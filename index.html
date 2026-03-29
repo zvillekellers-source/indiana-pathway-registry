@@ -183,6 +183,91 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 .field-list-item:hover{background:var(--mist)}
 .drag-handle{color:rgba(12,35,64,.3);font-size:12px}
 
+/* ── BULK UPLOAD MODAL ── */
+.bu-overlay{position:fixed;inset:0;background:rgba(12,35,64,.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;animation:buFadeIn .2s ease}
+.bu-overlay.hidden{display:none}
+@keyframes buFadeIn{from{opacity:0}to{opacity:1}}
+.bu-modal{background:#fff;border-radius:6px;box-shadow:0 4px 20px rgba(12,35,64,.18);width:100%;max-width:860px;max-height:88vh;display:flex;flex-direction:column;animation:buSlideIn .2s ease}
+@keyframes buSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.bu-header{background:var(--navy);border-radius:6px 6px 0 0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:3px solid var(--gold)}
+.bu-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#fff}
+.bu-subtitle{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.bu-close{background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.bu-close:hover{background:rgba(255,255,255,.2)}
+.bu-stepbar{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid rgba(12,35,64,.08);background:#fff;flex-shrink:0}
+.bu-step{display:flex;align-items:center;gap:8px;flex:1}
+.bu-stepnum{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all .2s}
+.bu-stepnum.active{background:var(--navy);color:#fff}
+.bu-stepnum.done{background:var(--green);color:#fff}
+.bu-stepnum.pending{background:rgba(12,35,64,.08);color:var(--slate)}
+.bu-steplabel{font-size:11px;font-weight:600}
+.bu-steplabel.active{color:var(--navy)}
+.bu-steplabel.done{color:var(--green)}
+.bu-steplabel.pending{color:var(--slate)}
+.bu-connector{flex:1;height:1px;background:rgba(12,35,64,.12);margin:0 8px;max-width:60px}
+.bu-connector.done{background:var(--green)}
+.bu-body{flex:1;overflow-y:auto;padding:24px}
+.bu-body::-webkit-scrollbar{width:4px}
+.bu-body::-webkit-scrollbar-thumb{background:rgba(12,35,64,.15);border-radius:2px}
+.bu-footer{padding:14px 20px;border-top:1px solid rgba(12,35,64,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff;border-radius:0 0 6px 6px}
+.bu-footer-left{font-size:11px;color:var(--slate)}
+.bu-drop{border:2px dashed rgba(12,35,64,.2);border-radius:6px;padding:40px 24px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;margin-bottom:20px}
+.bu-drop:hover,.bu-drop.drag-over{border-color:var(--navy);background:var(--mist)}
+.bu-drop-icon{font-size:32px;margin-bottom:10px}
+.bu-drop-title{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.bu-drop-sub{font-size:12px;color:var(--slate);margin-bottom:14px}
+.bu-formats{font-size:10px;color:var(--slate);background:var(--mist);display:inline-block;padding:4px 10px;border-radius:20px;letter-spacing:.04em}
+.bu-template{background:var(--mist);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.bu-template-info strong{display:block;font-size:12px;font-weight:600;color:var(--navy);margin-bottom:2px}
+.bu-template-info span{font-size:11px;color:var(--slate)}
+.bu-req-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:12px}
+.bu-req-table th{text-align:left;padding:6px 10px;background:var(--navy);color:rgba(255,255,255,.8);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+.bu-req-table td{padding:6px 10px;border-bottom:1px solid rgba(12,35,64,.06);color:var(--navy)}
+.bu-req-table tr:hover td{background:var(--mist)}
+.req-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;text-transform:uppercase;letter-spacing:.04em}
+.req-required{background:#FEE2E2;color:#7F1D1D}
+.req-optional{background:#F1F5F9;color:#475569}
+.bu-prev-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.bu-prev-stat{background:#fff;border-radius:var(--radius);padding:12px 14px;border-top:3px solid var(--navy);box-shadow:var(--shadow)}
+.bu-prev-stat.warn{border-top-color:var(--gold)}
+.bu-prev-stat.error{border-top-color:var(--red)}
+.bu-prev-stat.ok{border-top-color:var(--green)}
+.bu-prev-stat-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:4px}
+.bu-prev-stat-value{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--navy)}
+.bu-prev-table-wrap{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.bu-prev-table{width:100%;border-collapse:collapse;font-size:11px}
+.bu-prev-table th{background:var(--navy);color:rgba(255,255,255,.85);padding:8px 10px;text-align:left;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.bu-prev-table td{padding:8px 10px;border-bottom:1px solid rgba(12,35,64,.05);color:var(--navy);background:#fff;vertical-align:top}
+.bu-prev-table tr.row-warn td{background:#FFFBEB}
+.bu-prev-table tr.row-error td{background:#FFF5F5}
+.bu-prev-table tr:hover td{filter:brightness(.97)}
+.bu-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.bu-status-dot.ok{background:var(--green)}
+.bu-status-dot.warn{background:var(--gold)}
+.bu-status-dot.error{background:var(--red)}
+.bu-issue{font-size:10px;color:#92400E;margin-top:3px;font-style:italic}
+.bu-issue.err{color:#7F1D1D}
+.bu-filter-row{display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+.bu-fpill{padding:4px 10px;border-radius:20px;border:1px solid rgba(12,35,64,.15);background:#fff;font-size:11px;font-weight:500;cursor:pointer;color:var(--slate);transition:all .15s}
+.bu-fpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.bu-fpill.wp.active{background:#92400E;border-color:#92400E;color:#fff}
+.bu-fpill.ep.active{background:var(--red);border-color:var(--red);color:#fff}
+.bu-result-header{text-align:center;padding:20px 16px 16px}
+.bu-result-icon{font-size:40px;margin-bottom:10px}
+.bu-result-title{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.bu-result-sub{font-size:12px;color:var(--slate)}
+.bu-result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 20px}
+.bu-result-stat{background:#fff;border-radius:var(--radius);padding:14px 16px;text-align:center;box-shadow:var(--shadow)}
+.bu-result-stat.g{border-top:3px solid var(--green)}
+.bu-result-stat.a{border-top:3px solid var(--gold)}
+.bu-result-stat.r{border-top:3px solid var(--red)}
+.bu-result-num{font-family:var(--mono);font-size:28px;font-weight:500;color:var(--navy)}
+.bu-result-label{font-size:11px;color:var(--slate);margin-top:4px}
+.bu-log{background:var(--mist);border-radius:var(--radius);padding:14px 16px;font-size:11px;font-family:var(--mono);color:var(--slate);line-height:2}
+.bu-log .lok{color:var(--green)}
+.bu-log .lwarn{color:#92400E}
+.bu-log .lerr{color:var(--red)}
+
 /* SCROLLBAR */
 .sidebar::-webkit-scrollbar,.main::-webkit-scrollbar{width:4px}
 .sidebar::-webkit-scrollbar-track{background:transparent}
@@ -441,7 +526,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
           <div class="panel-subtitle">Indiana Official Course List &middot; 2,847 records &middot; SY 2025&ndash;26</div>
         </div>
         <div class="panel-actions">
-          <button class="btn btn-secondary btn-sm">Bulk Upload</button>
+          <button class="btn btn-secondary btn-sm" onclick="openBulkUpload()">Bulk Upload</button>
           <button class="btn btn-primary btn-sm">+ Add Course</button>
         </div>
       </div>
@@ -901,6 +986,123 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 </div><!-- end .body -->
 </div><!-- end .app -->
 
+<!-- BULK UPLOAD MODAL -->
+<div class="bu-overlay hidden" id="buOverlay" onclick="buOverlayClick(event)">
+<div class="bu-modal" id="buModal">
+  <div class="bu-header">
+    <div>
+      <div class="bu-title">Bulk Upload &mdash; Course Catalog</div>
+      <div class="bu-subtitle" id="buSubtitle">Upload a CSV or Excel file to import multiple course records</div>
+    </div>
+    <button class="bu-close" onclick="closeBulkUpload()">&#10005;</button>
+  </div>
+  <div class="bu-stepbar">
+    <div class="bu-step"><div class="bu-stepnum active" id="bsn1">1</div><span class="bu-steplabel active" id="bsl1">Upload File</span></div>
+    <div class="bu-connector" id="bsc1"></div>
+    <div class="bu-step"><div class="bu-stepnum pending" id="bsn2">2</div><span class="bu-steplabel pending" id="bsl2">Preview &amp; Validate</span></div>
+    <div class="bu-connector" id="bsc2"></div>
+    <div class="bu-step"><div class="bu-stepnum pending" id="bsn3">3</div><span class="bu-steplabel pending" id="bsl3">Confirm Import</span></div>
+  </div>
+
+  <!-- STEP 1: UPLOAD -->
+  <div class="bu-body" id="buStep1">
+    <div class="bu-drop" id="buDropZone" onclick="document.getElementById('buFileInput').click()" ondragover="buDragOver(event)" ondragleave="buDragLeave(event)" ondrop="buDrop(event)">
+      <div class="bu-drop-icon">&#128196;</div>
+      <div class="bu-drop-title" id="buDropTitle">Drop your file here or click to browse</div>
+      <div class="bu-drop-sub">Upload a completed template or your own file with matching column headers</div>
+      <span class="bu-formats">Accepted: .csv &nbsp;&middot;&nbsp; .xlsx &nbsp;&middot;&nbsp; .xls</span>
+    </div>
+    <input type="file" id="buFileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="buFileSelect(event)">
+    <div class="bu-template">
+      <div class="bu-template-info">
+        <strong>Download the official import template</strong>
+        <span>Pre-formatted CSV with all required columns and sample data. Recommended for first-time uploads.</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="buDownloadTemplate()">&#11015; Download Template</button>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Required &amp; Optional Columns</div>
+    <table class="bu-req-table">
+      <thead><tr><th>Column Name</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:var(--mono);font-size:10px">state_course_code</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(10)</td><td><span class="req-badge req-required">Required</span></td><td style="font-size:11px;color:var(--slate)">Must be unique. Existing code = update record.</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:10px">course_name</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(255)</td><td><span class="req-badge req-required">Required</span></td><td style="font-size:11px;color:var(--slate)">Official course title</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:10px">credit_hours</td><td style="font-family:var(--mono);font-size:10px">DECIMAL(3,1)</td><td><span class="req-badge req-required">Required</span></td><td style="font-size:11px;color:var(--slate)">Carnegie units (e.g. 1.0, 2.0)</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:10px">category</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(50)</td><td><span class="req-badge req-required">Required</span></td><td style="font-size:11px;color:var(--slate)">ELA, Math, Science, Social Studies, CTE, Other</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:10px">sced_code</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(5)</td><td><span class="req-badge req-optional">Optional</span></td><td style="font-size:11px;color:var(--slate)">AI will suggest if omitted</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:10px">cte_cluster</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(50)</td><td><span class="req-badge req-optional">Optional</span></td><td style="font-size:11px;color:var(--slate)">Required if category = CTE</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:10px">diploma_core40</td><td style="font-family:var(--mono);font-size:10px">BOOLEAN</td><td><span class="req-badge req-optional">Optional</span></td><td style="font-size:11px;color:var(--slate)">TRUE / FALSE. Defaults to FALSE.</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:10px">diploma_ahd</td><td style="font-family:var(--mono);font-size:10px">BOOLEAN</td><td><span class="req-badge req-optional">Optional</span></td><td style="font-size:11px;color:var(--slate)">Academic Honors Diploma flag</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- STEP 2: PREVIEW -->
+  <div class="bu-body" id="buStep2" style="display:none">
+    <div class="bu-prev-summary">
+      <div class="bu-prev-stat ok"><div class="bu-prev-stat-label">Total Rows</div><div class="bu-prev-stat-value">12</div></div>
+      <div class="bu-prev-stat ok"><div class="bu-prev-stat-label">Ready to Import</div><div class="bu-prev-stat-value">8</div></div>
+      <div class="bu-prev-stat warn"><div class="bu-prev-stat-label">Warnings</div><div class="bu-prev-stat-value">3</div></div>
+      <div class="bu-prev-stat error"><div class="bu-prev-stat-label">Errors (blocked)</div><div class="bu-prev-stat-value">1</div></div>
+    </div>
+    <div class="bu-filter-row">
+      <span style="font-size:11px;color:var(--slate);font-weight:600">Show:</span>
+      <div class="bu-fpill active" onclick="buFilter('all',this)">All rows</div>
+      <div class="bu-fpill wp" onclick="buFilter('warn',this)">Warnings only</div>
+      <div class="bu-fpill ep" onclick="buFilter('error',this)">Errors only</div>
+    </div>
+    <div class="bu-prev-table-wrap">
+      <table class="bu-prev-table">
+        <thead><tr><th style="width:28px"></th><th>State Code</th><th>Course Name</th><th>Category</th><th>Credits</th><th>SCED</th><th>Diploma Flags</th><th>Issue</th></tr></thead>
+        <tbody id="buPreviewBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--slate)">&#9432; Rows with <strong>errors</strong> will be skipped. Rows with <strong>warnings</strong> will import &mdash; review before confirming.</div>
+  </div>
+
+  <!-- STEP 3: RESULT -->
+  <div class="bu-body" id="buStep3" style="display:none">
+    <div class="bu-result-header">
+      <div class="bu-result-icon">&#10003;</div>
+      <div class="bu-result-title">Import Complete</div>
+      <div class="bu-result-sub">SY 2025&ndash;26 Course Catalog &middot; Imported March 29, 2026 &middot; By Admin (CIO)</div>
+    </div>
+    <div class="bu-result-grid">
+      <div class="bu-result-stat g"><div class="bu-result-num">8</div><div class="bu-result-label">Records imported successfully</div></div>
+      <div class="bu-result-stat a"><div class="bu-result-num">3</div><div class="bu-result-label">Imported with warnings &mdash; review recommended</div></div>
+      <div class="bu-result-stat r"><div class="bu-result-num">1</div><div class="bu-result-label">Rows skipped due to errors</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Import Log</div>
+    <div class="bu-log">
+      <div class="lok">&#10003; ELA1200 &mdash; English Language Arts 11 &mdash; imported successfully</div>
+      <div class="lok">&#10003; MTH3010 &mdash; Statistics &mdash; imported successfully</div>
+      <div class="lok">&#10003; SCI3030 &mdash; Chemistry I &mdash; imported successfully</div>
+      <div class="lok">&#10003; CTE4410 &mdash; Cybersecurity Fundamentals &mdash; imported successfully</div>
+      <div class="lok">&#10003; SST2010 &mdash; US History &mdash; imported successfully</div>
+      <div class="lok">&#10003; ELA2200 &mdash; Creative Writing &mdash; imported successfully</div>
+      <div class="lok">&#10003; MTH1060 &mdash; Geometry &mdash; imported successfully</div>
+      <div class="lok">&#10003; SCI2020 &mdash; Earth &amp; Space Science &mdash; imported successfully</div>
+      <div class="lwarn">&#9888; CTE3320 &mdash; Healthcare Pathways II &mdash; imported with warning: CTE cluster "Health Sciences" normalized to "Health Science"</div>
+      <div class="lwarn">&#9888; MTH2070 &mdash; Advanced Algebra &mdash; imported with warning: sced_code omitted, queued for AI suggestion</div>
+      <div class="lwarn">&#9888; ELA3100 &mdash; AP Literature &mdash; imported with warning: duplicate course name found (different code). Both retained.</div>
+      <div class="lerr">&#10007; CTE9999 &mdash; state_course_code format invalid (max 10 chars exceeded) &mdash; row skipped</div>
+    </div>
+    <div style="margin-top:14px;background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate);display:flex;align-items:center;gap:10px">
+      <span style="font-size:14px">&#9432;</span>
+      <span>All imported records are now in <strong>Pending Approval</strong> status. A Curriculum Director must approve before they appear in the published catalog.</span>
+    </div>
+  </div>
+
+  <div class="bu-footer">
+    <div class="bu-footer-left" id="buFooterLeft">Supported formats: CSV, XLSX &middot; Max 5,000 rows per upload</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" id="buBtnBack" style="display:none" onclick="buGoBack()">&larr; Back</button>
+      <button class="btn btn-secondary" onclick="closeBulkUpload()">Cancel</button>
+      <button class="btn btn-primary" id="buBtnNext" disabled onclick="buGoNext()">Next: Preview &rarr;</button>
+    </div>
+  </div>
+</div>
+</div>
+
 <script>
 function showPanel(id, navEl) {
   document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
@@ -926,7 +1128,118 @@ document.querySelectorAll('.filter-pill').forEach(function(pill) {
     this.classList.add('active');
   });
 });
-</script>
+/* ── BULK UPLOAD ── */
+var buStep = 1;
+var buRows = [
+  {code:'ELA1200',name:'English Language Arts 11',cat:'ELA',credits:'2.0',sced:'01003',flags:'Core 40, AHD',status:'ok',issue:''},
+  {code:'MTH3010',name:'Statistics',cat:'Math',credits:'2.0',sced:'02201',flags:'AHD, THD',status:'ok',issue:''},
+  {code:'SCI3030',name:'Chemistry I',cat:'Science',credits:'2.0',sced:'03051',flags:'Core 40, AHD',status:'ok',issue:''},
+  {code:'CTE4410',name:'Cybersecurity Fundamentals',cat:'CTE',credits:'1.0',sced:'21051',flags:'Core 40',status:'ok',issue:''},
+  {code:'SST2010',name:'US History',cat:'Social Studies',credits:'2.0',sced:'04101',flags:'Core 40',status:'ok',issue:''},
+  {code:'ELA2200',name:'Creative Writing',cat:'ELA',credits:'1.0',sced:'01071',flags:'—',status:'ok',issue:''},
+  {code:'MTH1060',name:'Geometry',cat:'Math',credits:'2.0',sced:'02101',flags:'Core 40, AHD',status:'ok',issue:''},
+  {code:'SCI2020',name:'Earth & Space Science',cat:'Science',credits:'2.0',sced:'03021',flags:'Core 40',status:'ok',issue:''},
+  {code:'CTE3320',name:'Healthcare Pathways II',cat:'CTE',credits:'1.0',sced:'20053',flags:'Core 40',status:'warn',issue:'CTE cluster "Health Sciences" — did you mean "Health Science"?'},
+  {code:'MTH2070',name:'Advanced Algebra',cat:'Math',credits:'2.0',sced:'—',flags:'AHD',status:'warn',issue:'sced_code omitted — AI suggestion will be queued'},
+  {code:'ELA3100',name:'AP Literature',cat:'ELA',credits:'2.0',sced:'01011',flags:'AHD, THD',status:'warn',issue:'Duplicate course name found with different code (ELA3101)'},
+  {code:'CTE9999TOOLONG',name:'Missing field test',cat:'CTE',credits:'1.0',sced:'—',flags:'—',status:'error',issue:'state_course_code exceeds 10 characters — row will be skipped'}
+];
+function openBulkUpload() {
+  buStep = 1;
+  document.getElementById('buBtnNext').disabled = true;
+  document.getElementById('buBtnNext').textContent = 'Next: Preview →';
+  document.getElementById('buDropTitle').textContent = 'Drop your file here or click to browse';
+  var dz = document.getElementById('buDropZone');
+  dz.style.borderColor = ''; dz.style.background = '';
+  buUpdateStep();
+  document.getElementById('buOverlay').classList.remove('hidden');
+}
+function closeBulkUpload() { document.getElementById('buOverlay').classList.add('hidden'); }
+function buOverlayClick(e) { if (e.target === document.getElementById('buOverlay')) closeBulkUpload(); }
+function buDragOver(e) { e.preventDefault(); document.getElementById('buDropZone').classList.add('drag-over'); }
+function buDragLeave() { document.getElementById('buDropZone').classList.remove('drag-over'); }
+function buDrop(e) { e.preventDefault(); document.getElementById('buDropZone').classList.remove('drag-over'); buFileReady('dropped_file.csv'); }
+function buFileSelect(e) { if (e.target.files[0]) buFileReady(e.target.files[0].name); }
+function buFileReady(name) {
+  var dz = document.getElementById('buDropZone');
+  document.getElementById('buDropTitle').textContent = '✓ ' + name + ' ready';
+  dz.style.borderColor = 'var(--green)'; dz.style.background = '#F0FFF4';
+  document.getElementById('buBtnNext').disabled = false;
+}
+function buDownloadTemplate() {
+  var csv = 'state_course_code,course_name,credit_hours,category,sced_code,cte_cluster,diploma_core40,diploma_ahd\nELA1200,English Language Arts 11,2.0,ELA,01003,,TRUE,TRUE\nCTE4410,Cybersecurity Fundamentals,1.0,CTE,21051,Information Technology,TRUE,FALSE\n';
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'ipr_course_catalog_upload_template.csv';
+  a.click();
+}
+function buRenderPreview(filter) {
+  var tbody = document.getElementById('buPreviewBody');
+  tbody.innerHTML = '';
+  buRows.forEach(function(row) {
+    if (filter !== 'all' && row.status !== filter) return;
+    var tr = document.createElement('tr');
+    if (row.status === 'warn') tr.className = 'row-warn';
+    if (row.status === 'error') tr.className = 'row-error';
+    var issueHtml = row.issue ? '<div class="bu-issue' + (row.status==='error'?' err':'') + '">' + row.issue + '</div>' : '';
+    tr.innerHTML = '<td style="text-align:center"><span class="bu-status-dot ' + row.status + '"></span></td>' +
+      '<td style="font-family:var(--mono);font-size:10px;color:var(--slate)">' + row.code + '</td>' +
+      '<td style="font-size:11px">' + row.name + '</td>' +
+      '<td><span class="chip chip-navy" style="font-size:9px">' + row.cat + '</span></td>' +
+      '<td style="font-family:var(--mono);font-size:10px;color:var(--slate)">' + row.credits + '</td>' +
+      '<td style="font-family:var(--mono);font-size:10px;color:var(--slate)">' + row.sced + '</td>' +
+      '<td style="font-size:10px;color:var(--slate)">' + row.flags + '</td>' +
+      '<td>' + issueHtml + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+function buFilter(type, el) {
+  document.querySelectorAll('.bu-fpill').forEach(function(p) { p.classList.remove('active'); });
+  el.classList.add('active');
+  buRenderPreview(type);
+}
+function buGoNext() {
+  if (buStep === 1) { buStep = 2; buRenderPreview('all'); }
+  else if (buStep === 2) { buStep = 3; }
+  buUpdateStep();
+}
+function buGoBack() {
+  if (buStep === 2) buStep = 1;
+  else if (buStep === 3) buStep = 2;
+  buUpdateStep();
+}
+function buUpdateStep() {
+  document.getElementById('buStep1').style.display = buStep === 1 ? 'block' : 'none';
+  document.getElementById('buStep2').style.display = buStep === 2 ? 'block' : 'none';
+  document.getElementById('buStep3').style.display = buStep === 3 ? 'block' : 'none';
+  [1,2,3].forEach(function(n) {
+    var num = document.getElementById('bsn'+n);
+    var lbl = document.getElementById('bsl'+n);
+    if (n < buStep) { num.className='bu-stepnum done'; num.textContent='✓'; lbl.className='bu-steplabel done'; }
+    else if (n === buStep) { num.className='bu-stepnum active'; num.textContent=n; lbl.className='bu-steplabel active'; }
+    else { num.className='bu-stepnum pending'; num.textContent=n; lbl.className='bu-steplabel pending'; }
+  });
+  [1,2].forEach(function(n) { document.getElementById('bsc'+n).className='bu-connector'+(n<buStep?' done':''); });
+  var back = document.getElementById('buBtnBack');
+  var next = document.getElementById('buBtnNext');
+  var fl = document.getElementById('buFooterLeft');
+  var sub = document.getElementById('buSubtitle');
+  if (buStep === 1) {
+    back.style.display='none'; next.style.display=''; next.className='btn btn-primary';
+    next.textContent='Next: Preview →';
+    fl.textContent='Supported formats: CSV, XLSX · Max 5,000 rows per upload';
+    sub.textContent='Upload a CSV or Excel file to import multiple course records';
+  } else if (buStep === 2) {
+    back.style.display=''; next.style.display=''; next.disabled=false;
+    next.textContent='Confirm Import (11 rows) →'; next.className='btn btn-gold';
+    fl.textContent='1 row will be skipped · 3 rows have warnings · 8 rows ready';
+    sub.textContent='Review parsed rows before importing — errors are blocked, warnings will import';
+  } else {
+    back.style.display='none'; next.style.display='none';
+    fl.textContent='11 records sent to Pending Approvals · 1 row skipped';
+    sub.textContent='Import complete — records are now awaiting Curriculum Director approval';
+  }
+}
 </body>
 </html>
 
