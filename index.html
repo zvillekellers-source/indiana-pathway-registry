@@ -1,1 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indiana Pathway Registry</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0C2340;--gold:#C8973A;--light:#F5F2EC;--white:#fff;
+  --slate:#4A5568;--mist:#E8EEF5;--green:#2D6A4F;
+  --blue-mid:#1B4F8A;--red:#9B2335;
+  --serif:'Libre Baskerville',Georgia,serif;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --radius:4px;
+  --shadow:0 1px 3px rgba(12,35,64,.12),0 1px 2px rgba(12,35,64,.08);
+  --shadow-lg:0 4px 16px rgba(12,35,64,.16);
+}
+body{font-family:var(--sans);background:var(--light);color:var(--navy);min-height:100vh;font-size:14px;line-height:1.5}
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* TOP BAR */
+.topbar{background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;flex-shrink:0;border-bottom:3px solid var(--gold)}
+.brand{display:flex;align-items:center;gap:10px;cursor:pointer}
+.brand-logo{width:30px;height:30px;background:var(--gold);border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;color:var(--navy);font-size:12px}
+.brand-name{font-family:var(--serif);font-size:14px;font-weight:700;letter-spacing:.02em}
+.brand-sub{font-size:9px;color:rgba(255,255,255,.55);letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-badge{background:rgba(200,151,58,.2);border:1px solid rgba(200,151,58,.4);color:var(--gold);font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.topbar-user{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#9B7729);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--navy);cursor:pointer}
+
+/* BODY LAYOUT */
+.body{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR NAV */
+.sidebar{width:220px;flex-shrink:0;background:var(--navy);color:#fff;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+.sidebar-top{padding:16px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sidebar-app-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:2px}
+.sidebar-app-name{font-family:var(--serif);font-size:13px;font-weight:700;color:var(--gold)}
+.nav-section{padding:16px 0 4px}
+.nav-section-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:0 16px;margin-bottom:4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.65);transition:all .15s;border-left:2px solid transparent;font-weight:500}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-item.active{background:rgba(200,151,58,.12);color:#fff;border-left-color:var(--gold)}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.nav-badge{background:var(--gold);color:var(--navy);font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;margin-left:auto}
+.nav-badge.amber{background:rgba(200,151,58,.25);color:var(--gold)}
+.nav-divider{border:none;border-top:1px solid rgba(255,255,255,.07);margin:8px 0}
+.nav-apps-item{display:flex;align-items:center;gap:8px;padding:8px 16px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.65);transition:all .15s;border-left:2px solid transparent;font-weight:500;background:rgba(200,151,58,.06)}
+.nav-apps-item:hover{background:rgba(200,151,58,.14);color:#fff}
+.nav-apps-item.active{background:rgba(200,151,58,.18);color:#fff;border-left-color:var(--gold)}
+
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;background:var(--light)}
+.panel{display:none;padding:24px;animation:fadeIn .2s ease}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* PANEL HEADERS */
+.panel-header{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(12,35,64,.1)}
+.panel-title{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--navy)}
+.panel-subtitle{font-size:12px;color:var(--slate);margin-top:3px}
+.panel-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.panel-actions{display:flex;gap:8px;flex-shrink:0;margin-top:2px}
+
+/* BUTTONS */
+.btn{padding:7px 14px;border-radius:var(--radius);border:none;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;letter-spacing:.02em}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover{background:var(--blue-mid)}
+.btn-secondary{background:#fff;color:var(--navy);border:1px solid rgba(12,35,64,.2)}
+.btn-secondary:hover{background:var(--mist)}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover{background:#B8872A}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* CARDS */
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px}
+.card-grid{display:grid;gap:12px}
+.card-grid-2{grid-template-columns:repeat(2,1fr)}
+.card-grid-3{grid-template-columns:repeat(3,1fr)}
+.card-grid-4{grid-template-columns:repeat(4,1fr)}
+
+/* KPI TILES */
+.kpi-tile{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px;border-top:3px solid var(--navy)}
+.kpi-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);margin-bottom:6px}
+.kpi-value{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--navy);line-height:1}
+.kpi-sub{font-size:11px;color:var(--slate);margin-top:4px}
+.kpi-tile.gold{border-top-color:var(--gold)}
+.kpi-tile.green{border-top-color:var(--green)}
+
+/* STATUS CHIPS */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:2px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.chip-green{background:#D8F3DC;color:#1B5E32}
+.chip-amber{background:#FEF3C7;color:#92400E}
+.chip-red{background:#FEE2E2;color:#7F1D1D}
+.chip-blue{background:#DBEAFE;color:#1E3A8A}
+.chip-gray{background:#F1F5F9;color:#475569}
+.chip-navy{background:rgba(12,35,64,.1);color:var(--navy)}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{background:var(--navy);color:rgba(255,255,255,.85);padding:8px 12px;text-align:left;font-weight:500;letter-spacing:.04em;font-size:10px;text-transform:uppercase}
+.data-table td{padding:9px 12px;border-bottom:1px solid rgba(12,35,64,.06);color:var(--navy)}
+.data-table tr:hover td{background:var(--mist)}
+.data-table .mono{font-family:var(--mono);font-size:11px;color:var(--slate)}
+
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-pill{padding:5px 12px;border-radius:20px;border:1px solid rgba(12,35,64,.15);background:#fff;font-size:11px;font-weight:500;cursor:pointer;color:var(--slate);transition:all .15s}
+.filter-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.filter-pill:hover:not(.active){background:var(--mist);color:var(--navy)}
+.search-input{padding:6px 12px;border:1px solid rgba(12,35,64,.15);border-radius:var(--radius);font-family:var(--sans);font-size:12px;background:#fff;color:var(--navy);outline:none;min-width:200px}
+.search-input:focus{border-color:var(--navy)}
+
+/* PLACEHOLDER CONTENT */
+.placeholder-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--slate)}
+.placeholder-icon{font-size:36px;margin-bottom:12px;opacity:.5}
+.placeholder-title{font-family:var(--serif);font-size:16px;color:var(--navy);margin-bottom:6px}
+.placeholder-sub{font-size:12px;color:var(--slate);max-width:320px;line-height:1.6}
+
+/* COLLAPSIBLE BLOCKS */
+.collapse-block{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.collapse-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none}
+.collapse-header:hover{background:var(--mist)}
+.collapse-title{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--navy)}
+.collapse-chips{display:flex;gap:6px;align-items:center}
+.collapse-arrow{font-size:10px;color:var(--slate);transition:transform .2s}
+.collapse-arrow.open{transform:rotate(180deg)}
+.collapse-body{display:none;padding:0 18px 16px;border-top:1px solid rgba(12,35,64,.06)}
+.collapse-body.open{display:block}
+
+/* WIREFRAME LINK BANNER */
+.wireframe-banner{background:linear-gradient(135deg,var(--navy),var(--blue-mid));border-radius:var(--radius);padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wireframe-banner-text{color:rgba(255,255,255,.85);font-size:12px}
+.wireframe-banner-text strong{color:var(--gold);font-weight:600}
+.wireframe-link{background:var(--gold);color:var(--navy);padding:6px 14px;border-radius:var(--radius);font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.wireframe-link:hover{background:#B8872A;color:#fff}
+
+/* SHERPA APP */
+.sherpa-header{background:linear-gradient(135deg,var(--navy),var(--blue-mid));padding:20px 24px;margin:-24px -24px 24px;border-bottom:3px solid var(--gold)}
+.sherpa-title{font-family:var(--serif);font-size:18px;color:#fff;font-weight:700}
+.sherpa-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
+
+/* APPROVAL CARDS */
+.approval-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--gold)}
+.approval-card.pending{border-left-color:var(--gold)}
+.approval-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.approval-card-id{font-family:var(--mono);font-size:11px;color:var(--slate)}
+.approval-card-title{font-size:13px;font-weight:600;color:var(--navy)}
+.approval-card-meta{font-size:11px;color:var(--slate);margin-bottom:10px}
+.approval-card-actions{display:flex;gap:6px}
+.btn-approve{background:#D8F3DC;color:#1B5E32;border:none;padding:5px 12px;border-radius:var(--radius);font-size:11px;font-weight:600;cursor:pointer}
+.btn-reject{background:#FEE2E2;color:#7F1D1D;border:none;padding:5px 12px;border-radius:var(--radius);font-size:11px;font-weight:600;cursor:pointer}
+
+/* PUBLICATION CARDS */
+.version-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px;margin-bottom:12px}
+.version-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.version-api{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--navy)}
+.version-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.version-stat{text-align:center;padding:8px;background:var(--light);border-radius:var(--radius)}
+.version-stat-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate)}
+.version-stat-value{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--navy);margin-top:2px}
+
+/* SCHEMA */
+.schema-field-row{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(12,35,64,.05);gap:10px;font-size:12px}
+.schema-field-row:hover{background:var(--mist)}
+.field-name{font-family:var(--mono);font-size:11px;color:var(--navy);width:160px;flex-shrink:0}
+.field-type{font-size:10px;background:rgba(12,35,64,.07);color:var(--slate);padding:1px 6px;border-radius:2px;font-family:var(--mono)}
+.field-nullable{font-size:10px;color:var(--slate);width:50px;text-align:center}
+
+/* ANALYTICS */
+.map-placeholder{background:#E8EEF5;border-radius:var(--radius);height:200px;display:flex;align-items:center;justify-content:center;color:var(--slate);font-size:12px;border:1px dashed rgba(12,35,64,.2)}
+.trend-bar{height:40px;background:var(--mist);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;position:relative}
+.trend-fill{height:100%;background:linear-gradient(90deg,var(--navy),var(--blue-mid));border-radius:var(--radius);display:flex;align-items:center;padding:0 10px;color:#fff;font-size:11px;font-weight:500}
+
+/* MODAL EDITOR */
+.modal-editor-layout{display:grid;grid-template-columns:240px 1fr;gap:16px}
+.field-list{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.field-list-header{background:var(--navy);color:#fff;padding:10px 14px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.field-list-item{padding:9px 14px;border-bottom:1px solid rgba(12,35,64,.06);font-size:12px;cursor:grab;display:flex;align-items:center;gap:8px;color:var(--navy)}
+.field-list-item:hover{background:var(--mist)}
+.drag-handle{color:rgba(12,35,64,.3);font-size:12px}
+
+/* SCROLLBAR */
+.sidebar::-webkit-scrollbar,.main::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-track{background:transparent}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
+.main::-webkit-scrollbar-track{background:transparent}
+.main::-webkit-scrollbar-thumb{background:rgba(12,35,64,.15);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand" onclick="showPanel('summary-stats')">
+    <div class="brand-logo">IPR</div>
+    <div>
+      <div class="brand-name">Indiana Pathway Registry</div>
+      <div class="brand-sub">Indiana Dept. of Education</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-badge">SY 2025–26</div>
+    <div class="topbar-badge" style="background:rgba(45,106,79,.2);border-color:rgba(45,106,79,.4);color:#52B788">&#9679; Live</div>
+    <div class="topbar-user" title="Admin User">CIO</div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-top">
+    <div class="sidebar-app-label">Application</div>
+    <div class="sidebar-app-name">Admin Console</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" onclick="showPanel('summary-stats',this)">
+      <span class="nav-icon">&#9672;</span> Summary Stats
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Data Registry</div>
+    <div class="nav-item" onclick="showPanel('course-catalog',this)">
+      <span class="nav-icon">&#128203;</span> Course Catalog
+    </div>
+    <div class="nav-item" onclick="showPanel('credentials',this)">
+      <span class="nav-icon">&#127941;</span> Credentials
+    </div>
+    <div class="nav-item" onclick="showPanel('patterns',this)">
+      <span class="nav-icon">&#11041;</span> Course Patterns
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Governance</div>
+    <div class="nav-item" onclick="showPanel('approvals',this)">
+      <span class="nav-icon">&#10003;</span> Pending Approvals
+      <span class="nav-badge">7</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('ai-staging',this)">
+      <span class="nav-icon">&#9678;</span> AI Staging Area
+      <span class="nav-badge amber">12</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('publication',this)">
+      <span class="nav-icon">&#11041;</span> Publication
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Analytics</div>
+    <div class="nav-item" onclick="showPanel('analytics',this)">
+      <span class="nav-icon">&#9638;</span> Enrollment &amp; Utilization
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Configuration</div>
+    <div class="nav-item" onclick="showPanel('schema',this)">
+      <span class="nav-icon">&#8862;</span> Schema Manager
+    </div>
+    <div class="nav-item" onclick="showPanel('modal-editor',this)">
+      <span class="nav-icon">&#8993;</span> Modal Editor
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Apps</div>
+    <hr class="nav-divider">
+    <div class="nav-apps-item" onclick="showPanel('sherpa',this)">
+      <span class="nav-icon">&#129517;</span> Course Sherpa
+    </div>
+    <div class="nav-apps-item" onclick="window.open('https://autumn-snowflake-4243.zvillekellers.workers.dev/','_blank')">
+      <span class="nav-icon">&#11041;</span> View Wireframe &#8599;
+    </div>
+  </div>
+</div>
+
+<!-- MAIN PANELS -->
+<div class="main">
+
+  <!-- SUMMARY STATS -->
+  <div class="panel active" id="panel-summary-stats">
+    <div class="wireframe-banner">
+      <div class="wireframe-banner-text">
+        <strong>Design Reference:</strong> The original interactive wireframe prototype is available for your dev team.
+      </div>
+      <a class="wireframe-link" href="https://autumn-snowflake-4243.zvillekellers.workers.dev/" target="_blank">Open Wireframe &#8599;</a>
+    </div>
+
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Summary Stats</div>
+          <div class="panel-subtitle">Registry-wide overview &middot; SY 2025&ndash;26 &middot; Last updated March 29, 2026</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Export Report</button>
+          <button class="btn btn-primary btn-sm">Refresh Data</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid card-grid-4" style="margin-bottom:20px">
+      <div class="kpi-tile">
+        <div class="kpi-label">Students Covered</div>
+        <div class="kpi-value">142,847</div>
+        <div class="kpi-sub">Active pathway plans</div>
+      </div>
+      <div class="kpi-tile gold">
+        <div class="kpi-label">Changes Pending Approval</div>
+        <div class="kpi-value">7</div>
+        <div class="kpi-sub">Awaiting Curriculum Director</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">API Versions Live</div>
+        <div class="kpi-value">4</div>
+        <div class="kpi-sub">SY 2022&ndash;23 through 2025&ndash;26</div>
+      </div>
+      <div class="kpi-tile green">
+        <div class="kpi-label">API Calls / Week</div>
+        <div class="kpi-value">284K</div>
+        <div class="kpi-sub">&#8593; 12% from last week</div>
+      </div>
+    </div>
+
+    <div class="collapse-block">
+      <div class="collapse-header" onclick="toggleCollapse(this)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="collapse-title">Course Catalog</span>
+          <div class="collapse-chips">
+            <span class="chip chip-navy">2,847 courses</span>
+            <span class="chip chip-green">2,614 active</span>
+            <span class="chip chip-amber">48 new this year</span>
+          </div>
+        </div>
+        <span class="collapse-arrow">&#9660;</span>
+      </div>
+      <div class="collapse-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Courses by Category</div>
+            <div class="trend-bar"><div class="trend-fill" style="width:35%">ELA &mdash; 35%</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:28%;background:linear-gradient(90deg,var(--green),#52B788)">Math &mdash; 28%</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:22%;background:linear-gradient(90deg,#1A8A7C,#5DCAA5)">CTE &mdash; 22%</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:15%;background:linear-gradient(90deg,var(--gold),#E8B96A)">Other &mdash; 15%</div></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Year-over-Year Change</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+              <div class="kpi-tile" style="border-top-color:var(--green);padding:10px 12px"><div class="kpi-label" style="font-size:9px">Added</div><div class="kpi-value" style="font-size:18px">+48</div></div>
+              <div class="kpi-tile" style="border-top-color:var(--gold);padding:10px 12px"><div class="kpi-label" style="font-size:9px">Modified</div><div class="kpi-value" style="font-size:18px">127</div></div>
+              <div class="kpi-tile" style="border-top-color:var(--red);padding:10px 12px"><div class="kpi-label" style="font-size:9px">Retired</div><div class="kpi-value" style="font-size:18px">23</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="collapse-block">
+      <div class="collapse-header" onclick="toggleCollapse(this)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="collapse-title">Credentials</span>
+          <div class="collapse-chips">
+            <span class="chip chip-navy">487 active</span>
+            <span class="chip chip-green">312 Employment Honors+</span>
+            <span class="chip chip-amber">8 pending score review</span>
+          </div>
+        </div>
+        <span class="collapse-arrow">&#9660;</span>
+      </div>
+      <div class="collapse-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">CoV Score Distribution</div>
+            <div class="trend-bar"><div class="trend-fill" style="width:64%;background:linear-gradient(90deg,var(--green),#52B788)">&ge;4.0 Employment Honors+ (64%)</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:22%;background:linear-gradient(90deg,var(--gold),#E8B96A)">3.0&ndash;3.9 Employment Honors (22%)</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:14%;background:linear-gradient(90deg,var(--slate),#888)">Below 3.0 (14%)</div></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">By Credential Type</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
+              <div class="kpi-tile" style="padding:8px 10px;border-top-color:var(--navy)"><div class="kpi-label" style="font-size:9px">Industry Cert</div><div class="kpi-value" style="font-size:16px">218</div></div>
+              <div class="kpi-tile" style="padding:8px 10px;border-top-color:var(--blue-mid)"><div class="kpi-label" style="font-size:9px">AS / AAS</div><div class="kpi-value" style="font-size:16px">94</div></div>
+              <div class="kpi-tile" style="padding:8px 10px;border-top-color:var(--green)"><div class="kpi-label" style="font-size:9px">Tech Cert</div><div class="kpi-value" style="font-size:16px">112</div></div>
+              <div class="kpi-tile" style="padding:8px 10px;border-top-color:var(--gold)"><div class="kpi-label" style="font-size:9px">Certificate</div><div class="kpi-value" style="font-size:16px">63</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="collapse-block">
+      <div class="collapse-header" onclick="toggleCollapse(this)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="collapse-title">Course Patterns</span>
+          <div class="collapse-chips">
+            <span class="chip chip-navy">847 patterns</span>
+            <span class="chip chip-green">612 established</span>
+            <span class="chip chip-amber">14 shifting (CUSUM)</span>
+          </div>
+        </div>
+        <span class="collapse-arrow">&#9660;</span>
+      </div>
+      <div class="collapse-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Pattern Lifecycle</div>
+            <div class="trend-bar"><div class="trend-fill" style="width:72%">Established &mdash; 612</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:14%;background:linear-gradient(90deg,var(--gold),#E8B96A)">Emerging &mdash; 118</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:8%;background:linear-gradient(90deg,var(--red),#C0392B)">Shifting &mdash; 14</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:6%;background:linear-gradient(90deg,var(--slate),#888)">Quarantine &mdash; 4</div></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">CUSUM Alert</div>
+            <div class="card" style="border-left:3px solid var(--gold);padding:12px">
+              <div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:4px">14 patterns flagged as Shifting</div>
+              <div style="font-size:11px;color:var(--slate);margin-bottom:8px">DGC review required. 6 pending review, 8 under review.</div>
+              <button class="btn btn-secondary btn-sm" onclick="showPanel('patterns')">View Patterns &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE CATALOG -->
+  <div class="panel" id="panel-course-catalog">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Course Catalog</div>
+          <div class="panel-subtitle">Indiana Official Course List &middot; 2,847 records &middot; SY 2025&ndash;26</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Bulk Upload</button>
+          <button class="btn btn-primary btn-sm">+ Add Course</button>
+        </div>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="search-input" type="text" placeholder="Search course name or code&hellip;">
+      <div class="filter-pill active">All Active</div>
+      <div class="filter-pill">ELA</div>
+      <div class="filter-pill">Math</div>
+      <div class="filter-pill">Science</div>
+      <div class="filter-pill">Social Studies</div>
+      <div class="filter-pill">CTE</div>
+      <div class="filter-pill">New This Year</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>State Code</th><th>Course Name</th><th>Category</th><th>Credits</th><th>SCED</th><th>Diploma Flags</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">ELA1000</td><td>English Language Arts 9</td><td><span class="chip chip-blue">ELA</span></td><td class="mono">2.0</td><td class="mono">01001</td><td><span class="chip chip-green">Core 40</span> <span class="chip chip-navy">AHD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">MTH1050</td><td>Algebra I</td><td><span class="chip chip-green">Math</span></td><td class="mono">2.0</td><td class="mono">02051</td><td><span class="chip chip-green">Core 40</span> <span class="chip chip-navy">AHD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">CTE2210</td><td>Principles of Business</td><td><span class="chip chip-amber">CTE</span></td><td class="mono">1.0</td><td class="mono">22001</td><td><span class="chip chip-green">Core 40</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">SCI2010</td><td>Biology I</td><td><span class="chip chip-green">Science</span></td><td class="mono">2.0</td><td class="mono">03001</td><td><span class="chip chip-green">Core 40</span> <span class="chip chip-navy">AHD</span> <span class="chip chip-blue">THD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">MTH2060</td><td>Precalculus</td><td><span class="chip chip-green">Math</span></td><td class="mono">2.0</td><td class="mono">02151</td><td><span class="chip chip-navy">AHD</span> <span class="chip chip-blue">THD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">CTE3310</td><td>Healthcare Career Exploration</td><td><span class="chip chip-amber">CTE</span></td><td class="mono">1.0</td><td class="mono">20052</td><td><span class="chip chip-green">Core 40</span></td><td><span class="chip chip-amber">New</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">ELA1100</td><td>English Language Arts 10</td><td><span class="chip chip-blue">ELA</span></td><td class="mono">2.0</td><td class="mono">01002</td><td><span class="chip chip-green">Core 40</span> <span class="chip chip-navy">AHD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">SST1050</td><td>World History &amp; Civilization</td><td><span class="chip chip-navy">Social Studies</span></td><td class="mono">2.0</td><td class="mono">04051</td><td><span class="chip chip-green">Core 40</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--slate)">
+      <span>Showing 8 of 2,847 records</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm">&larr; Prev</button>
+        <button class="btn btn-secondary btn-sm">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREDENTIALS -->
+  <div class="panel" id="panel-credentials">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Credentials</div>
+          <div class="panel-subtitle">Credentials of Value (CoV) Library &middot; 487 active &middot; SY 2025&ndash;26</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Bulk Upload</button>
+          <button class="btn btn-primary btn-sm">+ Add Credential</button>
+        </div>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="search-input" type="text" placeholder="Search credential name or ID&hellip;">
+      <div class="filter-pill active">All Active</div>
+      <div class="filter-pill">Employment Honors+</div>
+      <div class="filter-pill">Employment Honors</div>
+      <div class="filter-pill">Industry Cert</div>
+      <div class="filter-pill">Pending Review</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead>
+          <tr><th>Credential ID</th><th>Credential Name</th><th>Type</th><th>Issuer</th><th>CoV Score</th><th>Seal Tier</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">1042</td><td>AWS Certified Cloud Practitioner</td><td><span class="chip chip-blue">Industry Cert</span></td><td>Amazon Web Services</td><td class="mono" style="color:var(--green);font-weight:600">4.8</td><td><span class="chip chip-green">Honors+</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">1087</td><td>CompTIA A+ Certification</td><td><span class="chip chip-blue">Industry Cert</span></td><td>CompTIA</td><td class="mono" style="color:var(--green);font-weight:600">4.5</td><td><span class="chip chip-green">Honors+</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">2014</td><td>Certified Nurse Aide (CNA)</td><td><span class="chip chip-navy">Certificate</span></td><td>Indiana State Dept. Health</td><td class="mono" style="color:var(--gold);font-weight:600">3.7</td><td><span class="chip chip-amber">Honors</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">3001</td><td>Welding Technology AS</td><td><span class="chip chip-green">AS / AAS</span></td><td>Ivy Tech Community College</td><td class="mono" style="color:var(--green);font-weight:600">4.2</td><td><span class="chip chip-green">Honors+</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">1203</td><td>OSHA 10-Hour General Industry</td><td><span class="chip chip-blue">Industry Cert</span></td><td>OSHA</td><td class="mono" style="color:var(--slate);font-weight:600">2.4</td><td><span class="chip chip-gray">Below Honors</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">4088</td><td>Cybersecurity Fundamentals TC</td><td><span class="chip chip-blue">Tech Cert</span></td><td>Ivy Tech Community College</td><td class="mono" style="color:var(--gold);font-weight:600">3.1</td><td><span class="chip chip-amber">Honors</span></td><td><span class="chip chip-amber">Pending Review</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--slate)">
+      <span>Showing 6 of 487 records</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm">&larr; Prev</button>
+        <button class="btn btn-secondary btn-sm">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE PATTERNS -->
+  <div class="panel" id="panel-patterns">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Course Patterns</div>
+          <div class="panel-subtitle">Career Pathway Pattern Library &middot; 847 patterns &middot; SY 2025&ndash;26</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Import Batch</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background:#FEF3C7;border:1px solid #D97706;padding:12px 16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:16px">&#9888;</span>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#92400E">CUSUM Alert &mdash; 14 Patterns Flagged as Shifting</div>
+          <div style="font-size:11px;color:#92400E;margin-top:2px">Sustained directional shift detected. DGC review required before next publication cycle.</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto;flex-shrink:0">Review &rarr;</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="search-input" type="text" placeholder="Search pattern ID or career cluster&hellip;">
+      <div class="filter-pill active">All</div>
+      <div class="filter-pill">Established</div>
+      <div class="filter-pill">Emerging</div>
+      <div class="filter-pill">Shifting</div>
+      <div class="filter-pill">Quarantine</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead>
+          <tr><th>Pattern ID</th><th>Career Cluster</th><th>Cohort Anchor</th><th>Utility Score</th><th>Completers (N)</th><th>Lifecycle</th><th>Rec Type</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">PAT-00441</td><td>Health Science</td><td>2023</td><td class="mono">0.87</td><td class="mono">412</td><td><span class="chip chip-green">Established</span></td><td><span class="chip chip-blue">Confirmatory</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">PAT-00812</td><td>Information Technology</td><td>2023</td><td class="mono">0.91</td><td class="mono">287</td><td><span class="chip chip-green">Established</span></td><td><span class="chip chip-navy">Sequence Nudge</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">PAT-01204</td><td>Manufacturing</td><td>2024</td><td class="mono">0.74</td><td class="mono">156</td><td><span class="chip chip-amber">Emerging</span></td><td><span class="chip chip-green">Leveling-Up</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">PAT-00334</td><td>Business Management</td><td>2022</td><td class="mono">0.62</td><td class="mono">891</td><td><span class="chip chip-red">Shifting</span></td><td><span class="chip chip-amber">Continuity Risk</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">PAT-00588</td><td>Agriculture</td><td>2023</td><td class="mono">0.79</td><td class="mono">203</td><td><span class="chip chip-green">Established</span></td><td><span class="chip chip-blue">Regional Conditional</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PENDING APPROVALS -->
+  <div class="panel" id="panel-approvals">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Pending Approvals</div>
+          <div class="panel-subtitle">7 items awaiting sign-off</div>
+        </div>
+        <div class="panel-actions">
+          <select class="search-input" style="min-width:180px">
+            <option>Role: Curriculum Director</option>
+            <option>Role: CTE SME</option>
+            <option>Role: Labor Market SME</option>
+            <option>Role: Math SME</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:8px;font-weight:600">Credentials (3)</div>
+    <div class="approval-card">
+      <div class="approval-card-header">
+        <span class="approval-card-id">CRED &middot; 1042</span>
+        <span class="chip chip-amber">Pending</span>
+      </div>
+      <div class="approval-card-title">CoV Score Update &mdash; AWS Certified Cloud Practitioner</div>
+      <div class="approval-card-meta">Economic Value: 4.5 &rarr; 5.0 &middot; Labor Market SME &middot; Submitted Mar 27, 2026 &middot; Affects 1,847 student plans</div>
+      <div class="approval-card-actions">
+        <button class="btn-approve" onclick="dismissCard(this)">Approve</button>
+        <button class="btn-reject" onclick="dismissCard(this)">Reject</button>
+        <button class="btn btn-secondary btn-sm">Open Record</button>
+      </div>
+    </div>
+    <div class="approval-card">
+      <div class="approval-card-header">
+        <span class="approval-card-id">CRED &middot; 4088</span>
+        <span class="chip chip-amber">Pending</span>
+      </div>
+      <div class="approval-card-title">New Credential &mdash; Cybersecurity Fundamentals TC</div>
+      <div class="approval-card-meta">New record &middot; Ivy Tech &middot; CTE SME &middot; Submitted Mar 25, 2026 &middot; Cohort impact: SY 2025&ndash;26</div>
+      <div class="approval-card-actions">
+        <button class="btn-approve" onclick="dismissCard(this)">Approve</button>
+        <button class="btn-reject" onclick="dismissCard(this)">Reject</button>
+        <button class="btn btn-secondary btn-sm">Open Record</button>
+      </div>
+    </div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:8px;margin-top:16px;font-weight:600">Course Catalog (4)</div>
+    <div class="approval-card">
+      <div class="approval-card-header">
+        <span class="approval-card-id">COURSE &middot; CTE3310</span>
+        <span class="chip chip-amber">Pending</span>
+      </div>
+      <div class="approval-card-title">New Course &mdash; Healthcare Career Exploration</div>
+      <div class="approval-card-meta">New record &middot; CTE / Health Science &middot; CTE SME &middot; Submitted Mar 28, 2026</div>
+      <div class="approval-card-actions">
+        <button class="btn-approve" onclick="dismissCard(this)">Approve</button>
+        <button class="btn-reject" onclick="dismissCard(this)">Reject</button>
+        <button class="btn btn-secondary btn-sm">Open Record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI STAGING AREA -->
+  <div class="panel" id="panel-ai-staging">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">AI Staging Area</div>
+          <div class="panel-subtitle">12 AI-generated suggestions awaiting human review</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Accept All High-Confidence</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-grid card-grid-3" style="margin-bottom:16px">
+      <div class="kpi-tile" style="border-top-color:var(--navy)"><div class="kpi-label">SCED Suggestions</div><div class="kpi-value">8</div><div class="kpi-sub">avg confidence 91%</div></div>
+      <div class="kpi-tile gold"><div class="kpi-label">Diploma Category Suggestions</div><div class="kpi-value">3</div><div class="kpi-sub">avg confidence 84%</div></div>
+      <div class="kpi-tile green"><div class="kpi-label">Delta Narratives</div><div class="kpi-value">1</div><div class="kpi-sub">Ready for edit</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead><tr><th>Record</th><th>Suggestion Type</th><th>Current Value</th><th>AI Suggestion</th><th>Confidence</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">CTE3310</td><td>SCED Code</td><td class="mono">&mdash;</td><td class="mono">20052 <span class="chip chip-green" style="font-size:9px">High</span></td><td class="mono" style="color:var(--green)">97%</td><td><button class="btn-approve" onclick="dismissCard(this)">Accept</button> <button class="btn-reject" onclick="dismissCard(this)">Reject</button></td></tr>
+          <tr><td class="mono">MTH2060</td><td>SCED Code</td><td class="mono">02150</td><td class="mono">02151 <span class="chip chip-green" style="font-size:9px">High</span></td><td class="mono" style="color:var(--green)">94%</td><td><button class="btn-approve" onclick="dismissCard(this)">Accept</button> <button class="btn-reject" onclick="dismissCard(this)">Reject</button></td></tr>
+          <tr><td class="mono">SCI3020</td><td>Diploma Flag</td><td>Core 40</td><td>Core 40 + AHD <span class="chip chip-amber" style="font-size:9px">Med</span></td><td class="mono" style="color:var(--gold)">78%</td><td><button class="btn-approve" onclick="dismissCard(this)">Accept</button> <button class="btn-reject" onclick="dismissCard(this)">Reject</button></td></tr>
+          <tr><td class="mono">SY 2025-26</td><td>Delta Narrative</td><td>&mdash;</td><td style="font-size:11px;color:var(--slate)">48 new courses added, 23 retired&hellip;</td><td class="mono">&mdash;</td><td><button class="btn btn-secondary btn-sm">Edit Draft</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PUBLICATION -->
+  <div class="panel" id="panel-publication">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Publication</div>
+          <div class="panel-subtitle">API version management &middot; 4 versions live &middot; Rolling 4-year window</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Generate Update Summary</button>
+          <button class="btn btn-gold btn-sm">Promote to Golden Snapshot</button>
+        </div>
+      </div>
+    </div>
+    <div class="version-card">
+      <div class="version-card-header">
+        <div><span class="version-api">v2026</span> <span class="chip chip-green" style="margin-left:6px">Live &middot; Current</span></div>
+        <div style="font-size:11px;color:var(--slate)">Golden Snapshot: July 1, 2025 &middot; Sunset: Dec 31, 2027</div>
+      </div>
+      <div style="font-size:11px;color:var(--slate);margin-bottom:10px">SY 2025&ndash;26 &middot; <span style="color:var(--gold);font-weight:600">48 post-publication changes</span> since Golden Snapshot</div>
+      <div class="version-stats">
+        <div class="version-stat"><div class="version-stat-label">7-Day Requests</div><div class="version-stat-value">184K</div></div>
+        <div class="version-stat"><div class="version-stat-label">Peak Daily</div><div class="version-stat-value">31K</div></div>
+        <div class="version-stat"><div class="version-stat-label">Avg Response</div><div class="version-stat-value">142ms</div></div>
+        <div class="version-stat"><div class="version-stat-label">Error Rate</div><div class="version-stat-value">0.02%</div></div>
+      </div>
+    </div>
+    <div class="version-card" style="opacity:.85">
+      <div class="version-card-header">
+        <div><span class="version-api">v2025</span> <span class="chip chip-blue" style="margin-left:6px">Live &middot; Read-only</span></div>
+        <div style="font-size:11px;color:var(--slate)">Golden Snapshot: July 1, 2024 &middot; Sunset: Dec 31, 2026</div>
+      </div>
+      <div class="version-stats">
+        <div class="version-stat"><div class="version-stat-label">7-Day Requests</div><div class="version-stat-value">84K</div></div>
+        <div class="version-stat"><div class="version-stat-label">Peak Daily</div><div class="version-stat-value">14K</div></div>
+        <div class="version-stat"><div class="version-stat-label">Avg Response</div><div class="version-stat-value">138ms</div></div>
+        <div class="version-stat"><div class="version-stat-label">Error Rate</div><div class="version-stat-value">0.01%</div></div>
+      </div>
+    </div>
+    <div class="version-card" style="opacity:.65">
+      <div class="version-card-header">
+        <div><span class="version-api">v2024</span> <span class="chip chip-gray" style="margin-left:6px">Deprecated</span></div>
+        <div style="font-size:11px;color:var(--slate)">Golden Snapshot: July 1, 2023 &middot; Sunset: Dec 31, 2025</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="panel" id="panel-analytics">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Enrollment &amp; Utilization</div>
+          <div class="panel-subtitle">Course and credential usage across Indiana school corporations</div>
+        </div>
+        <div class="panel-actions">
+          <select class="search-input" style="min-width:200px"><option>Course: Biology I (SCI2010)</option></select>
+          <button class="btn btn-secondary btn-sm">Export</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-grid card-grid-4" style="margin-bottom:16px">
+      <div class="kpi-tile"><div class="kpi-label">Total Enrollment</div><div class="kpi-value">18,442</div><div class="kpi-sub">SY 2025&ndash;26</div></div>
+      <div class="kpi-tile gold"><div class="kpi-label">School Corporations</div><div class="kpi-value">287</div><div class="kpi-sub">offering this course</div></div>
+      <div class="kpi-tile green"><div class="kpi-label">Completers</div><div class="kpi-value">14,108</div><div class="kpi-sub">76.5% completion rate</div></div>
+      <div class="kpi-tile"><div class="kpi-label">YoY Change</div><div class="kpi-value">+4.2%</div><div class="kpi-sub">enrollment growth</div></div>
+    </div>
+    <div class="card-grid card-grid-2">
+      <div class="card">
+        <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Indiana County Map</div>
+        <div class="map-placeholder">[ Indiana County Choropleth Map &mdash; dynamic binding in production ]</div>
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--slate)">
+          <span>&#9632; High enrollment</span><span>&#9632; Medium</span><span>&#9632; Low</span><span>&#9633; No data</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Enrollment Trend (5-Year)</div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:70%">2021&ndash;22 &middot; 14,210</div></div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:75%">2022&ndash;23 &middot; 15,601</div></div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:80%">2023&ndash;24 &middot; 16,882</div></div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:84%">2024&ndash;25 &middot; 17,700</div></div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:88%">2025&ndash;26 &middot; 18,442 &#8593;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEMA MANAGER -->
+  <div class="panel" id="panel-schema">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Schema Manager</div>
+          <div class="panel-subtitle">Data contract definitions &middot; Changes require Approver sign-off</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Propose Schema Change</button>
+        </div>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <div class="filter-pill active">Course Catalog</div>
+      <div class="filter-pill">Credentials</div>
+      <div class="filter-pill">Course Patterns</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="background:var(--navy);color:rgba(255,255,255,.7);display:grid;grid-template-columns:160px 120px 60px 1fr 80px;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:500">
+        <span>Field Name</span><span>Type</span><span>Null</span><span>Description</span><span>Governed</span>
+      </div>
+      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
+        <span class="field-name">state_course_code</span><span class="field-type">VARCHAR(10)</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Primary identifier, stable across year instances</span><span><span class="chip chip-navy">Yes</span></span>
+      </div>
+      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
+        <span class="field-name">course_name</span><span class="field-type">VARCHAR(255)</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Official course title</span><span><span class="chip chip-navy">Yes</span></span>
+      </div>
+      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
+        <span class="field-name">sced_code</span><span class="field-type">VARCHAR(5)</span><span class="field-nullable">Yes</span><span style="font-size:11px;color:var(--slate)">Standard Course Equiv. Description (AI-assisted)</span><span><span class="chip chip-green">AI</span></span>
+      </div>
+      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
+        <span class="field-name">credit_hours</span><span class="field-type">DECIMAL(3,1)</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Carnegie unit credit value</span><span><span class="chip chip-gray">No</span></span>
+      </div>
+      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
+        <span class="field-name">cte_cluster</span><span class="field-type">VARCHAR(50)</span><span class="field-nullable">Yes</span><span style="font-size:11px;color:var(--slate)">CTE career cluster tag</span><span><span class="chip chip-navy">Yes</span></span>
+      </div>
+      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
+        <span class="field-name">diploma_core40</span><span class="field-type">BOOLEAN</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Satisfies Core 40 requirement</span><span><span class="chip chip-navy">Yes</span></span>
+      </div>
+      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
+        <span class="field-name">cohort_version</span><span class="field-type">VARCHAR(10)</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Cohort year anchor (e.g. SY2025-26)</span><span><span class="chip chip-navy">Yes</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITOR -->
+  <div class="panel" id="panel-modal-editor">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Modal Editor</div>
+          <div class="panel-subtitle">Controls how fields are presented in edit modals &middot; Independent of schema</div>
+        </div>
+        <div class="panel-actions">
+          <div class="filter-pill active" style="margin:0">Course Catalog</div>
+          <div class="filter-pill" style="margin:0;cursor:pointer">Credentials</div>
+          <div class="filter-pill" style="margin:0;cursor:pointer">Patterns</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background:#FEF3C7;border:1px solid #D97706;padding:10px 14px;margin-bottom:16px">
+      <div style="font-size:11px;color:#92400E"><strong>2 unassigned fields</strong> &mdash; Fields exist in schema but are not placed in any modal section. They will not appear to editors.</div>
+    </div>
+    <div class="modal-editor-layout">
+      <div class="field-list">
+        <div class="field-list-header">Available Fields</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> state_course_code</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> course_name</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> sced_code</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> credit_hours</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> cte_cluster</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> diploma_core40</div>
+        <div class="field-list-item" style="color:var(--gold)"><span class="drag-handle">&#10783;</span> ceds_code &#9888; unassigned</div>
+        <div class="field-list-item" style="color:var(--gold)"><span class="drag-handle">&#10783;</span> edfi_code &#9888; unassigned</div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:600;color:var(--navy)">Tab: Core</div>
+            <span class="chip chip-green">2-column layout</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)"><div style="font-size:9px;color:var(--slate);text-transform:uppercase;letter-spacing:.06em">Grounding</div>course_name</div>
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">state_course_code</div>
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">credit_hours</div>
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">cte_cluster</div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:600;color:var(--navy)">Tab: Standards &amp; Alignment</div>
+            <span class="chip chip-green">2-column layout</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:#FEF9EC;border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(200,151,58,.4)"><div style="font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em">Grounding (read-only)</div>course_name</div>
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">sced_code</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE SHERPA -->
+  <div class="panel" id="panel-sherpa">
+    <div class="sherpa-header">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="sherpa-title">&#129517; Course Sherpa</div>
+          <div class="sherpa-sub">AI-powered student diploma planning &middot; Bring Your Own Key (BYOK) model</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <span class="chip chip-amber">No student login required</span>
+          <span class="chip chip-green">Sessionless &middot; Email persistence</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-grid card-grid-3" style="margin-bottom:20px">
+      <div class="card" style="border-top:3px solid var(--gold)">
+        <div style="font-size:11px;font-weight:600;color:var(--navy);margin-bottom:6px">Step 1 &mdash; Enter API Key</div>
+        <div style="font-size:11px;color:var(--slate);margin-bottom:10px;line-height:1.6">Student or counselor enters their Anthropic API key. Key stored in browser memory only &mdash; never sent to IDOE servers.</div>
+        <div style="background:#FEF3C7;border-radius:var(--radius);padding:8px 10px;font-size:10px;color:#92400E;line-height:1.5"><strong>Required disclosure:</strong> Your API key will be visible in browser network traffic. Set a spending limit on your Anthropic account before using this feature.</div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--navy)">
+        <div style="font-size:11px;font-weight:600;color:var(--navy);margin-bottom:6px">Step 2 &mdash; Upload Transcript (optional)</div>
+        <div style="font-size:11px;color:var(--slate);margin-bottom:10px;line-height:1.6">Upload a .json / .csv / .txt transcript file. Read by browser FileReader API &mdash; never sent to IDOE servers. Sent directly to Anthropic with user's key.</div>
+        <div style="background:#D8F3DC;border-radius:var(--radius);padding:8px 10px;font-size:10px;color:#1B5E32">FERPA note: IDOE servers are not in the data chain. Browser &rarr; Anthropic directly.</div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--green)">
+        <div style="font-size:11px;font-weight:600;color:var(--navy);margin-bottom:6px">Step 3 &mdash; AI Course Assistant</div>
+        <div style="font-size:11px;color:var(--slate);margin-bottom:10px;line-height:1.6">Student asks questions. Browser assembles: Sherpa API context bundle + transcript + conversation history &rarr; calls api.anthropic.com directly.</div>
+        <div style="font-size:10px;color:var(--slate)">Quick questions: What courses do I still need? &middot; Am I on track for Employment Honors? &middot; What CTE pathway fits me?</div>
+      </div>
+    </div>
+    <div class="card" style="border:2px dashed rgba(12,35,64,.15);background:var(--mist);text-align:center;padding:32px">
+      <div style="font-size:24px;margin-bottom:8px">&#129517;</div>
+      <div style="font-family:var(--serif);font-size:15px;color:var(--navy);font-weight:700;margin-bottom:6px">Course Sherpa Student Interface</div>
+      <div style="font-size:12px;color:var(--slate);margin-bottom:16px;max-width:360px;margin-left:auto;margin-right:auto;line-height:1.6">The full student-facing four-year planner with AI counselor will be built in a subsequent session.</div>
+      <a href="https://autumn-snowflake-4243.zvillekellers.workers.dev/" target="_blank" class="btn btn-primary">View Full Wireframe &rarr;</a>
+    </div>
+  </div>
+
+</div><!-- end .main -->
+</div><!-- end .body -->
+</div><!-- end .app -->
+
+<script>
+function showPanel(id, navEl) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item,.nav-apps-item').forEach(function(n) { n.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+}
+function toggleCollapse(header) {
+  var body = header.nextElementSibling;
+  var arrow = header.querySelector('.collapse-arrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+function dismissCard(btn) {
+  var card = btn.closest('.approval-card, tr');
+  if (card) { card.style.opacity = '.35'; card.style.pointerEvents = 'none'; }
+}
+document.querySelectorAll('.filter-pill').forEach(function(pill) {
+  pill.addEventListener('click', function() {
+    var bar = this.closest('.filter-bar, .panel-actions');
+    if (bar) bar.querySelectorAll('.filter-pill').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
 
