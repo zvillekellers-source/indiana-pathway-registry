@@ -1039,10 +1039,10 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   <!-- STEP 2: PREVIEW -->
   <div class="bu-body" id="buStep2" style="display:none">
     <div class="bu-prev-summary">
-      <div class="bu-prev-stat ok"><div class="bu-prev-stat-label">Total Rows</div><div class="bu-prev-stat-value">12</div></div>
-      <div class="bu-prev-stat ok"><div class="bu-prev-stat-label">Ready to Import</div><div class="bu-prev-stat-value">8</div></div>
-      <div class="bu-prev-stat warn"><div class="bu-prev-stat-label">Warnings</div><div class="bu-prev-stat-value">3</div></div>
-      <div class="bu-prev-stat error"><div class="bu-prev-stat-label">Errors (blocked)</div><div class="bu-prev-stat-value">1</div></div>
+      <div class="bu-prev-stat ok"><div class="bu-prev-stat-label">Total Rows</div><div class="bu-prev-stat-value" id="buStatTotal">0</div></div>
+      <div class="bu-prev-stat ok"><div class="bu-prev-stat-label">Ready to Import</div><div class="bu-prev-stat-value" id="buStatOk">0</div></div>
+      <div class="bu-prev-stat warn"><div class="bu-prev-stat-label">Warnings</div><div class="bu-prev-stat-value" id="buStatWarn">0</div></div>
+      <div class="bu-prev-stat error"><div class="bu-prev-stat-label">Errors (blocked)</div><div class="bu-prev-stat-value" id="buStatErr">0</div></div>
     </div>
     <div class="bu-filter-row">
       <span style="font-size:11px;color:var(--slate);font-weight:600">Show:</span>
@@ -1158,13 +1158,51 @@ function closeBulkUpload() { document.getElementById('buOverlay').classList.add(
 function buOverlayClick(e) { if (e.target === document.getElementById('buOverlay')) closeBulkUpload(); }
 function buDragOver(e) { e.preventDefault(); document.getElementById('buDropZone').classList.add('drag-over'); }
 function buDragLeave() { document.getElementById('buDropZone').classList.remove('drag-over'); }
-function buDrop(e) { e.preventDefault(); document.getElementById('buDropZone').classList.remove('drag-over'); buFileReady('dropped_file.csv'); }
-function buFileSelect(e) { if (e.target.files[0]) buFileReady(e.target.files[0].name); }
-function buFileReady(name) {
-  var dz = document.getElementById('buDropZone');
-  document.getElementById('buDropTitle').textContent = '✓ ' + name + ' ready';
-  dz.style.borderColor = 'var(--green)'; dz.style.background = '#F0FFF4';
-  document.getElementById('buBtnNext').disabled = false;
+function buDrop(e) { e.preventDefault(); document.getElementById('buDropZone').classList.remove('drag-over'); if (e.dataTransfer.files[0]) buParseFile(e.dataTransfer.files[0]); }
+function buFileSelect(e) { if (e.target.files[0]) buParseFile(e.target.files[0]); }
+function buParseFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var text = e.target.result;
+    var lines = text.split(/\r?\n/).filter(function(l) { return l.trim() !== ''; });
+    if (lines.length < 2) { alert('File appears empty or has no data rows.'); return; }
+    var headers = lines[0].split(',').map(function(h) { return h.trim().toLowerCase().replace(/"/g,''); });
+    var required = ['state_course_code','course_name','credit_hours','category'];
+    var validCats = ['ela','math','science','social studies','cte','other'];
+    buRows = [];
+    for (var i = 1; i < lines.length; i++) {
+      var vals = buSplitCSV(lines[i]);
+      var obj = {};
+      headers.forEach(function(h, idx) { obj[h] = (vals[idx] || '').trim().replace(/^"|"$/g,''); });
+      var issues = [];
+      var status = 'ok';
+      required.forEach(function(r) { if (!obj[r]) { issues.push(r + ' is required but missing'); status = 'error'; } });
+      if (obj['state_course_code'] && obj['state_course_code'].length > 10) { issues.push('state_course_code exceeds 10 characters — row will be skipped'); status = 'error'; }
+      if (obj['category'] && validCats.indexOf(obj['category'].toLowerCase()) === -1) { issues.push('Category "' + obj['category'] + '" not recognized — expected: ELA, Math, Science, Social Studies, CTE, Other'); if (status !== 'error') status = 'warn'; }
+      if (obj['category'] && obj['category'].toLowerCase() === 'cte' && !obj['cte_cluster']) { issues.push('cte_cluster recommended when category is CTE'); if (status !== 'error') status = 'warn'; }
+      if (!obj['sced_code']) { issues.push('sced_code omitted — AI suggestion will be queued'); if (status !== 'error') status = 'warn'; }
+      var flags = [];
+      if (obj['diploma_core40'] && obj['diploma_core40'].toLowerCase() === 'true') flags.push('Core 40');
+      if (obj['diploma_ahd'] && obj['diploma_ahd'].toLowerCase() === 'true') flags.push('AHD');
+      buRows.push({ code: obj['state_course_code']||'—', name: obj['course_name']||'—', cat: obj['category']||'—', credits: obj['credit_hours']||'—', sced: obj['sced_code']||'—', flags: flags.length ? flags.join(', ') : '—', status: status, issue: issues.join('; ') });
+    }
+    var dz = document.getElementById('buDropZone');
+    document.getElementById('buDropTitle').textContent = '✓ ' + file.name + ' — ' + buRows.length + ' data rows found';
+    dz.style.borderColor = 'var(--green)'; dz.style.background = '#F0FFF4';
+    document.getElementById('buBtnNext').disabled = false;
+  };
+  reader.readAsText(file);
+}
+function buSplitCSV(line) {
+  var result = []; var cur = ''; var inQuotes = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (c === '"') { inQuotes = !inQuotes; }
+    else if (c === ',' && !inQuotes) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
 }
 function buDownloadTemplate() {
   var csv = 'state_course_code,course_name,credit_hours,category,sced_code,cte_cluster,diploma_core40,diploma_ahd\nELA1200,English Language Arts 11,2.0,ELA,01003,,TRUE,TRUE\nCTE4410,Cybersecurity Fundamentals,1.0,CTE,21051,Information Technology,TRUE,FALSE\n';
@@ -1174,6 +1212,16 @@ function buDownloadTemplate() {
   a.click();
 }
 function buRenderPreview(filter) {
+  var okCount = buRows.filter(function(r){return r.status==='ok';}).length;
+  var warnCount = buRows.filter(function(r){return r.status==='warn';}).length;
+  var errCount = buRows.filter(function(r){return r.status==='error';}).length;
+  document.getElementById('buStatTotal').textContent = buRows.length;
+  document.getElementById('buStatOk').textContent = okCount;
+  document.getElementById('buStatWarn').textContent = warnCount;
+  document.getElementById('buStatErr').textContent = errCount;
+  var importable = okCount + warnCount;
+  document.getElementById('buBtnNext').textContent = 'Confirm Import (' + importable + ' rows) →';
+  document.getElementById('buFooterLeft').textContent = errCount + ' row' + (errCount!==1?'s':'') + ' will be skipped · ' + warnCount + ' warning' + (warnCount!==1?'s':'') + ' · ' + okCount + ' ready';
   var tbody = document.getElementById('buPreviewBody');
   tbody.innerHTML = '';
   buRows.forEach(function(row) {
@@ -1199,9 +1247,37 @@ function buFilter(type, el) {
   buRenderPreview(type);
 }
 function buGoNext() {
-  if (buStep === 1) { buStep = 2; buRenderPreview('all'); }
-  else if (buStep === 2) { buStep = 3; }
+  if (buStep === 1) {
+    buStep = 2;
+    buRenderPreview('all');
+    document.querySelectorAll('.bu-fpill').forEach(function(p){p.classList.remove('active');});
+    document.querySelector('.bu-fpill').classList.add('active');
+  } else if (buStep === 2) {
+    buStep = 3;
+    buBuildResultScreen();
+  }
   buUpdateStep();
+}
+function buBuildResultScreen() {
+  var okRows = buRows.filter(function(r){return r.status==='ok';});
+  var warnRows = buRows.filter(function(r){return r.status==='warn';});
+  var errRows = buRows.filter(function(r){return r.status==='error';});
+  var importable = okRows.length + warnRows.length;
+  var s3 = document.getElementById('buStep3');
+  var log = okRows.map(function(r){ return '<div class="lok">&#10003; ' + r.code + ' &mdash; ' + r.name + ' &mdash; imported successfully</div>'; }).join('') +
+    warnRows.map(function(r){ return '<div class="lwarn">&#9888; ' + r.code + ' &mdash; ' + r.name + ' &mdash; imported with warning: ' + r.issue + '</div>'; }).join('') +
+    errRows.map(function(r){ return '<div class="lerr">&#10007; ' + r.code + ' &mdash; ' + r.issue + ' &mdash; row skipped</div>'; }).join('');
+  s3.innerHTML = '<div class="bu-result-header"><div class="bu-result-icon">&#10003;</div><div class="bu-result-title">Import Complete</div><div class="bu-result-sub">SY 2025&ndash;26 Course Catalog &middot; ' + buRows.length + ' rows processed</div></div>' +
+    '<div class="bu-result-grid">' +
+    '<div class="bu-result-stat g"><div class="bu-result-num">' + okRows.length + '</div><div class="bu-result-label">Records imported successfully</div></div>' +
+    '<div class="bu-result-stat a"><div class="bu-result-num">' + warnRows.length + '</div><div class="bu-result-label">Imported with warnings &mdash; review recommended</div></div>' +
+    '<div class="bu-result-stat r"><div class="bu-result-num">' + errRows.length + '</div><div class="bu-result-label">Rows skipped due to errors</div></div>' +
+    '</div>' +
+    '<div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Import Log</div>' +
+    '<div class="bu-log">' + (log || '<div style="color:var(--slate)">No rows processed.</div>') + '</div>' +
+    '<div style="margin-top:14px;background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate);display:flex;align-items:center;gap:10px"><span style="font-size:14px">&#9432;</span><span>All imported records are now in <strong>Pending Approval</strong> status. A Curriculum Director must approve before they appear in the published catalog.</span></div>';
+  document.getElementById('buFooterLeft').textContent = importable + ' records sent to Pending Approvals · ' + errRows.length + ' row' + (errRows.length!==1?'s':'') + ' skipped';
+  document.getElementById('buSubtitle').textContent = 'Import complete — records are now awaiting Curriculum Director approval';
 }
 function buGoBack() {
   if (buStep === 2) buStep = 1;
@@ -1231,13 +1307,10 @@ function buUpdateStep() {
     sub.textContent='Upload a CSV or Excel file to import multiple course records';
   } else if (buStep === 2) {
     back.style.display=''; next.style.display=''; next.disabled=false;
-    next.textContent='Confirm Import (11 rows) →'; next.className='btn btn-gold';
-    fl.textContent='1 row will be skipped · 3 rows have warnings · 8 rows ready';
+    next.className='btn btn-gold';
     sub.textContent='Review parsed rows before importing — errors are blocked, warnings will import';
   } else {
     back.style.display='none'; next.style.display='none';
-    fl.textContent='11 records sent to Pending Approvals · 1 row skipped';
-    sub.textContent='Import complete — records are now awaiting Curriculum Director approval';
   }
 }
 </script>
