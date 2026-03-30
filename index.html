@@ -1026,7 +1026,8 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       <label class="sm-label">Data Type <span style="color:var(--red)">*</span></label>
       <select id="smFldType" class="sm-input" onchange="smTypeChange()">
         <option value="">— Select type —</option>
-        <option value="VARCHAR">Text (VARCHAR)</option>
+        <option value="VARCHAR">Text — short (VARCHAR)</option>
+        <option value="TEXT">Text — long (TEXT, no length limit)</option>
         <option value="INTEGER">Integer</option>
         <option value="DECIMAL">Decimal</option>
         <option value="BOOLEAN">Boolean (TRUE/FALSE)</option>
@@ -1190,7 +1191,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     </div>
     <div class="bu-prev-table-wrap">
       <table class="bu-prev-table">
-        <thead><tr><th style="width:28px"></th><th>State Code</th><th>Course Name</th><th>Category</th><th>Credits</th><th>SCED</th><th>Diploma Flags</th><th>Issue</th></tr></thead>
+        <thead id="buPreviewHead"><tr><th style="width:28px"></th><th>Identifier</th><th>Name / Title</th><th>Type / Category</th><th>Status</th><th>Issues Found</th></tr></thead>
         <tbody id="buPreviewBody"></tbody>
       </table>
     </div>
@@ -1395,11 +1396,14 @@ function buParseFile(file) {
   var reader = new FileReader();
   reader.onload = function(e) {
     var text = e.target.result;
-    var lines = text.split(/\r?\n/).filter(function(l) { return l.trim() !== ''; });
+    var lines = text.split(/\r?\n/).filter(function(l) { return l.trim() !== '' && !l.trim().startsWith('#'); });
     if (lines.length < 2) { alert('File appears empty or has no data rows.'); return; }
     var headers = lines[0].split(',').map(function(h) { return h.trim().toLowerCase().replace(/"/g,''); });
-    var required = ['state_course_code','course_name','credit_hours','category'];
-    var validCats = ['ela','math','science','social studies','cte','other'];
+    var schema = smSchemas['catalog'].filter(function(f){ return f.status === 'active'; });
+    var requiredFields = schema.filter(function(f){ return !f.nullable; });
+    var idField = schema.find(function(f){ return f.name.includes('code') && !f.nullable; }) || schema[0];
+    var nameField = schema.find(function(f){ return f.name.includes('name') && !f.nullable; }) || schema[1];
+    var catField = schema.find(function(f){ return f.type === 'ENUM' && !f.nullable; });
     buRows = [];
     for (var i = 1; i < lines.length; i++) {
       var vals = buSplitCSV(lines[i]);
@@ -1407,15 +1411,43 @@ function buParseFile(file) {
       headers.forEach(function(h, idx) { obj[h] = (vals[idx] || '').trim().replace(/^"|"$/g,''); });
       var issues = [];
       var status = 'ok';
-      required.forEach(function(r) { if (!obj[r]) { issues.push(r + ' is required but missing'); status = 'error'; } });
-      if (obj['state_course_code'] && obj['state_course_code'].length > 10) { issues.push('state_course_code exceeds 10 characters — row will be skipped'); status = 'error'; }
-      if (obj['category'] && validCats.indexOf(obj['category'].toLowerCase()) === -1) { issues.push('Category "' + obj['category'] + '" not recognized — expected: ELA, Math, Science, Social Studies, CTE, Other'); if (status !== 'error') status = 'warn'; }
-      if (obj['category'] && obj['category'].toLowerCase() === 'cte' && !obj['cte_cluster']) { issues.push('cte_cluster recommended when category is CTE'); if (status !== 'error') status = 'warn'; }
-      if (!obj['sced_code']) { issues.push('sced_code omitted — AI suggestion will be queued'); if (status !== 'error') status = 'warn'; }
-      var flags = [];
-      if (obj['diploma_core40'] && obj['diploma_core40'].toLowerCase() === 'true') flags.push('Core 40');
-      if (obj['diploma_ahd'] && obj['diploma_ahd'].toLowerCase() === 'true') flags.push('AHD');
-      buRows.push({ code: obj['state_course_code']||'—', name: obj['course_name']||'—', cat: obj['category']||'—', credits: obj['credit_hours']||'—', sced: obj['sced_code']||'—', flags: flags.length ? flags.join(', ') : '—', status: status, issue: issues.join('; ') });
+      requiredFields.forEach(function(f) {
+        if (!obj[f.name] || obj[f.name] === '') {
+          issues.push(f.name + ' is required but missing');
+          status = 'error';
+        }
+      });
+      schema.forEach(function(f) {
+        var val = obj[f.name];
+        if (!val) return;
+        if (f.type === 'VARCHAR' && f.len && val.length > f.len) {
+          issues.push(f.name + ' exceeds ' + f.len + ' characters (got ' + val.length + ') — row will be skipped');
+          status = 'error';
+        }
+        if (f.type === 'ENUM' && f.enumVals.length) {
+          var match = f.enumVals.some(function(v){ return v.toLowerCase() === val.toLowerCase(); });
+          if (!match) {
+            issues.push(f.name + ' value "' + val + '" not in allowed list (' + f.enumVals.slice(0,3).join(', ') + (f.enumVals.length > 3 ? '…' : '') + ')');
+            if (status !== 'error') status = 'warn';
+          }
+        }
+        if (f.type === 'DECIMAL' && val && isNaN(parseFloat(val))) {
+          issues.push(f.name + ' must be a number (got "' + val + '")');
+          if (status !== 'error') status = 'warn';
+        }
+        if (f.type === 'INTEGER' && val && isNaN(parseInt(val))) {
+          issues.push(f.name + ' must be an integer (got "' + val + '")');
+          if (status !== 'error') status = 'warn';
+        }
+        if (f.type === 'BOOLEAN' && val && ['true','false','1','0','yes','no'].indexOf(val.toLowerCase()) === -1) {
+          issues.push(f.name + ' must be TRUE or FALSE (got "' + val + '")');
+          if (status !== 'error') status = 'warn';
+        }
+      });
+      var idVal = idField ? (obj[idField.name] || '—') : '—';
+      var nameVal = nameField ? (obj[nameField.name] || '—') : '—';
+      var catVal = catField ? (obj[catField.name] || '—') : '—';
+      buRows.push({ id: idVal, name: nameVal, cat: catVal, status: status, issue: issues.join(' · '), raw: obj });
     }
     var dz = document.getElementById('buDropZone');
     document.getElementById('buDropTitle').textContent = '✓ ' + file.name + ' — ' + buRows.length + ' data rows found';
@@ -1436,10 +1468,19 @@ function buSplitCSV(line) {
   return result;
 }
 function buDownloadTemplate() {
-  var csv = 'state_course_code,course_name,credit_hours,category,sced_code,cte_cluster,diploma_core40,diploma_ahd\nELA1200,English Language Arts 11,2.0,ELA,01003,,TRUE,TRUE\nCTE4410,Cybersecurity Fundamentals,1.0,CTE,21051,Information Technology,TRUE,FALSE\n';
+  var fields = smSchemas['catalog'].filter(function(f){ return f.status === 'active'; });
+  var headers = fields.map(function(f){ return f.name; });
+  var sample = fields.map(function(f){ return csvSampleValue(f); });
+  var rows = [headers.join(','), sample.join(',')];
+  var enumFields = fields.filter(function(f){ return f.type === 'ENUM' && f.enumVals.length; });
+  if (enumFields.length) {
+    rows.push('');
+    rows.push('# ALLOWED VALUES:');
+    enumFields.forEach(function(f){ rows.push('# ' + f.name + ': ' + f.enumVals.join(' | ')); });
+  }
   var a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'ipr_course_catalog_upload_template.csv';
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join('\n'));
+  a.download = 'ipr_course_catalog_template_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
 }
 function buRenderPreview(filter) {
@@ -1455,22 +1496,34 @@ function buRenderPreview(filter) {
   document.getElementById('buFooterLeft').textContent = errCount + ' row' + (errCount!==1?'s':'') + ' will be skipped · ' + warnCount + ' warning' + (warnCount!==1?'s':'') + ' · ' + okCount + ' ready';
   var tbody = document.getElementById('buPreviewBody');
   tbody.innerHTML = '';
+  var schema = smSchemas['catalog'].filter(function(f){ return f.status === 'active'; });
+  var requiredCount = schema.filter(function(f){ return !f.nullable; }).length;
+  document.getElementById('buPreviewHead').innerHTML =
+    '<tr><th style="width:28px"></th><th>Identifier</th><th>Name / Title</th><th>Type / Category</th>' +
+    '<th style="width:80px">Issues</th><th>Details</th></tr>';
   buRows.forEach(function(row) {
     if (filter !== 'all' && row.status !== filter) return;
     var tr = document.createElement('tr');
     if (row.status === 'warn') tr.className = 'row-warn';
     if (row.status === 'error') tr.className = 'row-error';
-    var issueHtml = row.issue ? '<div class="bu-issue' + (row.status==='error'?' err':'') + '">' + row.issue + '</div>' : '';
-    tr.innerHTML = '<td style="text-align:center"><span class="bu-status-dot ' + row.status + '"></span></td>' +
-      '<td style="font-family:var(--mono);font-size:10px;color:var(--slate)">' + row.code + '</td>' +
-      '<td style="font-size:11px">' + row.name + '</td>' +
+    var issueCount = row.issue ? row.issue.split(' · ').length : 0;
+    var issueCountHtml = issueCount > 0
+      ? '<span style="background:' + (row.status==='error'?'#FEE2E2':'#FEF3C7') + ';color:' + (row.status==='error'?'#7F1D1D':'#92400E') + ';padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600">' + issueCount + '</span>'
+      : '<span style="color:var(--green);font-size:12px">&#10003;</span>';
+    var issueDetail = row.issue
+      ? '<div class="bu-issue' + (row.status==='error'?' err':'') + '" style="line-height:1.8">' + row.issue.split(' · ').join('<br>') + '</div>'
+      : '<span style="font-size:11px;color:var(--slate)">No issues</span>';
+    tr.innerHTML =
+      '<td style="text-align:center"><span class="bu-status-dot ' + row.status + '"></span></td>' +
+      '<td style="font-family:var(--mono);font-size:10px;color:var(--navy);font-weight:500">' + row.id + '</td>' +
+      '<td style="font-size:11px;color:var(--navy)">' + row.name + '</td>' +
       '<td><span class="chip chip-navy" style="font-size:9px">' + row.cat + '</span></td>' +
-      '<td style="font-family:var(--mono);font-size:10px;color:var(--slate)">' + row.credits + '</td>' +
-      '<td style="font-family:var(--mono);font-size:10px;color:var(--slate)">' + row.sced + '</td>' +
-      '<td style="font-size:10px;color:var(--slate)">' + row.flags + '</td>' +
-      '<td>' + issueHtml + '</td>';
+      '<td style="text-align:center">' + issueCountHtml + '</td>' +
+      '<td>' + issueDetail + '</td>';
     tbody.appendChild(tr);
   });
+  var note = document.querySelector('#buStep2 > div:last-child');
+  if (note) note.innerHTML = '&#9432; Showing identifier, name and category columns to confirm file alignment. <strong>' + requiredCount + ' required fields</strong> validated against active schema — errors block import, warnings proceed.';
 }
 function buFilter(type, el) {
   document.querySelectorAll('.bu-fpill').forEach(function(p) { p.classList.remove('active'); });
@@ -1585,6 +1638,7 @@ var smSchemas = {
 
 function smTypeLabel(f) {
   if (f.type === 'VARCHAR') return 'VARCHAR(' + f.len + ')';
+  if (f.type === 'TEXT') return 'TEXT';
   if (f.type === 'DECIMAL') return 'DECIMAL';
   if (f.type === 'ENUM') return 'ENUM (' + f.enumVals.length + ' values)';
   return f.type;
@@ -1836,6 +1890,7 @@ function csvSelectNone() {
 }
 
 function csvSampleValue(f) {
+  if (f.type === 'TEXT') return 'Full description text goes here — no character limit';
   if (f.type === 'BOOLEAN') return 'TRUE';
   if (f.type === 'INTEGER') return '1001';
   if (f.type === 'DECIMAL') return '1.0';
