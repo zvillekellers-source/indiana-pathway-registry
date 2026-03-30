@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Indiana Pathway Registry</title>
@@ -561,7 +559,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
         </div>
         <div class="panel-actions">
           <button class="btn btn-secondary btn-sm" onclick="openBulkUpload()">Bulk Upload</button>
-          <button class="btn btn-primary btn-sm">+ Add Course</button>
+          <button class="btn btn-primary btn-sm" onclick="ccOpenAdd()">+ Add Course</button>
         </div>
       </div>
     </div>
@@ -1141,7 +1139,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     </div>
     <div class="sm-form-group">
       <label class="sm-label">State Course Code</label>
-      <input type="text" id="ceFldCode" class="sm-input" readonly style="background:var(--mist);color:var(--slate)">
+      <input type="text" id="ceFldCode" class="sm-input" placeholder="e.g. ELA1200">
       <div class="sm-hint">Course code cannot be changed after creation.</div>
     </div>
     <div class="sm-form-group">
@@ -2479,10 +2477,71 @@ function ccRender() {
 /* ── COURSE EDIT MODAL ── */
 var ceCurrentCode = null;
 
+function ccOpenAdd() {
+  ceCurrentCode = null;
+
+  // Clear all fields
+  document.getElementById('ceFldCode').value = '';
+  document.getElementById('ceFldCode').readOnly = false;
+  document.getElementById('ceFldCode').style.background = '';
+  document.getElementById('ceFldCode').style.color = '';
+  document.getElementById('ceFldName').value = '';
+  document.getElementById('ceFldCredits').value = '';
+  document.getElementById('ceFldSced').value = '';
+  document.getElementById('ceFldCte').value = '';
+  document.getElementById('ceFldDesc').value = '';
+  document.getElementById('ceFldReason').value = '';
+  document.getElementById('ceFldCategory').selectedIndex = 0;
+  document.getElementById('ceFlagCore40').checked = false;
+  document.getElementById('ceFlagAHD').checked = false;
+  document.getElementById('ceFlagTHD').checked = false;
+  document.getElementById('ceFlagTH29').checked = false;
+
+  // Populate subject dropdown from schema
+  var subjField = smSchemas.catalog.find(function(f){ return f.name === 'course_subject'; });
+  var subjSel = document.getElementById('ceFldSubject');
+  subjSel.innerHTML = '<option value="">— Select subject —</option>';
+  if (subjField && subjField.enumVals) {
+    subjField.enumVals.forEach(function(v){
+      var opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      subjSel.appendChild(opt);
+    });
+  }
+
+  // Hide grounding strip — nothing to ground against for a new record
+  var grounding = document.querySelector('#cePanel-core .sm-form-group:first-child');
+  document.getElementById('ceGroundingCode').textContent = 'New Course';
+  document.getElementById('ceGroundingName').textContent = 'Fill in the fields below';
+  document.getElementById('ceGroundingCode2').textContent = 'New Course';
+  document.getElementById('ceGroundingName2').textContent = '';
+
+  // Clear log
+  document.getElementById('ceLogEntries').innerHTML = '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet — record has not been created.</div>';
+
+  // Footer for new record
+  var footer = document.getElementById('ceFooterBar');
+  footer.innerHTML = '<div style="font-size:11px;color:var(--slate)">New course will go to Pending Approvals</div><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button></div>';
+
+  document.getElementById('ceDrawerTitle').textContent = 'Add Course';
+  document.getElementById('ceDrawerSub').textContent = 'New record — will go to Pending Approvals';
+
+  ceShowTab('core');
+  document.getElementById('ceOverlay').style.display = 'block';
+  var d = document.getElementById('ceDrawer');
+  d.style.display = 'flex';
+  setTimeout(function(){ d.style.transform = 'translateX(0)'; }, 10);
+}
+
 function ccOpenEditByCode(code) {
   var c = ccCourses.find(function(c){ return c.code === code; });
   if (!c) return;
   ceCurrentCode = code;
+
+  // Lock code field when editing an existing record
+  document.getElementById('ceFldCode').readOnly = true;
+  document.getElementById('ceFldCode').style.background = 'var(--mist)';
+  document.getElementById('ceFldCode').style.color = 'var(--slate)';
 
   // Populate grounding fields
   document.getElementById('ceGroundingCode').textContent = c.code;
@@ -2612,39 +2671,62 @@ function ceSubmit() {
     status: 'pending'
   };
 
-  // Mark course as pending with staged edits
-  var c = ccCourses.find(function(c){ return c.code === ceCurrentCode; });
-  if (c) {
-    c._pendingEdits = edits;
-    c.status = 'pending';
-    c.log = c.log || [];
-    c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Edit Submitted', by: 'Admin (CIO)', note: reason});
-  }
-
-  var apId = 'ap-course-edit-' + ceCurrentCode + '-' + Date.now();
   var today = new Date().toISOString().slice(0,10);
-  // Cancel any existing pending item for this course
-  apQueue.forEach(function(i){ if (i.courseCode === ceCurrentCode && i.status === 'pending') i.status = 'superseded'; });
-  apQueue.push({
-    id: apId,
-    group: 'Course Catalog',
-    ref: 'COURSE · ' + ceCurrentCode,
-    title: 'Course Edit — ' + name,
-    meta: 'Edited by Admin (CIO) · Submitted ' + today + ' · ' + reason,
-    approverRole: 'curriculum',
-    schemaLib: null,
-    schemaIdx: null,
-    courseCode: ceCurrentCode,
-    courseEdit: edits,
-    isNew: false,
-    status: 'pending'
-  });
+  var apId = 'ap-course-' + Date.now();
+
+  if (ceCurrentCode === null) {
+    // ── NEW RECORD ──
+    var code = document.getElementById('ceFldCode').value.trim().toUpperCase();
+    if (!code) { alert('State Course Code is required.'); return; }
+    if (ccCourses.find(function(c){ return c.code === code; })) {
+      alert('A course with code "' + code + '" already exists. Use Edit to update it.');
+      return;
+    }
+    var newCourse = {
+      code: code, name: name,
+      category: edits.category, credits: edits.credits,
+      sced: edits.sced, cteCluster: edits.cteCluster,
+      description: edits.description, subject: edits.subject,
+      flags: edits.flags, status: 'pending', isNew: true,
+      importedOn: today, issues: '',
+      log: [{date: today, action: 'Created', by: 'Admin (CIO)', note: reason}]
+    };
+    ccCourses.push(newCourse);
+    apQueue.push({
+      id: apId, group: 'Course Catalog',
+      ref: 'COURSE · ' + code,
+      title: 'New Course — ' + name,
+      meta: 'Added by Admin (CIO) · Submitted ' + today + ' · ' + reason,
+      approverRole: 'curriculum', schemaLib: null, schemaIdx: null,
+      courseCode: code, courseEdit: null, isNew: true, status: 'pending'
+    });
+    showPersistBanner('New course submitted for approval — saved.', true);
+  } else {
+    // ── EDIT EXISTING ──
+    var c = ccCourses.find(function(c){ return c.code === ceCurrentCode; });
+    if (c) {
+      c._pendingEdits = edits;
+      c.status = 'pending';
+      c.log = c.log || [];
+      c.log.unshift({date: today, action: 'Edit Submitted', by: 'Admin (CIO)', note: reason});
+    }
+    // Cancel any existing pending item for this course
+    apQueue.forEach(function(i){ if (i.courseCode === ceCurrentCode && i.status === 'pending') i.status = 'superseded'; });
+    apQueue.push({
+      id: apId, group: 'Course Catalog',
+      ref: 'COURSE · ' + ceCurrentCode,
+      title: 'Course Edit — ' + name,
+      meta: 'Edited by Admin (CIO) · Submitted ' + today + ' · ' + reason,
+      approverRole: 'curriculum', schemaLib: null, schemaIdx: null,
+      courseCode: ceCurrentCode, courseEdit: edits, isNew: false, status: 'pending'
+    });
+    showPersistBanner('Edit submitted for approval — saved.', true);
+  }
 
   ccSave();
   ccRender();
   persistSave();
   apRender();
-  showPersistBanner('Edit submitted for approval — saved.', true);
   ceClose();
   showPanel('approvals', document.querySelector('.nav-item[onclick*="approvals"]'));
 }
