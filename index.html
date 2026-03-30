@@ -1260,8 +1260,8 @@ function apRender() {
         '<div class="approval-card-title">' + item.title + '</div>' +
         '<div class="approval-card-meta">' + item.meta + '</div>' +
         '<div class="approval-card-actions">' +
-        '<button class="btn-approve" style="' + btnStyle + '" onclick="apApprove('' + item.id + '')">Approve</button>' +
-        '<button class="btn-reject" style="' + btnStyle + '" onclick="apReject('' + item.id + '')">Reject</button>' +
+        '<button class="btn-approve" style="' + btnStyle + '" onclick="apApprove(\'' + item.id + '\')">Approve</button>' +
+        '<button class="btn-reject" style="' + btnStyle + '" onclick="apReject(\'' + item.id + '\')">Reject</button>' +
         (!canAct ? '<span style="font-size:11px;color:var(--slate);margin-left:4px">Curriculum Director approval required</span>' : '') +
         '</div></div>';
     });
