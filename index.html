@@ -2536,18 +2536,18 @@ function ccOpenEditByCode(code) {
     }).join('');
   }
 
-  // Pending status — show read-only notice if already pending
+  // Footer — always editable; show withdraw option if already pending
   var footer = document.getElementById('ceFooterBar');
   var isPending = c.status === 'pending';
   if (isPending) {
-    footer.innerHTML = '<div style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:8px 12px;flex:1">This course is already pending approval. Approve or reject it in Pending Approvals first.</div><button class="btn btn-secondary" onclick="ceClose()">Close</button>';
+    footer.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex:1"><span style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:6px 10px">&#9888; Pending approval — you can still update and resubmit</span><button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none;white-space:nowrap" onclick="ceWithdraw()">Withdraw</button></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Resubmit</button></div>';
   } else {
     footer.innerHTML = '<div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button></div>';
   }
 
   ceShowTab('core');
   document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
-  document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval · Read-only' : 'Changes go to Pending Approvals';
+  document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
 
   // Open drawer
   document.getElementById('ceOverlay').style.display = 'block';
@@ -2573,6 +2573,21 @@ function ceClose() {
   ceCurrentCode = null;
 }
 
+function ceWithdraw() {
+  if (!confirm('Withdraw this pending submission? The course will return to its previous status.')) return;
+  var c = ccCourses.find(function(c){ return c.code === ceCurrentCode; });
+  if (c) {
+    // Cancel matching pending AP item
+    apQueue.forEach(function(i){ if (i.courseCode === ceCurrentCode && i.status === 'pending') i.status = 'withdrawn'; });
+    c.status = c.isNew ? 'pending' : 'active';
+    delete c._pendingEdits;
+    c.log = c.log || [];
+    c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Withdrawn', by: 'Admin (CIO)', note: 'Submission withdrawn by submitter'});
+    ccSave(); ccRender(); persistSave(); apRender();
+    showPersistBanner('Submission withdrawn.', true);
+  }
+  ceClose();
+}
 function ceSubmit() {
   var reason = document.getElementById('ceFldReason').value.trim();
   if (!reason) { alert('Please provide a reason for this change.'); return; }
@@ -2608,6 +2623,8 @@ function ceSubmit() {
 
   var apId = 'ap-course-edit-' + ceCurrentCode + '-' + Date.now();
   var today = new Date().toISOString().slice(0,10);
+  // Cancel any existing pending item for this course
+  apQueue.forEach(function(i){ if (i.courseCode === ceCurrentCode && i.status === 'pending') i.status = 'superseded'; });
   apQueue.push({
     id: apId,
     group: 'Course Catalog',
@@ -2737,13 +2754,13 @@ function crOpenEditById(id) {
     entries.map(function(e){ return '<div class="ce-log-entry"><div class="ce-log-date">' + e.date + ' · ' + e.by + '</div><div class="ce-log-action">' + e.action + '</div><div class="ce-log-note">' + e.note + '</div></div>'; }).join('');
   var footer = document.getElementById('crFooterBar');
   if (c.status === 'pending') {
-    footer.innerHTML = '<div style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:8px 12px;flex:1">This credential is already pending approval. Approve or reject it in Pending Approvals first.</div><button class="btn btn-secondary" onclick="crEditClose()">Close</button>';
+    footer.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex:1"><span style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:6px 10px">&#9888; Pending approval — you can still update and resubmit</span><button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none;white-space:nowrap" onclick="crWithdraw()">Withdraw</button></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-secondary" onclick="crEditClose()">Cancel</button><button class="btn btn-gold" onclick="crSubmit()">Resubmit</button></div>';
   } else {
     footer.innerHTML = '<div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="crEditClose()">Cancel</button><button class="btn btn-gold" onclick="crSubmit()">Submit for Approval</button></div>';
   }
   crShowTab('core');
   document.getElementById('crDrawerTitle').textContent = 'Edit Credential — ' + c.id;
-  document.getElementById('crDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval · Read-only' : 'Changes go to Pending Approvals';
+  document.getElementById('crDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
   document.getElementById('crOverlay').style.display = 'block';
   var d = document.getElementById('crDrawer');
   d.style.display = 'flex';
@@ -2789,6 +2806,20 @@ function crCalcCoV() {
   document.getElementById('crCalcTier').innerHTML = (econ > 0 || upskill > 0) ? '<span style="color:' + tierColor + ';font-weight:600">' + tier + '</span>' : '';
 }
 
+function crWithdraw() {
+  if (!confirm('Withdraw this pending submission? The credential will return to its previous status.')) return;
+  var c = crCreds.find(function(c){ return c.id === crCurrentId; });
+  if (c) {
+    apQueue.forEach(function(i){ if (i.credId === crCurrentId && i.status === 'pending') i.status = 'withdrawn'; });
+    c.status = c.isNew ? 'pending' : 'active';
+    delete c._pendingEdits;
+    c.log = c.log || [];
+    c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Withdrawn', by: 'Admin (CIO)', note: 'Submission withdrawn by submitter'});
+    crSave(); crRender(); persistSave(); apRender();
+    showPersistBanner('Submission withdrawn.', true);
+  }
+  crEditClose();
+}
 function crSubmit() {
   var reason = document.getElementById('crFldReason').value.trim();
   if (!reason) { alert('Please provide a reason for this change.'); return; }
@@ -2814,6 +2845,7 @@ function crSubmit() {
   }
   var apId = 'ap-cred-edit-' + crCurrentId + '-' + Date.now();
   var today = new Date().toISOString().slice(0,10);
+  apQueue.forEach(function(i){ if (i.credId === crCurrentId && i.status === 'pending') i.status = 'superseded'; });
   apQueue.push({id:apId, group:'Credentials', ref:'CRED · ' + crCurrentId, title:'Credential Edit — ' + name, meta:'Edited by Admin (CIO) · Submitted ' + today + ' · ' + reason, approverRole:'curriculum', schemaLib:null, schemaIdx:null, credId:crCurrentId, credEdit:edits, isNew:false, status:'pending'});
   crSave(); crRender(); persistSave(); apRender();
   showPersistBanner('Edit submitted for approval — saved.', true);
