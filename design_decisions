@@ -1,0 +1,290 @@
+Indiana Pathway Registry — Design Decisions
+Project: Indiana Pathway Registry (IPR)
+Owner: Indiana Department of Education, Office of Institutional Research & Data Governance
+Document Purpose: Running record of design decisions made during the Claude-assisted prototyping phase. Intended as the primary reference for the IDOE dev team during production implementation.
+Companion File: indiana_idoe_prototype.html — original interactive wireframe
+Prototype Stack: Single-file HTML/CSS/JS deployed via Cloudflare Pages
+Production Stack (per SRS): Angular or Blazor frontend · Azure Functions (.NET) backend · Azure SQL Serverless · Ed-Fi ODS API · IDOE Data Warehouse
+Last Updated: March 2026
+
+Table of Contents
+
+Architecture & Scope
+Technology Decisions
+Navigation & Application Shell
+Design System
+Data Persistence (Prototype)
+Course Catalog
+Credentials
+Schema Manager
+Bulk Upload
+Approval Workflow
+Course & Credential Edit Modals
+CSV Template Generation
+Analytics Panel
+Course Sherpa (Student App)
+Naming Conventions
+Out of Scope for Prototype
+
+
+1. Architecture & Scope
+✓ DECISION: The prototype is a governed MDM front-end, not a full-stack application.
+The prototype demonstrates all UI workflows, data structures, and governance logic. It does not implement a real backend, authentication, or live API connections. All data is seeded and persisted locally.
+✓ DECISION: The prototype scope covers the admin-facing Registry application only.
+Specifically: Course Catalog, Credentials, Schema Manager, Bulk Upload, Approval Workflow, Edit Modals, CSV Template Generation, and the Analytics panel stub. Course Patterns and the full Course Sherpa student interface are partially scaffolded but not fully built out.
+✓ DECISION: The Registry enriches MDM records with Ed-Fi and warehouse data at query time.
+It does not copy or store Ed-Fi or IDOE Data Warehouse data in the MDM database. Those are read-only enrichment sources.
+✓ DECISION: Cohort-locking protects students whose plans were built against a prior year's data.
+A student's plan evaluated against the v2025 API continues to use v2025 rules regardless of subsequent changes to the live catalog.
+✓ DECISION: The API supports a rolling 4-year window of simultaneously live versions.
+Deprecated versions remain accessible for 18 months after a new release is published.
+
+2. Technology Decisions
+✓ DECISION: Prototype built as a single HTML file, not a React or Angular project.
+Rationale: The CIO is building from a Chromebook without a local development environment. A single file can be edited directly in GitHub and deployed instantly via Cloudflare Pages. The dev team uses this as a visual and behavioral specification, not as code to extend directly.
+✓ DECISION: Deployed to Cloudflare Pages (not Cloudflare Workers).
+Cloudflare Pages is designed for static/SPA deployments. No build step is required — the HTML file is served as-is. The deployment URL is the CIO's personal zvillekellers.workers.dev subdomain.
+✓ DECISION: localStorage used for prototype persistence.
+Three storage keys are used:
+
+ipr_schemas_v1 — Schema Manager field definitions for both libraries
+ipr_apqueue_v1 — Approval queue state
+ipr_courses_v1 — Course Catalog records
+ipr_creds_v1 — Credentials records
+
+Storage keys are versioned so schema changes to the data model automatically invalidate stale stored data. A Reset to Defaults button in the Schema Manager wipes all localStorage and restores seed data.
+✓ DECISION: Production stack is Angular or Blazor + Azure Functions (.NET) + Azure SQL.
+The IDOE dev team uses Blazor/C#. The prototype is React-pattern HTML/JS and serves as a visual spec — dev team rewrites in their stack. The data structures, business rules, and workflow logic documented here carry over directly.
+
+3. Navigation & Application Shell
+✓ DECISION: Admin is the default view. Course Sherpa is accessed via Apps → Course Sherpa in the nav sidebar.
+The mode toggle between admin and student views has been removed from the prototype. The original wireframe had a toggle; this was eliminated in favor of treating Course Sherpa as a separate application accessible from the nav.
+✓ DECISION: The top bar brand mark functions as a home button, always returning to Summary Stats.
+✓ DECISION: Navigation structure is fixed as follows:
+SectionNav ItemsOverviewSummary StatsData RegistryCourse Catalog, Credentials, Course PatternsGovernancePending Approvals, AI Staging Area, PublicationAnalyticsTrends & UtilizationConfigurationSchema Manager, Modal EditorAppsCourse Sherpa, View Wireframe
+✓ DECISION: Navigating to Credentials, Course Catalog, or Approvals via the sidebar always re-renders that panel.
+showPanel() triggers crRender(), ccRender(), or apRender() respectively to ensure data is always fresh.
+✓ DECISION: A "View Wireframe" link is permanently available in the sidebar Apps section and as a banner on the Summary Stats dashboard.
+This opens the original indiana_idoe_prototype.html wireframe in a new tab. URL: https://autumn-snowflake-4243.zvillekellers.workers.dev/
+✓ DECISION: A persist banner appears in the top bar on save/restore events.
+Gold text flashes briefly to confirm: "Session restored from last visit", "Change submitted — saved", "Approved — saved", etc. Auto-hides after 2.2 seconds.
+
+4. Design System
+✓ DECISION: IDOE brand colors are used throughout.
+VariableHexUsage--navy#0C2340Primary backgrounds, headers, nav--gold#C8973AAccent, active states, CTAs--light#F5F2ECPage background--mist#E8EEF5Subtle surfaces, hover states--green#2D6A4FSuccess, active status--red#9B2335Errors, destructive actions--slate#4A5568Secondary text--blue-mid#1B4F8AHover on navy elements
+✓ DECISION: Typography stack is Libre Baskerville (serif, headings) + IBM Plex Sans (sans, body) + IBM Plex Mono (mono, codes and values).
+All three are loaded from Google Fonts.
+✓ DECISION: Status chips follow a consistent color system:
+
+Green chip = Active / Approved / On Track
+Amber chip = Pending / Warning / In Progress
+Red chip = Error / Deprecated / Blocked
+Blue chip = Informational / New
+Navy chip = Neutral category tags
+Gray chip = Below threshold / Inactive
+
+✓ DECISION: The top bar carries a cohort year badge (SY 2025–26) and a live status indicator.
+
+5. Data Persistence (Prototype)
+✓ DECISION: All data mutations save to localStorage automatically — no explicit save button.
+Every action that changes state (submit, approve, reject, withdraw, bulk import) calls persistSave() immediately.
+✓ DECISION: Reset to Defaults wipes all four localStorage keys and restores seed data.
+This is available as a red-outlined button in the Schema Manager header. It confirms before executing. Useful at the start of a new test run.
+✓ DECISION: Seed data is defined as *Default arrays in JavaScript.
+ccCoursesDefault, crCredsDefault, smSchemasDefault, apQueueDefault — these are deep-copied on reset, not mutated directly.
+✓ DECISION: In production, localStorage is replaced by Azure SQL.
+The data structures in the prototype map directly to database tables. No architectural changes to the business logic are required — only the storage layer changes.
+
+6. Course Catalog
+✓ DECISION: The Course Catalog is a live data-driven list, not a static table.
+Records are stored in ccCourses (persisted to ipr_courses_v1). The table renders from this array on every navigation event and search/filter change.
+✓ DECISION: Filter pills use the following subject categories:
+
+All Active
+English Language & Literature
+Mathematics
+Science
+Social Sciences & History
+CTE
+New This Year
+
+Filter logic matches on the full category string and common abbreviations (e.g. "ELA", "english", "literature" all match "English Language & Literature").
+✓ DECISION: "New This Year" filter shows any course with isNew: true.
+This flag is set on all bulk-uploaded courses and manually added courses. It is not cleared on approval — it persists for the cohort year.
+✓ DECISION: Search filters live across course code, course name, and category.
+The footer updates in real time: "Showing 1–15 of 23 records matching 'biology'".
+✓ DECISION: Pagination is 15 rows per page.
+✓ DECISION: Courses imported via bulk upload arrive with status: 'pending' and isNew: true.
+They are visible in the Course Catalog immediately after import and searchable. They do not appear as "Active" until a Curriculum Director approves them in Pending Approvals.
+✓ DECISION: Seed data includes 8 demo courses.
+These represent a realistic cross-section of ELA, Math, Science, Social Studies, and CTE courses with real Indiana course codes.
+
+7. Credentials
+✓ DECISION: Credentials follows the same data layer pattern as Course Catalog.
+crCreds array → ipr_creds_v1 localStorage → dynamic table with search, pagination, edit modal, approval flow.
+✓ DECISION: Credentials filter is All Active + search only.
+No subject-category pills. Search covers credential ID, name, issuer, and credential type.
+✓ DECISION: The CoV score calculator is live in the edit modal's CoV Scoring tab.
+Formula: ((EconomicValue + UpskillingValue) / 2) + NationalBonus + StackabilityBonus, capped at 5.0.
+ComponentValueBase(Econ + Upskill) ÷ 2National Recognition bonus+0.30 if nationally recognizedStackability — AS/AAS+1.00Stackability — Technical Certificate / Certificate+0.50Stackability — Industry Certification+0.00Maximum score5.0
+✓ DECISION: Seal tier thresholds:
+
+Employment Honors+ ≥ 4.0
+Employment Honors ≥ 3.0
+Below Threshold < 3.0
+
+✓ DECISION: CoV scores are cohort-locked annually on July 1.
+Once a cohort year is published, scores for that year cannot change. The prototype does not enforce this lock (no production calendar) but the business rule is documented here for implementation.
+✓ DECISION: Credential type dropdown values match the schema ENUM definition:
+Industry Certification, Associate of Science, Associate of Applied Science, Technical Certificate, Certificate, Apprenticeship.
+✓ DECISION: Seed data includes 6 demo credentials spanning Industry Certs, AS/AAS, and Certificates with realistic CoV scores.
+
+8. Schema Manager
+✓ DECISION: Schema Manager defines the data contract. Modal Editor defines presentation. These are independent governed artifacts.
+✓ DECISION: Schema Manager covers two libraries in the prototype: Course Catalog and Credentials.
+Course Patterns schema is architecturally defined but not built out in the prototype.
+✓ DECISION: Supported field types:
+TypeDescriptionVARCHAR(n)Short text with defined length limitTEXTLong text, no character limit (for descriptions, narratives)INTEGERWhole numbersDECIMALNumbers with decimal placesBOOLEANTRUE / FALSEDATEDate valuesENUMControlled vocabulary — allowed values defined in the schema
+✓ DECISION: TEXT type was added specifically to support course descriptions.
+255 characters (VARCHAR) is insufficient for full course descriptions. TEXT fields have no length limit enforced during bulk upload validation.
+✓ DECISION: ENUM fields carry their allowed values directly in the schema definition.
+The enumVals array is the source of truth for validation in bulk upload, for dropdowns in edit modals, and for enum reference rows in CSV templates.
+✓ DECISION: course_subject is an ENUM field with 25 controlled values.
+Values: English Language Arts, Mathematics, Science, Social Studies, Career & Technical Education, Fine Arts, Physical Education, World Language, Health, Journalism, Library Science, Drama/Theatre, Speech & Debate, Psychology, Philosophy, Economics, Government, Geography, Computer Science, Architecture, Agriculture, Business, Marketing, Finance, Hospitality.
+✓ DECISION: All schema changes require Curriculum Director approval.
+Operations: Add Field, Edit Field, Retire Field. All three generate approval queue entries. A retired field is marked deprecated (not deleted) for backward compatibility.
+✓ DECISION: Pending schema fields remain visible in the schema list with a "Pending Approval" chip.
+Approved fields move to Active. Rejected new fields are removed from the list; rejected edits revert to prior state; rejected retirements revert to Active.
+✓ DECISION: The Schema Manager is the source of truth for bulk upload validation.
+Required fields, VARCHAR length limits, ENUM allowed values, and type validation (DECIMAL must be numeric, BOOLEAN must be TRUE/FALSE/1/0/yes/no) are all derived from smSchemas at parse time — not hardcoded in the upload logic.
+
+9. Bulk Upload
+✓ DECISION: Bulk upload is a three-step modal flow: Upload → Preview & Validate → Confirm Import.
+Step 1 — Upload:
+
+Accepts CSV, XLSX, XLS
+Drag-and-drop or file browser
+Download Template button generates a schema-driven CSV with header row, sample data row, and enum reference comments
+Template is always in sync with the active schema — no hardcoded column lists
+
+Step 2 — Preview & Validate:
+
+Preview table shows: Identifier, Name/Title, Type/Category, Issue count badge, Issue details
+Summary tiles show Total Rows, Ready to Import, Warnings, Errors (blocked)
+Filter pills: All rows / Warnings only / Errors only
+Footer shows row counts dynamically
+
+✓ DECISION: Errors block a row. Warnings import with a flag.
+Validation RuleSeverityRequired field missingError (row skipped)VARCHAR value exceeds defined lengthError (row skipped)ENUM value not in allowed listWarning (imports, flagged)DECIMAL/INTEGER field contains non-numeric valueWarningBOOLEAN field has unexpected valueWarningTEXT fieldsNo length validation
+✓ DECISION: Comment rows (lines starting with #) are ignored during parsing.
+This allows enum reference comments in downloaded templates to be uploaded back without causing errors.
+Step 3 — Confirm Import:
+
+Import log lists every row with outcome
+Imported records land in Course Catalog with status: 'pending' and isNew: true
+Each imported course generates an approval card in Pending Approvals
+Footer note reminds: "Records are now visible in Course Catalog — search for them there now"
+
+✓ DECISION: Bulk upload Download Template uses the live schema.
+Column headers, sample values, and enum reference comments all derive from smSchemas['catalog'] at runtime. Adding a field to the schema automatically adds it to the template.
+
+10. Approval Workflow
+✓ DECISION: All governed changes route through Pending Approvals before taking effect.
+Governed change types: Schema field add/edit/retire, Course record add/edit (bulk or manual), Credential record add/edit.
+✓ DECISION: Only the Curriculum Director role can approve or reject items.
+Other roles (CTE SME, Labor Market SME, Math SME) can view the queue but Approve/Reject buttons are disabled. A role simulator dropdown is available for demo/testing.
+✓ DECISION: Approval cards are grouped by library type.
+Groups: Credentials, Course Catalog, Schema Changes. Each group shows a count.
+✓ DECISION: Schema change cards carry a blue "Schema Change" badge to distinguish them visually from record changes.
+✓ DECISION: Approving a course sets status: 'active' and writes a log entry.
+Rejecting a new course removes it from ccCourses. Rejecting an edit reverts the record to its prior values.
+✓ DECISION: Approving a credential applies any staged edits (_pendingEdits) and sets status: 'active'.
+The CoV score and seal tier from the staged edits are applied at approval time.
+✓ DECISION: Withdrawn and superseded approval items are excluded from the queue view.
+Status values: pending, approved, rejected, withdrawn, superseded. Only pending items appear in the queue.
+✓ DECISION: Resubmitting a pending record supersedes the prior approval card.
+The old card gets status: 'superseded' and disappears from the queue. A fresh card is pushed with the updated content. No duplicate cards.
+
+11. Course & Credential Edit Modals
+✓ DECISION: Edit modals are slide-out drawers from the right edge, 520px wide.
+They use a shared CSS pattern (.ce-tab, .ce-panel, .ce-toggle, .ce-flag-row, .ce-log-entry).
+✓ DECISION: All modal panels use single-column vertical layout.
+No horizontal grids inside modal panels. Fields stack vertically using sm-form-group with flex-direction: column on the panel container.
+✓ DECISION: Every modal has a grounding field strip at the top of each tab.
+Shows the record identifier (course code or credential ID) and name in a muted banner. Staff always know which record they are editing regardless of which tab they are on.
+Course edit modal tabs:
+TabContentsCoreCourse Code (read-only), Course Name, Category, Credit Hours, Course Subject (ENUM dropdown from schema), SCED Code, CTE Cluster, Course Description (TEXT), Reason for ChangeDiploma FlagsToggle switches for Core 40, AHD, THD, Core 40 with Technical Honors (2029)LogRead-only audit trail — date, actor, action, note
+Credential edit modal tabs:
+TabContentsCoreCredential ID (read-only), Credential Name, Short Name, Issuing Organization, Credential Type (ENUM dropdown), Career Cluster (ENUM dropdown), National Recognition (toggle), Reason for ChangeCoV ScoringEconomic Value input, Upskilling Value input, Live CoV calculator (Base, National bonus, Stackability bonus, Final score, Seal tier)LogRead-only audit trail
+✓ DECISION: Log tab hides the footer action bar.
+The Log tab is always read-only. The Submit/Cancel footer is hidden when Log is active.
+✓ DECISION: Pending records are fully editable — not locked.
+Opening the edit drawer on a pending record shows an amber notice but all fields remain live. Two actions are available:
+
+Resubmit — supersedes the prior approval card, pushes a fresh one
+Withdraw — cancels the pending card, reverts the record status, logs the withdrawal
+
+✓ DECISION: Course Subject dropdown populates from the live course_subject ENUM in the Schema Manager.
+If the enum values change in the Schema Manager, the dropdown reflects those changes immediately.
+✓ DECISION: Reason for Change is required on every edit submission.
+It appears in the approval card meta text so the Curriculum Director understands what changed and why.
+
+12. CSV Template Generation
+✓ DECISION: CSV Template is generated from the live schema, not hardcoded.
+Accessible via the "CSV Template" button in the Schema Manager header. Shows only active fields.
+✓ DECISION: The template builder modal allows field selection before download.
+Required fields are pre-checked. Three quick-select buttons: Select All, Required Only, Clear.
+✓ DECISION: Downloaded CSV includes three sections:
+
+Header row — selected column names
+Sample data row — realistic example values per field type
+Enum reference block — comment rows listing all allowed values for any ENUM fields selected
+
+✓ DECISION: The Bulk Upload "Download Template" also uses the live schema.
+It generates a template for all active Course Catalog fields automatically.
+✓ DECISION: CSV filename includes library name and today's date.
+Format: ipr_course_catalog_template_2026-03-29.csv
+
+13. Analytics Panel
+✓ DECISION: Panel is titled "Trends & Utilization" (not "Enrollment & Utilization").
+✓ DECISION: The Indiana county choropleth map is a placeholder in the prototype.
+Production requires real data binding so the map reclassifies dynamically when a different course or credential is selected. The SRS identifies this as a known gap requiring real data pipeline integration.
+✓ DECISION: KPI tiles and trend bars in the prototype use realistic but static seed data.
+Production replaces these with live queries against the IDOE Data Warehouse.
+
+14. Course Sherpa (Student App)
+✓ DECISION: Course Sherpa is a sessionless student diploma planning tool, accessible via Apps → Course Sherpa.
+No student login required. Plans are saved via email-code persistence (not implemented in prototype).
+✓ DECISION: The AI Course Assistant uses a BYOK (Bring Your Own Key) model.
+The student or counselor enters their own Anthropic API key. Key is stored in browser memory only — never sent to IDOE servers. Browser calls api.anthropic.com directly using the user's key.
+✓ DECISION: Required UI disclosure before key entry:
+"Your API key will be visible in browser network traffic. Set a spending limit on your Anthropic account before using this feature."
+✓ DECISION: FERPA compliance is maintained because IDOE servers are not in the transcript data chain.
+Browser reads the uploaded transcript file and sends it directly to Anthropic. IDOE never receives, processes, or stores transcript content.
+✓ DECISION: The full Course Sherpa student interface (four-year planner, diploma progress bars, AI counselor modal) is scaffolded but not fully built in the current prototype.
+It is the next major build milestone.
+
+15. Naming Conventions
+The following naming decisions are final. The prototype uses these names throughout.
+ConceptCorrect NameAvoidThe platformIndiana Pathway RegistryICCM, Course Sherpa (as platform name)The student appCourse Sherpa—The AI API output modeSherpa API—The credential libraryCredentialsCredentials of Value as a label (use CoV only in narrative)The dashboard panelSummary StatsDashboardThe API version panelPublicationVersion HistoryThe analytics panelTrends & UtilizationEnrollment & UtilizationThe admin default viewIndiana Pathway Registry (admin)—
+
+16. Out of Scope for Prototype
+The following are architecturally defined and anticipated but not built in the current prototype:
+
+Course Sherpa full student interface — four-year planner, diploma progress bars, seal tracker, AI counselor modal
+Credential bulk upload — scaffolded as a button; workflow identical to Course Catalog bulk upload
+Course Patterns panel — scaffolded with static data; lifecycle states (Quarantine → Emerging → Established → Shifting → Archived), CUSUM monitoring, and DGC review workflow not implemented
+Modal Editor — the governed tool for configuring which fields appear in edit modals and their layout. Scaffolded in nav; not built. Edit modals currently use hardcoded field sets.
+AI Staging Area — scaffolded with static data; SCED code suggestions, diploma category suggestions, and delta narratives not wired to real AI
+Publication panel — scaffolded with static data; Golden Snapshot promotion, diff endpoint, and AI-drafted release notes not implemented
+Schema Manager for Course Patterns — only Course Catalog and Credentials schemas are built
+Sherpa API context bundle endpoint — architecturally defined; not wired to a live backend
+Server-side BYOK proxy — for institutional users wanting AI assistance at scale
+CTDL/JSON-LD diploma credential definition — formal machine-readable diploma rules
+County SVG map dynamic reclassification — Trends & Utilization map needs real data binding
+Authentication & role management — prototype uses a role simulator dropdown; production requires real identity management (Azure AD or Indiana SSO)
+Ed-Fi ODS API integration — prototype uses static enrollment data; production reads live from Indiana centralized ODS
+IDOE Data Warehouse integration — prototype uses static trend data; production reads from the warehouse
+
+
+This document was generated from the Claude-assisted prototyping session and reflects decisions made as of March 2026. It should be updated as the production implementation evolves.
