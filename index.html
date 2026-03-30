@@ -377,7 +377,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   <div class="nav-section">
     <div class="nav-section-label">Analytics</div>
     <div class="nav-item" onclick="showPanel('analytics',this)">
-      <span class="nav-icon">&#9638;</span> Enrollment &amp; Utilization
+      <span class="nav-icon">&#9638;</span> Trends &amp; Utilization
     </div>
   </div>
 
@@ -568,10 +568,10 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     <div class="filter-bar">
       <input class="search-input" id="ccSearch" type="text" placeholder="Search course name or code&hellip;" oninput="ccRender()">
       <div class="filter-pill active" onclick="ccSetFilter('all',this)">All Active</div>
-      <div class="filter-pill" onclick="ccSetFilter('ela',this)">ELA</div>
-      <div class="filter-pill" onclick="ccSetFilter('math',this)">Math</div>
+      <div class="filter-pill" onclick="ccSetFilter('english',this)">English Language &amp; Literature</div>
+      <div class="filter-pill" onclick="ccSetFilter('math',this)">Mathematics</div>
       <div class="filter-pill" onclick="ccSetFilter('science',this)">Science</div>
-      <div class="filter-pill" onclick="ccSetFilter('social studies',this)">Social Studies</div>
+      <div class="filter-pill" onclick="ccSetFilter('social',this)">Social Sciences &amp; History</div>
       <div class="filter-pill" onclick="ccSetFilter('cte',this)">CTE</div>
       <div class="filter-pill" onclick="ccSetFilter('new',this)">New This Year</div>
     </div>
@@ -598,42 +598,31 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       <div class="panel-header-row">
         <div>
           <div class="panel-title">Credentials</div>
-          <div class="panel-subtitle">Credentials of Value (CoV) Library &middot; 487 active &middot; SY 2025&ndash;26</div>
+          <div class="panel-subtitle" id="crSubtitle">Credentials of Value (CoV) Library &middot; SY 2025&ndash;26</div>
         </div>
         <div class="panel-actions">
-          <button class="btn btn-secondary btn-sm">Bulk Upload</button>
+          <button class="btn btn-secondary btn-sm" onclick="crOpenBulkUpload()">Bulk Upload</button>
           <button class="btn btn-primary btn-sm">+ Add Credential</button>
         </div>
       </div>
     </div>
     <div class="filter-bar">
-      <input class="search-input" type="text" placeholder="Search credential name or ID&hellip;">
-      <div class="filter-pill active">All Active</div>
-      <div class="filter-pill">Employment Honors+</div>
-      <div class="filter-pill">Employment Honors</div>
-      <div class="filter-pill">Industry Cert</div>
-      <div class="filter-pill">Pending Review</div>
+      <input class="search-input" id="crSearch" type="text" placeholder="Search credential name or ID&hellip;" oninput="crRender()">
+      <div class="filter-pill active" onclick="crSetFilter('all',this)">All Active</div>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <table class="data-table">
         <thead>
           <tr><th>Credential ID</th><th>Credential Name</th><th>Type</th><th>Issuer</th><th>CoV Score</th><th>Seal Tier</th><th>Status</th><th></th></tr>
         </thead>
-        <tbody>
-          <tr><td class="mono">1042</td><td>AWS Certified Cloud Practitioner</td><td><span class="chip chip-blue">Industry Cert</span></td><td>Amazon Web Services</td><td class="mono" style="color:var(--green);font-weight:600">4.8</td><td><span class="chip chip-green">Honors+</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">1087</td><td>CompTIA A+ Certification</td><td><span class="chip chip-blue">Industry Cert</span></td><td>CompTIA</td><td class="mono" style="color:var(--green);font-weight:600">4.5</td><td><span class="chip chip-green">Honors+</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">2014</td><td>Certified Nurse Aide (CNA)</td><td><span class="chip chip-navy">Certificate</span></td><td>Indiana State Dept. Health</td><td class="mono" style="color:var(--gold);font-weight:600">3.7</td><td><span class="chip chip-amber">Honors</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">3001</td><td>Welding Technology AS</td><td><span class="chip chip-green">AS / AAS</span></td><td>Ivy Tech Community College</td><td class="mono" style="color:var(--green);font-weight:600">4.2</td><td><span class="chip chip-green">Honors+</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">1203</td><td>OSHA 10-Hour General Industry</td><td><span class="chip chip-blue">Industry Cert</span></td><td>OSHA</td><td class="mono" style="color:var(--slate);font-weight:600">2.4</td><td><span class="chip chip-gray">Below Honors</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">4088</td><td>Cybersecurity Fundamentals TC</td><td><span class="chip chip-blue">Tech Cert</span></td><td>Ivy Tech Community College</td><td class="mono" style="color:var(--gold);font-weight:600">3.1</td><td><span class="chip chip-amber">Honors</span></td><td><span class="chip chip-amber">Pending Review</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-        </tbody>
+        <tbody id="crTableBody"></tbody>
       </table>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--slate)">
-      <span>Showing 6 of 487 records</span>
+      <span id="crFooter">Loading&hellip;</span>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-secondary btn-sm">&larr; Prev</button>
-        <button class="btn btn-secondary btn-sm">Next &rarr;</button>
+        <button class="btn btn-secondary btn-sm" onclick="crPage(-1)">&larr; Prev</button>
+        <button class="btn btn-secondary btn-sm" onclick="crPage(1)">Next &rarr;</button>
       </div>
     </div>
   </div>
@@ -790,8 +779,8 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     <div class="panel-header">
       <div class="panel-header-row">
         <div>
-          <div class="panel-title">Enrollment &amp; Utilization</div>
-          <div class="panel-subtitle">Course and credential usage across Indiana school corporations</div>
+          <div class="panel-title">Trends &amp; Utilization</div>
+          <div class="panel-subtitle">Course and credential enrollment trends across Indiana school corporations</div>
         </div>
         <div class="panel-actions">
           <select class="search-input" style="min-width:200px"><option>Course: Biology I (SCI2010)</option></select>
@@ -1004,6 +993,129 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 </div>
 </div>
 
+<!-- CREDENTIAL EDIT MODAL -->
+<div id="crOverlay" style="position:fixed;inset:0;background:rgba(12,35,64,.45);z-index:900;display:none" onclick="if(event.target===this)crEditClose()"></div>
+<div id="crDrawer" style="position:fixed;top:0;right:0;width:520px;height:100vh;background:#fff;z-index:901;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(12,35,64,.18);transform:translateX(100%);transition:transform .25s ease">
+  <div style="background:var(--navy);border-bottom:3px solid var(--gold);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div style="font-family:var(--serif);font-size:15px;font-weight:700;color:#fff" id="crDrawerTitle">Edit Credential</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px" id="crDrawerSub">Changes will go to Pending Approvals</div>
+    </div>
+    <button onclick="crEditClose()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:16px">&#10005;</button>
+  </div>
+  <div style="display:flex;border-bottom:1px solid rgba(12,35,64,.1);flex-shrink:0;background:#fff">
+    <div class="ce-tab active" id="crTab-core" onclick="crShowTab('core')">Core</div>
+    <div class="ce-tab" id="crTab-cov" onclick="crShowTab('cov')">CoV Scoring</div>
+    <div class="ce-tab" id="crTab-log" onclick="crShowTab('log')">Log</div>
+  </div>
+
+  <!-- TAB: CORE -->
+  <div id="crPanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
+    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
+      <strong style="color:var(--navy)" id="crGroundingId"></strong> &mdash; <span id="crGroundingName"></span>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Credential ID</label>
+      <input type="text" id="crFldId" class="sm-input" readonly style="background:var(--mist);color:var(--slate)">
+      <div class="sm-hint">4-digit ID (1000–9999). Cannot be changed after creation.</div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Credential Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="crFldName" class="sm-input" placeholder="Full credential name as issued">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Short Name</label>
+      <input type="text" id="crFldShort" class="sm-input" placeholder="Abbreviated display name (optional)">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Issuing Organization <span style="color:var(--red)">*</span></label>
+      <input type="text" id="crFldIssuer" class="sm-input" placeholder="e.g. CompTIA, Ivy Tech, Indiana State Dept. Health">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Credential Type <span style="color:var(--red)">*</span></label>
+      <select id="crFldType" class="sm-input">
+        <option value="">— Select type —</option>
+        <option>Industry Certification</option>
+        <option>Associate of Science</option>
+        <option>Associate of Applied Science</option>
+        <option>Technical Certificate</option>
+        <option>Certificate</option>
+        <option>Apprenticeship</option>
+      </select>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Career Cluster</label>
+      <select id="crFldCluster" class="sm-input">
+        <option value="">— Select cluster —</option>
+        <option>Agriculture</option><option>Architecture &amp; Construction</option><option>Arts A/V</option>
+        <option>Business Management</option><option>Education</option><option>Finance</option>
+        <option>Government</option><option>Health Science</option><option>Hospitality</option>
+        <option>Human Services</option><option>Information Technology</option><option>Law</option>
+        <option>Manufacturing</option><option>Marketing</option><option>Science &amp; Technology</option>
+        <option>Transportation</option>
+      </select>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">National Recognition</label>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+        <label class="ce-toggle"><input type="checkbox" id="crFldNational"><span class="ce-toggle-slider"></span></label>
+        <span style="font-size:12px;color:var(--slate)">Nationally recognized (+0.3 Signaling bonus in CoV score)</span>
+      </div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
+      <textarea id="crFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea>
+    </div>
+  </div>
+
+  <!-- TAB: CoV SCORING -->
+  <div id="crPanel-cov" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
+    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
+      <strong style="color:var(--navy)" id="crGroundingId2"></strong> &mdash; <span id="crGroundingName2"></span>
+    </div>
+    <div style="font-size:12px;color:var(--slate);margin-bottom:16px;line-height:1.7">
+      CoV scores are computed from Economic Value + Upskilling Value, with bonuses for national recognition and stackability. Scores are cohort-locked on July 1 each year.
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Economic Value (0.0 – 5.0) <span style="color:var(--red)">*</span></label>
+      <input type="number" id="crFldEcon" class="sm-input" min="0" max="5" step="0.1" placeholder="0.0 – 5.0" oninput="crCalcCoV()">
+      <div class="sm-hint">Wages, employment rates, and regional labor market demand.</div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Upskilling Value (0.0 – 5.0) <span style="color:var(--red)">*</span></label>
+      <input type="number" id="crFldUpskill" class="sm-input" min="0" max="5" step="0.1" placeholder="0.0 – 5.0" oninput="crCalcCoV()">
+      <div class="sm-hint">Stackability toward further credentials and degrees.</div>
+    </div>
+    <div style="background:#fff;border:1px solid rgba(12,35,64,.1);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:10px;font-weight:600">Live CoV Calculator</div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--slate)">Base (Econ + Upskill) ÷ 2</span><span id="crCalcBase" style="font-family:var(--mono);font-weight:600">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--slate)">National Recognition bonus</span><span id="crCalcNat" style="font-family:var(--mono)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--slate)">Stackability bonus (by type)</span><span id="crCalcStack" style="font-family:var(--mono)">—</span></div>
+        <div style="border-top:1px solid rgba(12,35,64,.1);margin-top:4px;padding-top:8px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:600;color:var(--navy)">Final CoV Score (max 5.0)</span>
+          <span id="crCalcFinal" style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--navy)">—</span>
+        </div>
+        <div id="crCalcTier" style="text-align:right;font-size:11px;margin-top:2px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: LOG -->
+  <div id="crPanel-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
+    <div style="font-size:11px;color:var(--slate);margin-bottom:12px">Read-only audit trail for this credential record.</div>
+    <div id="crLogEntries"></div>
+  </div>
+
+  <div style="padding:14px 20px;border-top:1px solid rgba(12,35,64,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:#fff" id="crFooterBar">
+    <div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="crEditClose()">Cancel</button>
+      <button class="btn btn-gold" onclick="crSubmit()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
 <!-- COURSE EDIT MODAL -->
 <div id="ceOverlay" style="position:fixed;inset:0;background:rgba(12,35,64,.45);z-index:900;display:none" onclick="if(event.target===this)ceClose()"></div>
 <div id="ceDrawer" style="position:fixed;top:0;right:0;width:520px;height:100vh;background:#fff;z-index:901;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(12,35,64,.18);transform:translateX(100%);transition:transform .25s ease">
@@ -1036,20 +1148,18 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       <label class="sm-label">Course Name <span style="color:var(--red)">*</span></label>
       <input type="text" id="ceFldName" class="sm-input" placeholder="Official course title">
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="sm-form-group">
-        <label class="sm-label">Category <span style="color:var(--red)">*</span></label>
-        <select id="ceFldCategory" class="sm-input">
-          <option value="">— Select —</option>
-          <option>ELA</option><option>Mathematics</option><option>Science</option>
-          <option>Social Studies</option><option>Career &amp; Technical Education</option>
-          <option>Fine Arts</option><option>Physical Education</option><option>World Language</option><option>Other</option>
-        </select>
-      </div>
-      <div class="sm-form-group">
-        <label class="sm-label">Credit Hours <span style="color:var(--red)">*</span></label>
-        <input type="number" id="ceFldCredits" class="sm-input" step="0.5" min="0.5" max="8" placeholder="e.g. 1.0">
-      </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Category <span style="color:var(--red)">*</span></label>
+      <select id="ceFldCategory" class="sm-input">
+        <option value="">— Select —</option>
+        <option>English Language and Literature</option><option>Mathematics</option><option>Science</option>
+        <option>Social Sciences and History</option><option>Career &amp; Technical Education</option>
+        <option>Fine Arts</option><option>Physical Education</option><option>World Language</option><option>Other</option>
+      </select>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Credit Hours <span style="color:var(--red)">*</span></label>
+      <input type="number" id="ceFldCredits" class="sm-input" step="0.5" min="0.5" max="8" placeholder="e.g. 1.0">
     </div>
     <div class="sm-form-group">
       <label class="sm-label">Course Subject</label>
@@ -1058,15 +1168,13 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       </select>
       <div class="sm-hint">Controlled vocabulary — 25 values defined in Schema Manager.</div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="sm-form-group">
-        <label class="sm-label">SCED Code</label>
-        <input type="text" id="ceFldSced" class="sm-input" placeholder="e.g. 01001" maxlength="5">
-      </div>
-      <div class="sm-form-group">
-        <label class="sm-label">CTE Cluster</label>
-        <input type="text" id="ceFldCte" class="sm-input" placeholder="e.g. Health Science">
-      </div>
+    <div class="sm-form-group">
+      <label class="sm-label">SCED Code</label>
+      <input type="text" id="ceFldSced" class="sm-input" placeholder="e.g. 01001" maxlength="5">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">CTE Cluster</label>
+      <input type="text" id="ceFldCte" class="sm-input" placeholder="e.g. Health Science">
     </div>
     <div class="sm-form-group">
       <label class="sm-label">Course Description</label>
@@ -1461,6 +1569,17 @@ function apApprove(id) {
     if (f) { f.status = (f.status === 'pending-retire') ? 'deprecated' : 'active'; }
     smRender();
   }
+  // Credential approval
+  if (item.credId) {
+    var cr = crCreds.find(function(c){ return c.id === item.credId; });
+    if (cr) {
+      if (item.credEdit) { Object.keys(item.credEdit).forEach(function(k){ cr[k] = item.credEdit[k]; }); }
+      cr.status = 'active';
+      cr.log = cr.log || [];
+      cr.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Approved', by: 'Curriculum Director', note: item.title});
+    }
+    crSave(); crRender();
+  }
   // Course approval — move course from pending → active
   if (item.courseCode) {
     var c = ccCourses.find(function(c){ return c.code === item.courseCode; });
@@ -1497,6 +1616,16 @@ function apReject(id) {
       else if (f.status === 'pending-retire') { f.status = 'active'; }
     }
     smRender();
+  }
+  // Credential rejection
+  if (item.credId) {
+    var cr = crCreds.find(function(c){ return c.id === item.credId; });
+    if (cr) {
+      cr.status = 'active';
+      cr.log = cr.log || [];
+      cr.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Rejected', by: 'Curriculum Director', note: item.title});
+    }
+    crSave(); crRender();
   }
   // Course rejection — remove if new, revert edits if edit
   if (item.courseCode) {
@@ -2087,10 +2216,13 @@ function persistReset() {
   smSchemas.credentials  = JSON.parse(JSON.stringify(smSchemasDefault.credentials));
   apQueue.length = 0;
   apQueueDefault.forEach(function(i){ apQueue.push(JSON.parse(JSON.stringify(i))); });
-  try { localStorage.removeItem(LS_COURSES); } catch(e) {}
+  try { localStorage.removeItem(LS_COURSES); localStorage.removeItem(LS_CREDS); } catch(e) {}
   ccCourses = JSON.parse(JSON.stringify(ccCoursesDefault));
+  crCreds = JSON.parse(JSON.stringify(crCredsDefault));
+  crSave();
   ccSave();
   ccRender();
+  crRender();
   smRender(); apRender();
   showPersistBanner('Reset to defaults.', false);
 }
@@ -2105,6 +2237,7 @@ function showPersistBanner(msg, autohide) {
 
 document.addEventListener('DOMContentLoaded', function() {
   ccLoad();
+  crLoad();
   var loaded = persistLoad();
   smRender();
   apRender();
@@ -2225,14 +2358,14 @@ var ccPage_num = 0;
 var ccPageSize = 15;
 
 var ccCoursesDefault = [
-  {code:'ELA1000', name:'English Language Arts 9', category:'ELA', credits:'2.0', sced:'01001', flags:'Core 40, AHD', status:'active', isNew:false, importedOn:null, issues:''},
+  {code:'ELA1000', name:'English Language Arts 9', category:'English Language and Literature', credits:'2.0', sced:'01001', flags:'Core 40, AHD', status:'active', isNew:false, importedOn:null, issues:''},
   {code:'MTH1050', name:'Algebra I', category:'Mathematics', credits:'2.0', sced:'02051', flags:'Core 40, AHD', status:'active', isNew:false, importedOn:null, issues:''},
   {code:'CTE2210', name:'Principles of Business', category:'Career & Technical Education', credits:'1.0', sced:'22001', flags:'Core 40', status:'active', isNew:false, importedOn:null, issues:''},
   {code:'SCI2010', name:'Biology I', category:'Science', credits:'2.0', sced:'03001', flags:'Core 40, AHD, THD', status:'active', isNew:false, importedOn:null, issues:''},
   {code:'MTH2060', name:'Precalculus', category:'Mathematics', credits:'2.0', sced:'02151', flags:'AHD, THD', status:'active', isNew:false, importedOn:null, issues:''},
   {code:'CTE3310', name:'Healthcare Career Exploration', category:'Career & Technical Education', credits:'1.0', sced:'20052', flags:'Core 40', status:'pending', isNew:true, importedOn:'2026-03-28', issues:''},
-  {code:'ELA1100', name:'English Language Arts 10', category:'ELA', credits:'2.0', sced:'01002', flags:'Core 40, AHD', status:'active', isNew:false, importedOn:null, issues:''},
-  {code:'SST1050', name:'World History & Civilization', category:'Social Studies', credits:'2.0', sced:'04051', flags:'Core 40', status:'active', isNew:false, importedOn:null, issues:''},
+  {code:'ELA1100', name:'English Language Arts 10', category:'English Language and Literature', credits:'2.0', sced:'01002', flags:'Core 40, AHD', status:'active', isNew:false, importedOn:null, issues:''},
+  {code:'SST1050', name:'World History & Civilization', category:'Social Sciences and History', credits:'2.0', sced:'04051', flags:'Core 40', status:'active', isNew:false, importedOn:null, issues:''},
 ];
 
 var ccCourses = [];
@@ -2289,10 +2422,10 @@ function ccRender() {
     if (ccFilter === 'all') return true;
     if (ccFilter === 'new') return c.isNew;
     var cat = (c.category||'').toLowerCase();
-    if (ccFilter === 'ela') return cat.includes('ela') || cat.includes('english');
+    if (ccFilter === 'english') return cat.includes('english') || cat.includes('ela') || cat.includes('literature');
     if (ccFilter === 'math') return cat.includes('math');
     if (ccFilter === 'science') return cat.includes('science');
-    if (ccFilter === 'social studies') return cat.includes('social');
+    if (ccFilter === 'social') return cat.includes('social') || cat.includes('history') || cat.includes('geography') || cat.includes('government') || cat.includes('economics');
     if (ccFilter === 'cte') return cat.includes('cte') || cat.includes('career') || cat.includes('technical');
     return true;
   });
@@ -2495,7 +2628,199 @@ function ceSubmit() {
   showPanel('approvals', document.querySelector('.nav-item[onclick*="approvals"]'));
 }
 
+/* ── CREDENTIALS DATA LAYER ── */
+var LS_CREDS = 'ipr_creds_v1';
+var crFilter = 'all';
+var crPageNum = 0;
+var crPageSize = 15;
+var crCurrentId = null;
+
+var crCredsDefault = [
+  {id:'1042', name:'AWS Certified Cloud Practitioner', shortName:'AWS CCP', issuer:'Amazon Web Services', credType:'Industry Certification', cluster:'Information Technology', national:true, econValue:4.5, upskillValue:4.8, covScore:4.8, sealTier:'Employment Honors+', status:'active', isNew:false, importedOn:null, log:[]},
+  {id:'1087', name:'CompTIA A+ Certification', shortName:'CompTIA A+', issuer:'CompTIA', credType:'Industry Certification', cluster:'Information Technology', national:true, econValue:4.2, upskillValue:4.5, covScore:4.5, sealTier:'Employment Honors+', status:'active', isNew:false, importedOn:null, log:[]},
+  {id:'2014', name:'Certified Nurse Aide (CNA)', shortName:'CNA', issuer:'Indiana State Dept. Health', credType:'Certificate', cluster:'Health Science', national:false, econValue:3.5, upskillValue:3.6, covScore:3.7, sealTier:'Employment Honors', status:'active', isNew:false, importedOn:null, log:[]},
+  {id:'3001', name:'Welding Technology AS', shortName:'Welding AS', issuer:'Ivy Tech Community College', credType:'Associate of Applied Science', cluster:'Manufacturing', national:false, econValue:3.8, upskillValue:3.9, covScore:4.2, sealTier:'Employment Honors+', status:'active', isNew:false, importedOn:null, log:[]},
+  {id:'1203', name:'OSHA 10-Hour General Industry', shortName:'OSHA 10', issuer:'OSHA', credType:'Industry Certification', cluster:'Manufacturing', national:true, econValue:2.0, upskillValue:2.2, covScore:2.4, sealTier:'Below Threshold', status:'active', isNew:false, importedOn:null, log:[]},
+  {id:'4088', name:'Cybersecurity Fundamentals TC', shortName:'Cyber TC', issuer:'Ivy Tech Community College', credType:'Technical Certificate', cluster:'Information Technology', national:false, econValue:2.8, upskillValue:3.0, covScore:3.1, sealTier:'Employment Honors', status:'pending', isNew:true, importedOn:'2026-03-25', log:[]},
+];
+var crCreds = [];
+
+function crLoad() {
+  try { var s = localStorage.getItem(LS_CREDS); if (s) { crCreds = JSON.parse(s); return; } } catch(e) {}
+  crCreds = JSON.parse(JSON.stringify(crCredsDefault));
+}
+function crSave() {
+  try { localStorage.setItem(LS_CREDS, JSON.stringify(crCreds)); } catch(e) {}
+}
+function crCalcScore(econ, upskill, national, credType) {
+  var base = (parseFloat(econ)||0 + parseFloat(upskill)||0) / 2;
+  var natBonus = national ? 0.3 : 0;
+  var stackBonus = 0;
+  if (credType === 'Associate of Science' || credType === 'Associate of Applied Science') stackBonus = 1.0;
+  else if (credType === 'Technical Certificate' || credType === 'Certificate') stackBonus = 0.5;
+  return Math.min(5.0, Math.round((base + natBonus + stackBonus) * 10) / 10);
+}
+function crSealTier(score) {
+  if (score >= 4.0) return 'Employment Honors+';
+  if (score >= 3.0) return 'Employment Honors';
+  return 'Below Threshold';
+}
+function crSetFilter(f, el) {
+  crFilter = f; crPageNum = 0;
+  document.querySelectorAll('#panel-credentials .filter-pill').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+  crRender();
+}
+function crPage(dir) { crPageNum = Math.max(0, crPageNum + dir); crRender(); }
+function crRender() {
+  var q = (document.getElementById('crSearch') ? document.getElementById('crSearch').value : '').toLowerCase().trim();
+  var filtered = crCreds.filter(function(c) {
+    if (c.status === 'retired') return false;
+    return !q || c.id.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || (c.issuer||'').toLowerCase().includes(q) || (c.credType||'').toLowerCase().includes(q);
+  });
+  var total = filtered.length;
+  var maxPage = Math.max(0, Math.ceil(total / crPageSize) - 1);
+  crPageNum = Math.min(crPageNum, maxPage);
+  var start = crPageNum * crPageSize;
+  var page = filtered.slice(start, start + crPageSize);
+  var tbody = document.getElementById('crTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  if (page.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--slate);font-size:12px">' + (q ? 'No credentials match "' + q + '"' : 'No credentials yet.') + '</td></tr>';
+  } else {
+    page.forEach(function(c) {
+      var scoreColor = c.covScore >= 4.0 ? 'var(--green)' : c.covScore >= 3.0 ? 'var(--gold)' : 'var(--slate)';
+      var sealChip = c.sealTier === 'Employment Honors+' ? '<span class="chip chip-green">Honors+</span>' : c.sealTier === 'Employment Honors' ? '<span class="chip chip-amber">Honors</span>' : '<span class="chip chip-gray">Below</span>';
+      var statusChip = c.status === 'pending' ? '<span class="chip chip-amber">Pending</span>' : c.isNew ? '<span class="chip chip-blue">New</span>' : '<span class="chip chip-green">Active</span>';
+      var typeChip = c.credType === 'Industry Certification' ? '<span class="chip chip-blue" style="font-size:9px">Industry Cert</span>' : c.credType && c.credType.includes('Associate') ? '<span class="chip chip-green" style="font-size:9px">AS/AAS</span>' : '<span class="chip chip-navy" style="font-size:9px">Cert</span>';
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td class="mono">' + c.id + '</td><td>' + c.name + '</td><td>' + typeChip + '</td><td style="font-size:11px">' + (c.issuer||'—') + '</td><td class="mono" style="color:' + scoreColor + ';font-weight:600">' + (c.covScore||'—') + '</td><td>' + sealChip + '</td><td>' + statusChip + '</td><td><button class="btn btn-secondary btn-sm" onclick="crOpenEditById(\'' + c.id + '\')">Edit</button></td>';
+      tbody.appendChild(tr);
+    });
+  }
+  var showing = total === 0 ? '0' : (start+1) + '–' + Math.min(start+crPageSize, total);
+  var footerEl = document.getElementById('crFooter');
+  if (footerEl) footerEl.textContent = 'Showing ' + showing + ' of ' + total + ' record' + (total!==1?'s':'') + (q ? ' matching "' + q + '"' : '');
+  var subEl = document.getElementById('crSubtitle');
+  if (subEl) subEl.textContent = 'Credentials of Value (CoV) Library · ' + crCreds.length + ' records · SY 2025–26';
+}
+
+function crOpenEditById(id) {
+  var c = crCreds.find(function(c){ return c.id === id; });
+  if (!c) return;
+  crCurrentId = id;
+  document.getElementById('crGroundingId').textContent = c.id;
+  document.getElementById('crGroundingName').textContent = c.name;
+  document.getElementById('crGroundingId2').textContent = c.id;
+  document.getElementById('crGroundingName2').textContent = c.name;
+  document.getElementById('crFldId').value = c.id;
+  document.getElementById('crFldName').value = c.name || '';
+  document.getElementById('crFldShort').value = c.shortName || '';
+  document.getElementById('crFldIssuer').value = c.issuer || '';
+  document.getElementById('crFldReason').value = '';
+  document.getElementById('crFldEcon').value = c.econValue || '';
+  document.getElementById('crFldUpskill').value = c.upskillValue || '';
+  document.getElementById('crFldNational').checked = !!c.national;
+  var typeSel = document.getElementById('crFldType');
+  for (var i = 0; i < typeSel.options.length; i++) { if (typeSel.options[i].value === c.credType) { typeSel.selectedIndex = i; break; } }
+  var clSel = document.getElementById('crFldCluster');
+  for (var i = 0; i < clSel.options.length; i++) { if (clSel.options[i].value === c.cluster) { clSel.selectedIndex = i; break; } }
+  crCalcCoV();
+  var logEl = document.getElementById('crLogEntries');
+  var entries = c.log || [];
+  logEl.innerHTML = entries.length === 0 ? '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet.</div>' :
+    entries.map(function(e){ return '<div class="ce-log-entry"><div class="ce-log-date">' + e.date + ' · ' + e.by + '</div><div class="ce-log-action">' + e.action + '</div><div class="ce-log-note">' + e.note + '</div></div>'; }).join('');
+  var footer = document.getElementById('crFooterBar');
+  if (c.status === 'pending') {
+    footer.innerHTML = '<div style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:8px 12px;flex:1">This credential is already pending approval. Approve or reject it in Pending Approvals first.</div><button class="btn btn-secondary" onclick="crEditClose()">Close</button>';
+  } else {
+    footer.innerHTML = '<div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="crEditClose()">Cancel</button><button class="btn btn-gold" onclick="crSubmit()">Submit for Approval</button></div>';
+  }
+  crShowTab('core');
+  document.getElementById('crDrawerTitle').textContent = 'Edit Credential — ' + c.id;
+  document.getElementById('crDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval · Read-only' : 'Changes go to Pending Approvals';
+  document.getElementById('crOverlay').style.display = 'block';
+  var d = document.getElementById('crDrawer');
+  d.style.display = 'flex';
+  setTimeout(function(){ d.style.transform = 'translateX(0)'; }, 10);
+}
+
+function crShowTab(tab) {
+  ['core','cov','log'].forEach(function(t){
+    var panel = document.getElementById('crPanel-' + t);
+    var tabEl = document.getElementById('crTab-' + t);
+    if (panel) panel.style.display = t === tab ? 'flex' : 'none';
+    if (tabEl) tabEl.className = 'ce-tab' + (t === tab ? ' active' : '');
+  });
+  var footer = document.getElementById('crFooterBar');
+  if (footer) footer.style.display = tab === 'log' ? 'none' : 'flex';
+}
+
+function crEditClose() {
+  var d = document.getElementById('crDrawer');
+  d.style.transform = 'translateX(100%)';
+  setTimeout(function(){ d.style.display = 'none'; document.getElementById('crOverlay').style.display = 'none'; }, 260);
+  crCurrentId = null;
+}
+
+function crCalcCoV() {
+  var econ = parseFloat(document.getElementById('crFldEcon').value) || 0;
+  var upskill = parseFloat(document.getElementById('crFldUpskill').value) || 0;
+  var nat = document.getElementById('crFldNational') ? document.getElementById('crFldNational').checked : false;
+  var typeSel = document.getElementById('crFldType');
+  var credType = typeSel ? typeSel.value : '';
+  var base = (econ + upskill) / 2;
+  var natBonus = nat ? 0.3 : 0;
+  var stackBonus = 0;
+  if (credType === 'Associate of Science' || credType === 'Associate of Applied Science') stackBonus = 1.0;
+  else if (credType === 'Technical Certificate' || credType === 'Certificate') stackBonus = 0.5;
+  var final = Math.min(5.0, Math.round((base + natBonus + stackBonus) * 10) / 10);
+  document.getElementById('crCalcBase').textContent = base.toFixed(2);
+  document.getElementById('crCalcNat').textContent = nat ? '+0.30' : '+0.00';
+  document.getElementById('crCalcStack').textContent = stackBonus > 0 ? '+' + stackBonus.toFixed(2) : '+0.00';
+  document.getElementById('crCalcFinal').textContent = (econ > 0 || upskill > 0) ? final.toFixed(1) : '—';
+  var tier = crSealTier(final);
+  var tierColor = tier === 'Employment Honors+' ? 'var(--green)' : tier === 'Employment Honors' ? 'var(--gold)' : 'var(--slate)';
+  document.getElementById('crCalcTier').innerHTML = (econ > 0 || upskill > 0) ? '<span style="color:' + tierColor + ';font-weight:600">' + tier + '</span>' : '';
+}
+
+function crSubmit() {
+  var reason = document.getElementById('crFldReason').value.trim();
+  if (!reason) { alert('Please provide a reason for this change.'); return; }
+  var name = document.getElementById('crFldName').value.trim();
+  if (!name) { alert('Credential Name is required.'); return; }
+  var econ = parseFloat(document.getElementById('crFldEcon').value) || 0;
+  var upskill = parseFloat(document.getElementById('crFldUpskill').value) || 0;
+  var nat = document.getElementById('crFldNational').checked;
+  var credType = document.getElementById('crFldType').value;
+  var newScore = crCalcScore(econ, upskill, nat, credType);
+  var edits = {
+    name: name, shortName: document.getElementById('crFldShort').value,
+    issuer: document.getElementById('crFldIssuer').value, credType: credType,
+    cluster: document.getElementById('crFldCluster').value, national: nat,
+    econValue: econ, upskillValue: upskill, covScore: newScore, sealTier: crSealTier(newScore),
+    status: 'pending'
+  };
+  var c = crCreds.find(function(c){ return c.id === crCurrentId; });
+  if (c) {
+    c._pendingEdits = edits; c.status = 'pending';
+    c.log = c.log || [];
+    c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Edit Submitted', by: 'Admin (CIO)', note: reason});
+  }
+  var apId = 'ap-cred-edit-' + crCurrentId + '-' + Date.now();
+  var today = new Date().toISOString().slice(0,10);
+  apQueue.push({id:apId, group:'Credentials', ref:'CRED · ' + crCurrentId, title:'Credential Edit — ' + name, meta:'Edited by Admin (CIO) · Submitted ' + today + ' · ' + reason, approverRole:'curriculum', schemaLib:null, schemaIdx:null, credId:crCurrentId, credEdit:edits, isNew:false, status:'pending'});
+  crSave(); crRender(); persistSave(); apRender();
+  showPersistBanner('Edit submitted for approval — saved.', true);
+  crEditClose();
+  showPanel('approvals', document.querySelector('.nav-item[onclick*="approvals"]'));
+}
+
+function crOpenBulkUpload() {
+  alert('Credential bulk upload coming soon. Use the Course Catalog bulk upload as a reference for the expected workflow.');
+}
+
 </script>
 </body>
 </html>
-
