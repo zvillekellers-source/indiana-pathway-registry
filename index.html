@@ -826,6 +826,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
           <div class="panel-subtitle">Data contract definitions &middot; Changes require Curriculum Director approval</div>
         </div>
         <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm" onclick="smOpenCsvBuilder()">&#11015; CSV Template</button>
           <button class="btn btn-secondary btn-sm" onclick="smOpenAdd()">+ Add Field</button>
         </div>
       </div>
@@ -949,6 +950,51 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 </div><!-- end .main -->
 </div><!-- end .body -->
 </div><!-- end .app -->
+
+<!-- CSV TEMPLATE BUILDER MODAL -->
+<div class="bu-overlay hidden" id="csvOverlay" onclick="if(event.target===this)csvClose()">
+<div class="bu-modal" style="max-width:640px">
+  <div class="bu-header">
+    <div>
+      <div class="bu-title" id="csvTitle">Generate CSV Template</div>
+      <div class="bu-subtitle" id="csvSubtitle">Select fields to include. Required fields are pre-checked.</div>
+    </div>
+    <button class="bu-close" onclick="csvClose()">&#10005;</button>
+  </div>
+  <div class="bu-body" style="padding:20px">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--slate)">
+        <span id="csvSelectedCount" style="font-weight:600;color:var(--navy)">0</span> fields selected
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="csvSelectAll()">Select All</button>
+        <button class="btn btn-secondary btn-sm" onclick="csvSelectRequired()">Required Only</button>
+        <button class="btn btn-secondary btn-sm" onclick="csvSelectNone()">Clear</button>
+      </div>
+    </div>
+
+    <div style="border:1px solid rgba(12,35,64,.1);border-radius:var(--radius);overflow:hidden;margin-bottom:16px">
+      <div style="background:var(--navy);display:grid;grid-template-columns:32px 1fr 120px 80px;padding:7px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.7);font-weight:500">
+        <span></span><span>Field Name</span><span>Type</span><span>Required</span>
+      </div>
+      <div id="csvFieldList"></div>
+    </div>
+
+    <div style="background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate)">
+      <strong style="color:var(--navy);display:block;margin-bottom:4px">&#9432; About the generated template</strong>
+      The CSV will include your selected column headers plus one sample data row showing the expected format for each field type. Enumerated fields will show allowed values in a comment row.
+    </div>
+  </div>
+  <div class="bu-footer">
+    <div class="bu-footer-left" id="csvFooterNote">Choose fields above then download</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="csvClose()">Cancel</button>
+      <button class="btn btn-gold" id="csvDownloadBtn" onclick="csvDownload()" disabled>&#11015; Download Template</button>
+    </div>
+  </div>
+</div>
+</div>
 
 <!-- SCHEMA FIELD EDITOR SLIDE-OUT -->
 <div id="smOverlay" style="position:fixed;inset:0;background:rgba(12,35,64,.45);z-index:900;display:none" onclick="smCloseIfOverlay(event)"></div>
@@ -1736,6 +1782,112 @@ function smSubmit() {
 }
 
 document.addEventListener('DOMContentLoaded', function() { smRender(); apRender(); });
+/* ── CSV TEMPLATE BUILDER ── */
+function smOpenCsvBuilder() {
+  var fields = smSchemas[smCurrentLib].filter(function(f){ return f.status === 'active'; });
+  var lib = smCurrentLib === 'catalog' ? 'Course Catalog' : 'Credentials';
+  document.getElementById('csvTitle').textContent = 'Generate CSV Template — ' + lib;
+  document.getElementById('csvSubtitle').textContent = fields.length + ' active fields available · Select which to include';
+
+  var list = document.getElementById('csvFieldList');
+  list.innerHTML = '';
+  fields.forEach(function(f, idx) {
+    var isRequired = !f.nullable;
+    var typeLabel = f.type === 'VARCHAR' ? 'Text' : f.type === 'DECIMAL' ? 'Decimal' : f.type === 'INTEGER' ? 'Integer' : f.type === 'BOOLEAN' ? 'Boolean' : f.type === 'DATE' ? 'Date' : 'List (' + f.enumVals.length + ')';
+    var row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:32px 1fr 120px 80px;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(12,35,64,.05);cursor:pointer;transition:background .12s';
+    row.onmouseenter = function(){ this.style.background = 'var(--mist)'; };
+    row.onmouseleave = function(){ this.style.background = ''; };
+    row.onclick = function(){ var cb = this.querySelector('input'); cb.checked = !cb.checked; csvUpdateCount(); };
+    var enumHint = f.type === 'ENUM' && f.enumVals.length ? '<div style="font-size:9px;color:var(--gold);margin-top:1px">' + f.enumVals.slice(0,3).join(', ') + (f.enumVals.length > 3 ? ' +' + (f.enumVals.length - 3) + ' more' : '') + '</div>' : '';
+    row.innerHTML =
+      '<span onclick="event.stopPropagation()"><input type="checkbox" class="csv-field-cb" data-idx="' + idx + '" ' + (isRequired ? 'checked' : '') + ' onclick="csvUpdateCount()" style="cursor:pointer;width:14px;height:14px"></span>' +
+      '<span><span style="font-family:var(--mono);font-size:11px;font-weight:500;color:var(--navy)">' + f.name + '</span>' + enumHint + '<div style="font-size:10px;color:var(--slate);margin-top:1px">' + f.desc.substring(0,60) + (f.desc.length > 60 ? '…' : '') + '</div></span>' +
+      '<span style="font-size:10px;background:rgba(12,35,64,.07);color:var(--slate);padding:2px 6px;border-radius:2px;font-family:var(--mono);display:inline-block">' + typeLabel + '</span>' +
+      '<span>' + (isRequired ? '<span class="chip chip-red" style="font-size:9px">Required</span>' : '<span class="chip chip-gray" style="font-size:9px">Optional</span>') + '</span>';
+    list.appendChild(row);
+  });
+
+  csvUpdateCount();
+  document.getElementById('csvOverlay').classList.remove('hidden');
+}
+
+function csvUpdateCount() {
+  var checked = document.querySelectorAll('.csv-field-cb:checked').length;
+  document.getElementById('csvSelectedCount').textContent = checked;
+  document.getElementById('csvDownloadBtn').disabled = checked === 0;
+  document.getElementById('csvFooterNote').textContent = checked > 0 ? checked + ' column' + (checked !== 1 ? 's' : '') + ' will be included' : 'Choose fields above then download';
+}
+
+function csvSelectAll() {
+  document.querySelectorAll('.csv-field-cb').forEach(function(cb){ cb.checked = true; });
+  csvUpdateCount();
+}
+function csvSelectRequired() {
+  var fields = smSchemas[smCurrentLib].filter(function(f){ return f.status === 'active'; });
+  document.querySelectorAll('.csv-field-cb').forEach(function(cb, i){
+    cb.checked = !fields[i].nullable;
+  });
+  csvUpdateCount();
+}
+function csvSelectNone() {
+  document.querySelectorAll('.csv-field-cb').forEach(function(cb){ cb.checked = false; });
+  csvUpdateCount();
+}
+
+function csvSampleValue(f) {
+  if (f.type === 'BOOLEAN') return 'TRUE';
+  if (f.type === 'INTEGER') return '1001';
+  if (f.type === 'DECIMAL') return '1.0';
+  if (f.type === 'DATE') return '2026-07-01';
+  if (f.type === 'ENUM') return f.enumVals.length ? f.enumVals[0] : 'Value';
+  if (f.name.includes('code')) return 'ELA1000';
+  if (f.name.includes('name') || f.name.includes('title')) return 'Example Name';
+  if (f.name.includes('desc')) return 'Example description';
+  if (f.name.includes('version')) return 'SY2025-26';
+  if (f.name.includes('guid')) return '00000000-0000-0000-0000-000000000001';
+  if (f.name.includes('id')) return '1001';
+  if (f.name.includes('org') || f.name.includes('issuer')) return 'Example Organization';
+  return 'Example';
+}
+
+function csvDownload() {
+  var fields = smSchemas[smCurrentLib].filter(function(f){ return f.status === 'active'; });
+  var checkboxes = document.querySelectorAll('.csv-field-cb');
+  var selected = [];
+  checkboxes.forEach(function(cb, i){ if (cb.checked) selected.push(fields[i]); });
+  if (selected.length === 0) return;
+
+  var lib = smCurrentLib === 'catalog' ? 'course_catalog' : 'credentials';
+  var rows = [];
+
+  // Header row
+  rows.push(selected.map(function(f){ return f.name; }).join(','));
+
+  // Sample data row
+  rows.push(selected.map(function(f){ return csvSampleValue(f); }).join(','));
+
+  // Enum reference rows as comments
+  var enumFields = selected.filter(function(f){ return f.type === 'ENUM' && f.enumVals.length; });
+  if (enumFields.length) {
+    rows.push('');
+    rows.push('# ALLOWED VALUES FOR ENUMERATED FIELDS:');
+    enumFields.forEach(function(f){
+      rows.push('# ' + f.name + ': ' + f.enumVals.join(' | '));
+    });
+  }
+
+  var csv = rows.join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'ipr_' + lib + '_template_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  csvClose();
+}
+
+function csvClose() {
+  document.getElementById('csvOverlay').classList.add('hidden');
+}
 </script>
 </body>
 </html>
