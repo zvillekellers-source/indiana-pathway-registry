@@ -183,6 +183,22 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 .field-list-item:hover{background:var(--mist)}
 .drag-handle{color:rgba(12,35,64,.3);font-size:12px}
 
+/* ── SCHEMA EDITOR ── */
+.sm-field-row{display:grid;grid-template-columns:180px 130px 56px 56px 1fr 120px 100px;align-items:center;padding:9px 12px;border-bottom:1px solid rgba(12,35,64,.05);font-size:12px;transition:background .12s;cursor:pointer}
+.sm-field-row:hover{background:var(--mist)}
+.sm-field-row.deprecated{opacity:.5}
+.sm-field-name{font-family:var(--mono);font-size:11px;color:var(--navy);font-weight:500}
+.sm-field-type{font-size:10px;background:rgba(12,35,64,.07);color:var(--slate);padding:2px 6px;border-radius:2px;font-family:var(--mono);display:inline-block}
+.sm-field-center{text-align:center;font-size:11px;color:var(--slate)}
+.sm-field-desc{font-size:11px;color:var(--slate);padding-right:8px}
+.sm-row-actions{display:flex;gap:4px;justify-content:flex-end}
+.sm-form-group{margin-bottom:16px}
+.sm-label{display:block;font-size:11px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.sm-input{width:100%;padding:7px 10px;border:1px solid rgba(12,35,64,.2);border-radius:var(--radius);font-family:var(--sans);font-size:12px;color:var(--navy);background:#fff;outline:none;transition:border-color .15s}
+.sm-input:focus{border-color:var(--navy)}
+.sm-hint{font-size:10px;color:var(--slate);margin-top:3px;line-height:1.5}
+.sm-enum-chip{background:var(--mist);border:1px solid rgba(12,35,64,.12);border-radius:2px;padding:2px 8px;font-size:10px;color:var(--navy);font-family:var(--mono)}
+
 /* ── BULK UPLOAD MODAL ── */
 .bu-overlay{position:fixed;inset:0;background:rgba(12,35,64,.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;animation:buFadeIn .2s ease}
 .bu-overlay.hidden{display:none}
@@ -846,43 +862,30 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       <div class="panel-header-row">
         <div>
           <div class="panel-title">Schema Manager</div>
-          <div class="panel-subtitle">Data contract definitions &middot; Changes require Approver sign-off</div>
+          <div class="panel-subtitle">Data contract definitions &middot; Changes require Curriculum Director approval</div>
         </div>
         <div class="panel-actions">
-          <button class="btn btn-secondary btn-sm">Propose Schema Change</button>
+          <button class="btn btn-secondary btn-sm" onclick="smOpenAdd()">+ Add Field</button>
         </div>
       </div>
     </div>
+
     <div class="filter-bar">
-      <div class="filter-pill active">Course Catalog</div>
-      <div class="filter-pill">Credentials</div>
-      <div class="filter-pill">Course Patterns</div>
+      <div class="filter-pill active" onclick="smSwitchLib('catalog',this)">Course Catalog</div>
+      <div class="filter-pill" onclick="smSwitchLib('credentials',this)">Credentials</div>
     </div>
-    <div class="card" style="padding:0;overflow:hidden">
-      <div style="background:var(--navy);color:rgba(255,255,255,.7);display:grid;grid-template-columns:160px 120px 60px 1fr 80px;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:500">
-        <span>Field Name</span><span>Type</span><span>Null</span><span>Description</span><span>Governed</span>
+
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
+      <div style="background:var(--navy);display:grid;grid-template-columns:180px 130px 56px 56px 1fr 120px 100px;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:500;color:rgba(255,255,255,.7)">
+        <span>Field Name</span><span>Type</span><span>Nullable</span><span>Governed</span><span>Description</span><span>Status</span><span></span>
       </div>
-      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
-        <span class="field-name">state_course_code</span><span class="field-type">VARCHAR(10)</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Primary identifier, stable across year instances</span><span><span class="chip chip-navy">Yes</span></span>
-      </div>
-      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
-        <span class="field-name">course_name</span><span class="field-type">VARCHAR(255)</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Official course title</span><span><span class="chip chip-navy">Yes</span></span>
-      </div>
-      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
-        <span class="field-name">sced_code</span><span class="field-type">VARCHAR(5)</span><span class="field-nullable">Yes</span><span style="font-size:11px;color:var(--slate)">Standard Course Equiv. Description (AI-assisted)</span><span><span class="chip chip-green">AI</span></span>
-      </div>
-      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
-        <span class="field-name">credit_hours</span><span class="field-type">DECIMAL(3,1)</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Carnegie unit credit value</span><span><span class="chip chip-gray">No</span></span>
-      </div>
-      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
-        <span class="field-name">cte_cluster</span><span class="field-type">VARCHAR(50)</span><span class="field-nullable">Yes</span><span style="font-size:11px;color:var(--slate)">CTE career cluster tag</span><span><span class="chip chip-navy">Yes</span></span>
-      </div>
-      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
-        <span class="field-name">diploma_core40</span><span class="field-type">BOOLEAN</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Satisfies Core 40 requirement</span><span><span class="chip chip-navy">Yes</span></span>
-      </div>
-      <div class="schema-field-row" style="display:grid;grid-template-columns:160px 120px 60px 1fr 80px">
-        <span class="field-name">cohort_version</span><span class="field-type">VARCHAR(10)</span><span class="field-nullable">No</span><span style="font-size:11px;color:var(--slate)">Cohort year anchor (e.g. SY2025-26)</span><span><span class="chip chip-navy">Yes</span></span>
-      </div>
+      <div id="smFieldList"></div>
+    </div>
+
+    <div style="font-size:11px;color:var(--slate);display:flex;align-items:center;gap:16px">
+      <span id="smFieldCount"></span>
+      <span>&middot; <strong style="color:var(--navy)" id="smDepCount"></strong> deprecated</span>
+      <span>&middot; Changes require Curriculum Director sign-off before taking effect</span>
     </div>
   </div>
 
@@ -985,6 +988,134 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 </div><!-- end .main -->
 </div><!-- end .body -->
 </div><!-- end .app -->
+
+<!-- SCHEMA FIELD EDITOR SLIDE-OUT -->
+<div id="smOverlay" style="position:fixed;inset:0;background:rgba(12,35,64,.45);z-index:900;display:none" onclick="smCloseIfOverlay(event)"></div>
+<div id="smDrawer" style="position:fixed;top:0;right:0;width:480px;height:100vh;background:#fff;z-index:901;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(12,35,64,.18);transform:translateX(100%);transition:transform .25s ease">
+  <div style="background:var(--navy);border-bottom:3px solid var(--gold);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div style="font-family:var(--serif);font-size:15px;font-weight:700;color:#fff" id="smDrawerTitle">Add Field</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px" id="smDrawerSub">Define field properties. Change will go to Pending Approvals.</div>
+    </div>
+    <button onclick="smCloseDrawer()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:16px">&#10005;</button>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:20px" id="smDrawerBody">
+
+    <!-- RETIRE NOTICE (shown only when retiring) -->
+    <div id="smRetireNotice" style="display:none;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:12px;color:#7F1D1D">
+      <strong>Retiring this field</strong> marks it as deprecated. It remains in the schema for backward compatibility but is hidden from the Modal Editor and flagged in API documentation. This action requires Curriculum Director approval.
+    </div>
+
+    <!-- FIELD NAME -->
+    <div class="sm-form-group">
+      <label class="sm-label">Field Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="smFldName" class="sm-input" placeholder="e.g. course_subject" oninput="smSlugify(this)">
+      <div class="sm-hint">Lowercase, underscores only. Cannot be changed after approval.</div>
+    </div>
+
+    <!-- DATA TYPE -->
+    <div class="sm-form-group">
+      <label class="sm-label">Data Type <span style="color:var(--red)">*</span></label>
+      <select id="smFldType" class="sm-input" onchange="smTypeChange()">
+        <option value="">— Select type —</option>
+        <option value="VARCHAR">Text (VARCHAR)</option>
+        <option value="INTEGER">Integer</option>
+        <option value="DECIMAL">Decimal</option>
+        <option value="BOOLEAN">Boolean (TRUE/FALSE)</option>
+        <option value="DATE">Date</option>
+        <option value="ENUM">Enumerated List (controlled vocabulary)</option>
+      </select>
+    </div>
+
+    <!-- VARCHAR LENGTH (shown when VARCHAR) -->
+    <div class="sm-form-group" id="smVarcharLen" style="display:none">
+      <label class="sm-label">Max Length</label>
+      <input type="number" id="smFldLen" class="sm-input" placeholder="e.g. 255" style="max-width:120px">
+      <div class="sm-hint">Maximum character length for this field.</div>
+    </div>
+
+    <!-- DECIMAL PRECISION (shown when DECIMAL) -->
+    <div class="sm-form-group" id="smDecimalPrec" style="display:none">
+      <label class="sm-label">Precision &amp; Scale</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="smFldPrec" class="sm-input" placeholder="5" style="max-width:80px">
+        <span style="font-size:12px;color:var(--slate)">total digits,</span>
+        <input type="number" id="smFldScale" class="sm-input" placeholder="2" style="max-width:80px">
+        <span style="font-size:12px;color:var(--slate)">decimal places</span>
+      </div>
+    </div>
+
+    <!-- ENUMERATED VALUES (shown when ENUM) -->
+    <div class="sm-form-group" id="smEnumSection" style="display:none">
+      <label class="sm-label">Allowed Values <span style="color:var(--red)">*</span></label>
+      <div class="sm-hint" style="margin-bottom:8px">Define all permitted values for this field. One per line, or comma-separated. These become the controlled vocabulary.</div>
+      <textarea id="smEnumInput" class="sm-input" rows="6" placeholder="e.g.&#10;English Language Arts&#10;Mathematics&#10;Science&#10;Social Studies&#10;CTE&#10;Fine Arts&#10;Physical Education&#10;World Language"></textarea>
+      <div id="smEnumPreview" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"></div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="smParseEnum()">Parse &amp; Preview Values</button>
+    </div>
+
+    <!-- NULLABLE -->
+    <div class="sm-form-group">
+      <label class="sm-label">Nullable</label>
+      <div style="display:flex;gap:16px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smNullable" value="no" checked> No — required field
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smNullable" value="yes"> Yes — optional field
+        </label>
+      </div>
+    </div>
+
+    <!-- GOVERNED -->
+    <div class="sm-form-group">
+      <label class="sm-label">Governed</label>
+      <div style="display:flex;gap:16px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smGoverned" value="yes" checked> Yes — changes require approval
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smGoverned" value="no"> No — staff can edit freely
+        </label>
+      </div>
+    </div>
+
+    <!-- AI ASSISTED -->
+    <div class="sm-form-group">
+      <label class="sm-label">AI-Assisted</label>
+      <div style="display:flex;gap:16px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smAI" value="no" checked> No
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smAI" value="yes"> Yes — AI suggestions enabled for this field
+        </label>
+      </div>
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="sm-form-group">
+      <label class="sm-label">Description</label>
+      <textarea id="smFldDesc" class="sm-input" rows="3" placeholder="What is this field for? How should it be interpreted?"></textarea>
+    </div>
+
+    <!-- CHANGE REASON -->
+    <div class="sm-form-group" id="smChangeReasonGroup">
+      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
+      <textarea id="smFldReason" class="sm-input" rows="2" placeholder="Briefly explain why this change is needed. This will appear in the approval request."></textarea>
+    </div>
+
+  </div>
+
+  <div style="padding:14px 20px;border-top:1px solid rgba(12,35,64,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:#fff">
+    <div id="smDrawerFooterLeft" style="font-size:11px;color:var(--slate)">Change will be submitted for Curriculum Director approval</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="smCloseDrawer()">Cancel</button>
+      <button class="btn btn-gold" id="smSubmitBtn" onclick="smSubmit()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
 
 <!-- BULK UPLOAD MODAL -->
 <div class="bu-overlay hidden" id="buOverlay" onclick="buOverlayClick(event)">
@@ -1313,6 +1444,231 @@ function buUpdateStep() {
     back.style.display='none'; next.style.display='none';
   }
 }
+/* ── SCHEMA MANAGER ── */
+var smCurrentLib = 'catalog';
+var smEditingIdx = null;
+var smRetiring = false;
+
+var smSchemas = {
+  catalog: [
+    {name:'state_course_code', type:'VARCHAR', len:10, nullable:false, governed:true, ai:false, status:'active', desc:'Primary identifier, stable across all year instances of the course.', enumVals:[]},
+    {name:'course_name', type:'VARCHAR', len:255, nullable:false, governed:true, ai:false, status:'active', desc:'Official course title as published by IDOE.', enumVals:[]},
+    {name:'course_subject', type:'ENUM', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Broad subject area for the course. Controlled vocabulary of 25 values.', enumVals:['English Language Arts','Mathematics','Science','Social Studies','Career & Technical Education','Fine Arts','Physical Education','World Language','Health','Journalism','Library Science','Drama/Theatre','Speech & Debate','Psychology','Philosophy','Economics','Government','Geography','Computer Science','Architecture','Agriculture','Business','Marketing','Finance','Hospitality']},
+    {name:'credit_hours', type:'DECIMAL', len:null, nullable:false, governed:false, ai:false, status:'active', desc:'Carnegie unit credit value (e.g. 1.0, 2.0).', enumVals:[]},
+    {name:'sced_code', type:'VARCHAR', len:5, nullable:true, governed:true, ai:true, status:'active', desc:'Standard Course Equivalency Description code. AI-suggested if omitted.', enumVals:[]},
+    {name:'ceds_code', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Common Education Data Standards code.', enumVals:[]},
+    {name:'edfi_code', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Ed-Fi ODS course code for SIS integration.', enumVals:[]},
+    {name:'cte_cluster', type:'VARCHAR', len:50, nullable:true, governed:true, ai:false, status:'active', desc:'CTE career cluster. Required when course_subject = CTE.', enumVals:[]},
+    {name:'diploma_core40', type:'BOOLEAN', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Satisfies Indiana Core 40 diploma requirement.', enumVals:[]},
+    {name:'diploma_ahd', type:'BOOLEAN', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Counts toward Academic Honors Diploma.', enumVals:[]},
+    {name:'diploma_thd', type:'BOOLEAN', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Counts toward Technical Honors Diploma.', enumVals:[]},
+    {name:'cohort_version', type:'VARCHAR', len:10, nullable:false, governed:true, ai:false, status:'active', desc:'Cohort year anchor (e.g. SY2025-26). Set at record creation.', enumVals:[]},
+    {name:'record_status', type:'ENUM', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Lifecycle status of the course record.', enumVals:['Active','Pending Approval','Deprecated','Retired']},
+  ],
+  credentials: [
+    {name:'credential_guid', type:'VARCHAR', len:36, nullable:false, governed:true, ai:false, status:'active', desc:'System-assigned GUID. Immutable after creation.', enumVals:[]},
+    {name:'credential_id', type:'INTEGER', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Staff-assigned 4-digit ID (1000–9999, never starting with 0).', enumVals:[]},
+    {name:'credential_name', type:'VARCHAR', len:255, nullable:false, governed:true, ai:false, status:'active', desc:'Full credential name as issued by the credentialing body.', enumVals:[]},
+    {name:'short_name', type:'VARCHAR', len:60, nullable:true, governed:false, ai:false, status:'active', desc:'Abbreviated name for display in tight UI contexts.', enumVals:[]},
+    {name:'issuing_organization', type:'VARCHAR', len:255, nullable:false, governed:true, ai:false, status:'active', desc:'Name of the organization that awards this credential.', enumVals:[]},
+    {name:'credential_type', type:'ENUM', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Credential classification for CoV scoring and seal eligibility.', enumVals:['Industry Certification','Associate of Science','Associate of Applied Science','Technical Certificate','Certificate','Apprenticeship']},
+    {name:'career_cluster', type:'ENUM', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'ACTE career cluster alignment.', enumVals:['Agriculture','Architecture & Construction','Arts A/V','Business Management','Education','Finance','Government','Health Science','Hospitality','Human Services','Information Technology','Law','Manufacturing','Marketing','Science & Technology','Transportation']},
+    {name:'cov_economic_value', type:'DECIMAL', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Economic Value score 0.0–5.0. Input to CoV formula.', enumVals:[]},
+    {name:'cov_upskilling_value', type:'DECIMAL', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Upskilling Value score 0.0–5.0. Input to CoV formula.', enumVals:[]},
+    {name:'national_recognition', type:'BOOLEAN', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Nationally recognized credential (+0.3 Signaling bonus in CoV).', enumVals:[]},
+    {name:'cov_score', type:'DECIMAL', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Computed CoV score (max 5.0). Cohort-locked annually at July 1.', enumVals:[]},
+    {name:'seal_tier', type:'ENUM', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Employment seal eligibility based on CoV score thresholds.', enumVals:['Employment Honors+','Employment Honors','Below Threshold']},
+    {name:'cohort_version', type:'VARCHAR', len:10, nullable:false, governed:true, ai:false, status:'active', desc:'Cohort year anchor for score locking.', enumVals:[]},
+    {name:'record_status', type:'ENUM', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Lifecycle status of the credential record.', enumVals:['Active','Pending Review','Pending Approval','Deprecated','Retired']},
+  ]
+};
+
+function smTypeLabel(f) {
+  if (f.type === 'VARCHAR') return 'VARCHAR(' + f.len + ')';
+  if (f.type === 'DECIMAL') return 'DECIMAL';
+  if (f.type === 'ENUM') return 'ENUM (' + f.enumVals.length + ' values)';
+  return f.type;
+}
+
+function smRender() {
+  var fields = smSchemas[smCurrentLib];
+  var active = fields.filter(function(f){return f.status==='active';}).length;
+  var dep = fields.filter(function(f){return f.status==='deprecated';}).length;
+  document.getElementById('smFieldCount').textContent = fields.length + ' fields total · ' + active + ' active';
+  document.getElementById('smDepCount').textContent = dep;
+  var list = document.getElementById('smFieldList');
+  list.innerHTML = '';
+  fields.forEach(function(f, idx) {
+    var row = document.createElement('div');
+    row.className = 'sm-field-row' + (f.status === 'deprecated' ? ' deprecated' : '');
+    var govChip = f.ai ? '<span class="chip chip-green" style="font-size:9px">AI</span>' : (f.governed ? '<span class="chip chip-navy" style="font-size:9px">Yes</span>' : '<span class="chip" style="font-size:9px;background:#F1F5F9;color:#475569">No</span>');
+    var statusChip = f.status === 'deprecated'
+      ? '<span class="chip chip-red" style="font-size:9px">Deprecated</span>'
+      : f.status === 'pending'
+      ? '<span class="chip chip-amber" style="font-size:9px">Pending Approval</span>'
+      : '<span class="chip chip-green" style="font-size:9px">Active</span>';
+    var enumHint = f.type === 'ENUM' && f.enumVals.length
+      ? '<div style="font-size:9px;color:var(--gold);margin-top:2px">' + f.enumVals.slice(0,3).join(', ') + (f.enumVals.length > 3 ? ' +' + (f.enumVals.length-3) + ' more' : '') + '</div>' : '';
+    row.innerHTML =
+      '<span class="sm-field-name">' + f.name + '</span>' +
+      '<span><span class="sm-field-type">' + smTypeLabel(f) + '</span></span>' +
+      '<span class="sm-field-center">' + (f.nullable ? 'Yes' : 'No') + '</span>' +
+      '<span class="sm-field-center">' + govChip + '</span>' +
+      '<span class="sm-field-desc">' + f.desc + enumHint + '</span>' +
+      '<span>' + statusChip + '</span>' +
+      '<span class="sm-row-actions">' +
+        '<button class="btn btn-secondary btn-sm" onclick="smOpenEdit(' + idx + ')">Edit</button>' +
+        (f.status !== 'deprecated' ? '<button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none" onclick="smOpenRetire(' + idx + ')">Retire</button>' : '') +
+      '</span>';
+    list.appendChild(row);
+  });
+}
+
+function smSwitchLib(lib, el) {
+  smCurrentLib = lib;
+  document.querySelectorAll('#panel-schema .filter-pill').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');
+  smRender();
+}
+
+function smOpenDrawer() {
+  document.getElementById('smOverlay').style.display = 'block';
+  var drawer = document.getElementById('smDrawer');
+  drawer.style.display = 'flex';
+  setTimeout(function(){ drawer.style.transform = 'translateX(0)'; }, 10);
+}
+function smCloseDrawer() {
+  var drawer = document.getElementById('smDrawer');
+  drawer.style.transform = 'translateX(100%)';
+  setTimeout(function(){ drawer.style.display = 'none'; document.getElementById('smOverlay').style.display = 'none'; }, 260);
+  smEditingIdx = null; smRetiring = false;
+}
+function smCloseIfOverlay(e) { if (e.target === document.getElementById('smOverlay')) smCloseDrawer(); }
+
+function smResetForm() {
+  document.getElementById('smFldName').value = '';
+  document.getElementById('smFldType').value = '';
+  document.getElementById('smFldLen').value = '';
+  document.getElementById('smFldPrec').value = '';
+  document.getElementById('smFldScale').value = '';
+  document.getElementById('smFldDesc').value = '';
+  document.getElementById('smFldReason').value = '';
+  document.getElementById('smEnumInput').value = '';
+  document.getElementById('smEnumPreview').innerHTML = '';
+  document.querySelectorAll('input[name="smNullable"]')[0].checked = true;
+  document.querySelectorAll('input[name="smGoverned"]')[0].checked = true;
+  document.querySelectorAll('input[name="smAI"]')[0].checked = true;
+  smTypeChange();
+}
+
+function smOpenAdd() {
+  smEditingIdx = null; smRetiring = false;
+  smResetForm();
+  document.getElementById('smDrawerTitle').textContent = 'Add New Field';
+  document.getElementById('smDrawerSub').textContent = 'Define field properties. Change will go to Pending Approvals.';
+  document.getElementById('smRetireNotice').style.display = 'none';
+  document.getElementById('smFldName').readOnly = false;
+  document.getElementById('smSubmitBtn').textContent = 'Submit for Approval';
+  document.getElementById('smSubmitBtn').className = 'btn btn-gold';
+  smOpenDrawer();
+}
+
+function smOpenEdit(idx) {
+  smEditingIdx = idx; smRetiring = false;
+  var f = smSchemas[smCurrentLib][idx];
+  smResetForm();
+  document.getElementById('smDrawerTitle').textContent = 'Edit Field — ' + f.name;
+  document.getElementById('smDrawerSub').textContent = 'Changes will go to Pending Approvals for Curriculum Director review.';
+  document.getElementById('smRetireNotice').style.display = 'none';
+  document.getElementById('smFldName').value = f.name;
+  document.getElementById('smFldName').readOnly = true;
+  document.getElementById('smFldType').value = f.type;
+  document.getElementById('smFldLen').value = f.len || '';
+  document.getElementById('smFldDesc').value = f.desc;
+  document.getElementById('smEnumInput').value = f.enumVals.join('\n');
+  document.querySelectorAll('input[name="smNullable"]')[f.nullable ? 1 : 0].checked = true;
+  document.querySelectorAll('input[name="smGoverned"]')[f.governed ? 0 : 1].checked = true;
+  document.querySelectorAll('input[name="smAI"]')[f.ai ? 1 : 0].checked = true;
+  document.getElementById('smSubmitBtn').textContent = 'Submit Change for Approval';
+  document.getElementById('smSubmitBtn').className = 'btn btn-gold';
+  smTypeChange();
+  if (f.enumVals.length) smParseEnum();
+  smOpenDrawer();
+}
+
+function smOpenRetire(idx) {
+  smEditingIdx = idx; smRetiring = true;
+  var f = smSchemas[smCurrentLib][idx];
+  smResetForm();
+  document.getElementById('smDrawerTitle').textContent = 'Retire Field — ' + f.name;
+  document.getElementById('smDrawerSub').textContent = 'Deprecation requires Curriculum Director approval.';
+  document.getElementById('smRetireNotice').style.display = 'block';
+  document.getElementById('smFldName').value = f.name;
+  document.getElementById('smFldName').readOnly = true;
+  document.getElementById('smFldType').value = f.type;
+  document.getElementById('smFldDesc').value = f.desc;
+  document.getElementById('smSubmitBtn').textContent = 'Submit Retirement for Approval';
+  document.getElementById('smSubmitBtn').className = 'btn btn-primary';
+  document.getElementById('smDrawerFooterLeft').textContent = 'Field will be marked deprecated pending approval';
+  smTypeChange();
+  smOpenDrawer();
+}
+
+function smTypeChange() {
+  var t = document.getElementById('smFldType').value;
+  document.getElementById('smVarcharLen').style.display = t === 'VARCHAR' ? 'block' : 'none';
+  document.getElementById('smDecimalPrec').style.display = t === 'DECIMAL' ? 'block' : 'none';
+  document.getElementById('smEnumSection').style.display = t === 'ENUM' ? 'block' : 'none';
+}
+
+function smSlugify(inp) {
+  inp.value = inp.value.toLowerCase().replace(/[^a-z0-9_]/g,'_').replace(/__+/g,'_');
+}
+
+function smParseEnum() {
+  var raw = document.getElementById('smEnumInput').value;
+  var vals = raw.split(/[\n,]/).map(function(v){return v.trim();}).filter(function(v){return v.length > 0;});
+  var preview = document.getElementById('smEnumPreview');
+  preview.innerHTML = vals.map(function(v){ return '<span class="sm-enum-chip">' + v + '</span>'; }).join(' ');
+  return vals;
+}
+
+function smSubmit() {
+  var name = document.getElementById('smFldName').value.trim();
+  var type = document.getElementById('smFldType').value;
+  var reason = document.getElementById('smFldReason').value.trim();
+  if (!name) { alert('Field name is required.'); return; }
+  if (!type) { alert('Please select a data type.'); return; }
+  if (!reason) { alert('Please provide a reason for this change.'); return; }
+  if (type === 'ENUM' && smParseEnum().length === 0) { alert('Enumerated list requires at least one allowed value.'); return; }
+
+  if (smRetiring) {
+    smSchemas[smCurrentLib][smEditingIdx].status = 'pending-retire';
+    smCloseDrawer();
+    smRender();
+    alert('Retirement request submitted. It will appear in Pending Approvals for Curriculum Director review.');
+    return;
+  }
+
+  var nullable = document.querySelector('input[name="smNullable"]:checked').value === 'yes';
+  var governed = document.querySelector('input[name="smGoverned"]:checked').value === 'yes';
+  var ai = document.querySelector('input[name="smAI"]:checked').value === 'yes';
+  var desc = document.getElementById('smFldDesc').value.trim();
+  var len = parseInt(document.getElementById('smFldLen').value) || null;
+  var enumVals = type === 'ENUM' ? smParseEnum() : [];
+
+  if (smEditingIdx !== null) {
+    var f = smSchemas[smCurrentLib][smEditingIdx];
+    f.type = type; f.len = len; f.nullable = nullable; f.governed = governed; f.ai = ai; f.desc = desc; f.enumVals = enumVals; f.status = 'pending';
+  } else {
+    smSchemas[smCurrentLib].push({ name:name, type:type, len:len, nullable:nullable, governed:governed, ai:ai, status:'pending', desc:desc, enumVals:enumVals });
+  }
+  smCloseDrawer();
+  smRender();
+  alert('Schema change submitted for Curriculum Director approval. It will appear in Pending Approvals.');
+}
+
+document.addEventListener('DOMContentLoaded', function() { smRender(); });
 </script>
 </body>
 </html>
