@@ -199,6 +199,23 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 .sm-hint{font-size:10px;color:var(--slate);margin-top:3px;line-height:1.5}
 .sm-enum-chip{background:var(--mist);border:1px solid rgba(12,35,64,.12);border-radius:2px;padding:2px 8px;font-size:10px;color:var(--navy);font-family:var(--mono)}
 
+/* ── COURSE EDIT MODAL ── */
+.ce-tab{padding:10px 18px;font-size:12px;font-weight:600;color:var(--slate);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.ce-tab:hover{color:var(--navy);background:var(--mist)}
+.ce-tab.active{color:var(--navy);border-bottom-color:var(--gold)}
+.ce-panel{flex:1;overflow-y:auto;padding:20px}
+.ce-flag-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(12,35,64,.07)}
+.ce-toggle{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
+.ce-toggle input{opacity:0;width:0;height:0}
+.ce-toggle-slider{position:absolute;cursor:pointer;inset:0;background:rgba(12,35,64,.15);border-radius:22px;transition:.2s}
+.ce-toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.ce-toggle input:checked + .ce-toggle-slider{background:var(--green)}
+.ce-toggle input:checked + .ce-toggle-slider:before{transform:translateX(18px)}
+.ce-log-entry{padding:10px 12px;border-left:3px solid var(--mist);margin-bottom:8px;background:#fff;border-radius:0 var(--radius) var(--radius) 0}
+.ce-log-date{font-size:10px;color:var(--slate);font-family:var(--mono);margin-bottom:2px}
+.ce-log-action{font-size:12px;font-weight:600;color:var(--navy)}
+.ce-log-note{font-size:11px;color:var(--slate);margin-top:2px}
+
 /* ── BULK UPLOAD MODAL ── */
 .bu-overlay{position:fixed;inset:0;background:rgba(12,35,64,.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;animation:buFadeIn .2s ease}
 .bu-overlay.hidden{display:none}
@@ -987,6 +1004,133 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 </div>
 </div>
 
+<!-- COURSE EDIT MODAL -->
+<div id="ceOverlay" style="position:fixed;inset:0;background:rgba(12,35,64,.45);z-index:900;display:none" onclick="if(event.target===this)ceClose()"></div>
+<div id="ceDrawer" style="position:fixed;top:0;right:0;width:520px;height:100vh;background:#fff;z-index:901;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(12,35,64,.18);transform:translateX(100%);transition:transform .25s ease">
+  <div style="background:var(--navy);border-bottom:3px solid var(--gold);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div style="font-family:var(--serif);font-size:15px;font-weight:700;color:#fff" id="ceDrawerTitle">Edit Course</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px" id="ceDrawerSub">Changes will go to Pending Approvals</div>
+    </div>
+    <button onclick="ceClose()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:16px">&#10005;</button>
+  </div>
+
+  <!-- TAB BAR -->
+  <div style="display:flex;border-bottom:1px solid rgba(12,35,64,.1);flex-shrink:0;background:#fff">
+    <div class="ce-tab active" id="ceTab-core" onclick="ceShowTab('core')">Core</div>
+    <div class="ce-tab" id="ceTab-diploma" onclick="ceShowTab('diploma')">Diploma Flags</div>
+    <div class="ce-tab" id="ceTab-log" onclick="ceShowTab('log')">Log</div>
+  </div>
+
+  <!-- TAB: CORE -->
+  <div id="cePanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
+    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
+      <strong style="color:var(--navy)" id="ceGroundingCode"></strong> &mdash; <span id="ceGroundingName"></span>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">State Course Code</label>
+      <input type="text" id="ceFldCode" class="sm-input" readonly style="background:var(--mist);color:var(--slate)">
+      <div class="sm-hint">Course code cannot be changed after creation.</div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Course Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="ceFldName" class="sm-input" placeholder="Official course title">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="sm-form-group">
+        <label class="sm-label">Category <span style="color:var(--red)">*</span></label>
+        <select id="ceFldCategory" class="sm-input">
+          <option value="">— Select —</option>
+          <option>ELA</option><option>Mathematics</option><option>Science</option>
+          <option>Social Studies</option><option>Career &amp; Technical Education</option>
+          <option>Fine Arts</option><option>Physical Education</option><option>World Language</option><option>Other</option>
+        </select>
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">Credit Hours <span style="color:var(--red)">*</span></label>
+        <input type="number" id="ceFldCredits" class="sm-input" step="0.5" min="0.5" max="8" placeholder="e.g. 1.0">
+      </div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Course Subject</label>
+      <select id="ceFldSubject" class="sm-input">
+        <option value="">— Select subject —</option>
+      </select>
+      <div class="sm-hint">Controlled vocabulary — 25 values defined in Schema Manager.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="sm-form-group">
+        <label class="sm-label">SCED Code</label>
+        <input type="text" id="ceFldSced" class="sm-input" placeholder="e.g. 01001" maxlength="5">
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">CTE Cluster</label>
+        <input type="text" id="ceFldCte" class="sm-input" placeholder="e.g. Health Science">
+      </div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Course Description</label>
+      <textarea id="ceFldDesc" class="sm-input" rows="4" placeholder="Full course description (no character limit)"></textarea>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
+      <textarea id="ceFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea>
+    </div>
+  </div>
+
+  <!-- TAB: DIPLOMA FLAGS -->
+  <div id="cePanel-diploma" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
+    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
+      <strong style="color:var(--navy)" id="ceGroundingCode2"></strong> &mdash; <span id="ceGroundingName2"></span>
+    </div>
+    <div style="font-size:12px;color:var(--slate);margin-bottom:16px;line-height:1.6">
+      Diploma flags determine which Indiana diploma programs this course can satisfy. Changes require Curriculum Director approval.
+    </div>
+    <div class="ce-flag-row">
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">Core 40</div>
+        <div style="font-size:11px;color:var(--slate);margin-top:2px">Indiana Core 40 diploma requirement</div>
+      </div>
+      <label class="ce-toggle"><input type="checkbox" id="ceFlagCore40"><span class="ce-toggle-slider"></span></label>
+    </div>
+    <div class="ce-flag-row">
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">Academic Honors Diploma (AHD)</div>
+        <div style="font-size:11px;color:var(--slate);margin-top:2px">Counts toward Indiana Academic Honors Diploma</div>
+      </div>
+      <label class="ce-toggle"><input type="checkbox" id="ceFlagAHD"><span class="ce-toggle-slider"></span></label>
+    </div>
+    <div class="ce-flag-row">
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">Technical Honors Diploma (THD)</div>
+        <div style="font-size:11px;color:var(--slate);margin-top:2px">Counts toward Indiana Technical Honors Diploma</div>
+      </div>
+      <label class="ce-toggle"><input type="checkbox" id="ceFlagTHD"><span class="ce-toggle-slider"></span></label>
+    </div>
+    <div class="ce-flag-row" style="border-bottom:none">
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">Core 40 with Technical Honors (2029)</div>
+        <div style="font-size:11px;color:var(--slate);margin-top:2px">2029 diploma framework flag</div>
+      </div>
+      <label class="ce-toggle"><input type="checkbox" id="ceFlagTH29"><span class="ce-toggle-slider"></span></label>
+    </div>
+  </div>
+
+  <!-- TAB: LOG -->
+  <div id="cePanel-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
+    <div style="font-size:11px;color:var(--slate);margin-bottom:12px">Read-only audit trail for this course record.</div>
+    <div id="ceLogEntries"></div>
+  </div>
+
+  <div style="padding:14px 20px;border-top:1px solid rgba(12,35,64,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:#fff" id="ceFooterBar">
+    <div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="ceClose()">Cancel</button>
+      <button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
 <!-- SCHEMA FIELD EDITOR SLIDE-OUT -->
 <div id="smOverlay" style="position:fixed;inset:0;background:rgba(12,35,64,.45);z-index:900;display:none" onclick="smCloseIfOverlay(event)"></div>
 <div id="smDrawer" style="position:fixed;top:0;right:0;width:480px;height:100vh;background:#fff;z-index:901;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(12,35,64,.18);transform:translateX(100%);transition:transform .25s ease">
@@ -1311,10 +1455,26 @@ function apApprove(id) {
   var item = apQueue.find(function(i){ return i.id === id; });
   if (!item) return;
   item.status = 'approved';
+  // Schema field approval
   if (item.schemaLib !== null && item.schemaIdx !== null) {
     var f = smSchemas[item.schemaLib][item.schemaIdx];
     if (f) { f.status = (f.status === 'pending-retire') ? 'deprecated' : 'active'; }
     smRender();
+  }
+  // Course approval — move course from pending → active
+  if (item.courseCode) {
+    var c = ccCourses.find(function(c){ return c.code === item.courseCode; });
+    if (c) {
+      if (item.courseEdit) {
+        // Apply the pending edits
+        Object.keys(item.courseEdit).forEach(function(k){ c[k] = item.courseEdit[k]; });
+      }
+      c.status = 'active';
+      c.log = c.log || [];
+      c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Approved', by: 'Curriculum Director', note: item.title});
+    }
+    ccSave();
+    ccRender();
   }
   var card = document.getElementById(id);
   if (card) { card.style.transition = 'opacity .3s'; card.style.opacity = '0'; }
@@ -1327,6 +1487,7 @@ function apReject(id) {
   var item = apQueue.find(function(i){ return i.id === id; });
   if (!item) return;
   item.status = 'rejected';
+  // Schema field rejection
   if (item.schemaLib !== null && item.schemaIdx !== null) {
     var fields = smSchemas[item.schemaLib];
     var f = fields[item.schemaIdx];
@@ -1336,6 +1497,22 @@ function apReject(id) {
       else if (f.status === 'pending-retire') { f.status = 'active'; }
     }
     smRender();
+  }
+  // Course rejection — remove if new, revert edits if edit
+  if (item.courseCode) {
+    if (item.isNew && !item.courseEdit) {
+      var idx = ccCourses.findIndex(function(c){ return c.code === item.courseCode; });
+      if (idx >= 0) ccCourses.splice(idx, 1);
+    } else {
+      var c = ccCourses.find(function(c){ return c.code === item.courseCode; });
+      if (c) {
+        c.status = 'active';
+        c.log = c.log || [];
+        c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Rejected', by: 'Curriculum Director', note: item.title});
+      }
+    }
+    ccSave();
+    ccRender();
   }
   var card = document.getElementById(id);
   if (card) { card.style.transition = 'opacity .3s'; card.style.opacity = '0'; }
@@ -1563,6 +1740,30 @@ function buBuildResultScreen() {
   });
   ccSave();
   ccRender();
+
+  // Push each importable course into the approval queue
+  var today = new Date().toISOString().slice(0,10);
+  okRows.concat(warnRows).forEach(function(r) {
+    var apId = 'ap-course-' + r.id + '-' + Date.now() + Math.random().toString(36).slice(2,6);
+    var existing = apQueue.find(function(i){ return i.courseCode === r.id && i.status === 'pending'; });
+    if (!existing) {
+      apQueue.push({
+        id: apId,
+        group: 'Course Catalog',
+        ref: 'COURSE · ' + r.id,
+        title: (r.raw && r.raw['state_course_code'] ? 'New' : 'Updated') + ' Course — ' + r.name,
+        meta: 'Bulk import · ' + (r.raw && r.raw['category'] ? r.raw['category'] : '—') + ' · Submitted ' + today + (r.issue ? ' · ⚠ ' + r.issue.split(' · ')[0] : ''),
+        approverRole: 'curriculum',
+        schemaLib: null,
+        schemaIdx: null,
+        courseCode: r.id,
+        isNew: true,
+        status: 'pending'
+      });
+    }
+  });
+  persistSave();
+  apRender();
 
   var s3 = document.getElementById('buStep3');
   var log = okRows.map(function(r){ return '<div class="lok">&#10003; ' + r.id + ' &mdash; ' + r.name + ' &mdash; added to catalog (Pending Approval)</div>'; }).join('') +
@@ -2128,7 +2329,7 @@ function ccRender() {
         '<td class="mono">' + (c.sced||'—') + '</td>' +
         '<td>' + flagsHtml + '</td>' +
         '<td>' + statusChip + '</td>' +
-        '<td><button class="btn btn-secondary btn-sm">Edit</button></td>';
+        '<td><button class="btn btn-secondary btn-sm" onclick="ccOpenEditByCode(\'' + c.code + '\')">Edit</button></td>';
       tbody.appendChild(tr);
     });
   }
@@ -2138,6 +2339,163 @@ function ccRender() {
   document.getElementById('ccSubtitle').textContent = 'Indiana Official Course List · ' + ccCourses.length + ' records · SY 2025–26';
 }
 
+/* ── COURSE EDIT MODAL ── */
+var ceCurrentCode = null;
+
+function ccOpenEditByCode(code) {
+  var c = ccCourses.find(function(c){ return c.code === code; });
+  if (!c) return;
+  ceCurrentCode = code;
+
+  // Populate grounding fields
+  document.getElementById('ceGroundingCode').textContent = c.code;
+  document.getElementById('ceGroundingName').textContent = c.name;
+  document.getElementById('ceGroundingCode2').textContent = c.code;
+  document.getElementById('ceGroundingName2').textContent = c.name;
+
+  // Core tab
+  document.getElementById('ceFldCode').value = c.code;
+  document.getElementById('ceFldName').value = c.name || '';
+  document.getElementById('ceFldCredits').value = c.credits || '';
+  document.getElementById('ceFldSced').value = c.sced && c.sced !== '—' ? c.sced : '';
+  document.getElementById('ceFldCte').value = c.cteCluster || '';
+  document.getElementById('ceFldDesc').value = c.description || '';
+  document.getElementById('ceFldReason').value = '';
+
+  // Populate subject dropdown from schema enum
+  var subjField = smSchemas.catalog.find(function(f){ return f.name === 'course_subject'; });
+  var subjSel = document.getElementById('ceFldSubject');
+  subjSel.innerHTML = '<option value="">— Select subject —</option>';
+  if (subjField && subjField.enumVals) {
+    subjField.enumVals.forEach(function(v){
+      var opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      if (c.subject === v) opt.selected = true;
+      subjSel.appendChild(opt);
+    });
+  }
+
+  // Category
+  var catSel = document.getElementById('ceFldCategory');
+  for (var i = 0; i < catSel.options.length; i++) {
+    if (catSel.options[i].value === c.category) { catSel.selectedIndex = i; break; }
+  }
+
+  // Diploma flags
+  var flags = (c.flags || '').split(',').map(function(f){ return f.trim(); });
+  document.getElementById('ceFlagCore40').checked = flags.indexOf('Core 40') >= 0;
+  document.getElementById('ceFlagAHD').checked = flags.indexOf('AHD') >= 0;
+  document.getElementById('ceFlagTHD').checked = flags.indexOf('THD') >= 0;
+  document.getElementById('ceFlagTH29').checked = flags.indexOf('TH29') >= 0;
+
+  // Log tab
+  var logEl = document.getElementById('ceLogEntries');
+  var entries = c.log || [];
+  if (entries.length === 0) {
+    logEl.innerHTML = '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet.</div>';
+  } else {
+    logEl.innerHTML = entries.map(function(e){
+      return '<div class="ce-log-entry"><div class="ce-log-date">' + e.date + ' · ' + e.by + '</div><div class="ce-log-action">' + e.action + '</div><div class="ce-log-note">' + e.note + '</div></div>';
+    }).join('');
+  }
+
+  // Pending status — show read-only notice if already pending
+  var footer = document.getElementById('ceFooterBar');
+  var isPending = c.status === 'pending';
+  if (isPending) {
+    footer.innerHTML = '<div style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:8px 12px;flex:1">This course is already pending approval. Approve or reject it in Pending Approvals first.</div><button class="btn btn-secondary" onclick="ceClose()">Close</button>';
+  } else {
+    footer.innerHTML = '<div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button></div>';
+  }
+
+  ceShowTab('core');
+  document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
+  document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval · Read-only' : 'Changes go to Pending Approvals';
+
+  // Open drawer
+  document.getElementById('ceOverlay').style.display = 'block';
+  var d = document.getElementById('ceDrawer');
+  d.style.display = 'flex';
+  setTimeout(function(){ d.style.transform = 'translateX(0)'; }, 10);
+}
+
+function ceShowTab(tab) {
+  ['core','diploma','log'].forEach(function(t){
+    document.getElementById('cePanel-' + t).style.display = t === tab ? 'flex' : 'none';
+    var tabEl = document.getElementById('ceTab-' + t);
+    if (tabEl) tabEl.className = 'ce-tab' + (t === tab ? ' active' : '');
+  });
+  // Log tab doesn't need footer
+  document.getElementById('ceFooterBar').style.display = tab === 'log' ? 'none' : 'flex';
+}
+
+function ceClose() {
+  var d = document.getElementById('ceDrawer');
+  d.style.transform = 'translateX(100%)';
+  setTimeout(function(){ d.style.display = 'none'; document.getElementById('ceOverlay').style.display = 'none'; }, 260);
+  ceCurrentCode = null;
+}
+
+function ceSubmit() {
+  var reason = document.getElementById('ceFldReason').value.trim();
+  if (!reason) { alert('Please provide a reason for this change.'); return; }
+  var name = document.getElementById('ceFldName').value.trim();
+  if (!name) { alert('Course Name is required.'); return; }
+
+  var flags = [];
+  if (document.getElementById('ceFlagCore40').checked) flags.push('Core 40');
+  if (document.getElementById('ceFlagAHD').checked) flags.push('AHD');
+  if (document.getElementById('ceFlagTHD').checked) flags.push('THD');
+  if (document.getElementById('ceFlagTH29').checked) flags.push('TH29');
+
+  var edits = {
+    name: name,
+    category: document.getElementById('ceFldCategory').value,
+    credits: document.getElementById('ceFldCredits').value,
+    sced: document.getElementById('ceFldSced').value || '—',
+    cteCluster: document.getElementById('ceFldCte').value,
+    description: document.getElementById('ceFldDesc').value,
+    subject: document.getElementById('ceFldSubject').value,
+    flags: flags.join(', ') || '—',
+    status: 'pending'
+  };
+
+  // Mark course as pending with staged edits
+  var c = ccCourses.find(function(c){ return c.code === ceCurrentCode; });
+  if (c) {
+    c._pendingEdits = edits;
+    c.status = 'pending';
+    c.log = c.log || [];
+    c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Edit Submitted', by: 'Admin (CIO)', note: reason});
+  }
+
+  var apId = 'ap-course-edit-' + ceCurrentCode + '-' + Date.now();
+  var today = new Date().toISOString().slice(0,10);
+  apQueue.push({
+    id: apId,
+    group: 'Course Catalog',
+    ref: 'COURSE · ' + ceCurrentCode,
+    title: 'Course Edit — ' + name,
+    meta: 'Edited by Admin (CIO) · Submitted ' + today + ' · ' + reason,
+    approverRole: 'curriculum',
+    schemaLib: null,
+    schemaIdx: null,
+    courseCode: ceCurrentCode,
+    courseEdit: edits,
+    isNew: false,
+    status: 'pending'
+  });
+
+  ccSave();
+  ccRender();
+  persistSave();
+  apRender();
+  showPersistBanner('Edit submitted for approval — saved.', true);
+  ceClose();
+  showPanel('approvals', document.querySelector('.nav-item[onclick*="approvals"]'));
+}
+
 </script>
 </body>
 </html>
+
