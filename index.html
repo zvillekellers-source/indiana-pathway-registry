@@ -540,7 +540,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       <div class="panel-header-row">
         <div>
           <div class="panel-title">Course Catalog</div>
-          <div class="panel-subtitle">Indiana Official Course List &middot; 2,847 records &middot; SY 2025&ndash;26</div>
+          <div class="panel-subtitle" id="ccSubtitle">Indiana Official Course List &middot; SY 2025&ndash;26</div>
         </div>
         <div class="panel-actions">
           <button class="btn btn-secondary btn-sm" onclick="openBulkUpload()">Bulk Upload</button>
@@ -549,39 +549,28 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       </div>
     </div>
     <div class="filter-bar">
-      <input class="search-input" type="text" placeholder="Search course name or code&hellip;">
-      <div class="filter-pill active">All Active</div>
-      <div class="filter-pill">ELA</div>
-      <div class="filter-pill">Math</div>
-      <div class="filter-pill">Science</div>
-      <div class="filter-pill">Social Studies</div>
-      <div class="filter-pill">CTE</div>
-      <div class="filter-pill">New This Year</div>
+      <input class="search-input" id="ccSearch" type="text" placeholder="Search course name or code&hellip;" oninput="ccRender()">
+      <div class="filter-pill active" onclick="ccSetFilter('all',this)">All Active</div>
+      <div class="filter-pill" onclick="ccSetFilter('ela',this)">ELA</div>
+      <div class="filter-pill" onclick="ccSetFilter('math',this)">Math</div>
+      <div class="filter-pill" onclick="ccSetFilter('science',this)">Science</div>
+      <div class="filter-pill" onclick="ccSetFilter('social studies',this)">Social Studies</div>
+      <div class="filter-pill" onclick="ccSetFilter('cte',this)">CTE</div>
+      <div class="filter-pill" onclick="ccSetFilter('new',this)">New This Year</div>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <table class="data-table">
         <thead>
-          <tr>
-            <th>State Code</th><th>Course Name</th><th>Category</th><th>Credits</th><th>SCED</th><th>Diploma Flags</th><th>Status</th><th></th>
-          </tr>
+          <tr><th>State Code</th><th>Course Name</th><th>Category</th><th>Credits</th><th>SCED</th><th>Diploma Flags</th><th>Status</th><th></th></tr>
         </thead>
-        <tbody>
-          <tr><td class="mono">ELA1000</td><td>English Language Arts 9</td><td><span class="chip chip-blue">ELA</span></td><td class="mono">2.0</td><td class="mono">01001</td><td><span class="chip chip-green">Core 40</span> <span class="chip chip-navy">AHD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">MTH1050</td><td>Algebra I</td><td><span class="chip chip-green">Math</span></td><td class="mono">2.0</td><td class="mono">02051</td><td><span class="chip chip-green">Core 40</span> <span class="chip chip-navy">AHD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">CTE2210</td><td>Principles of Business</td><td><span class="chip chip-amber">CTE</span></td><td class="mono">1.0</td><td class="mono">22001</td><td><span class="chip chip-green">Core 40</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">SCI2010</td><td>Biology I</td><td><span class="chip chip-green">Science</span></td><td class="mono">2.0</td><td class="mono">03001</td><td><span class="chip chip-green">Core 40</span> <span class="chip chip-navy">AHD</span> <span class="chip chip-blue">THD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">MTH2060</td><td>Precalculus</td><td><span class="chip chip-green">Math</span></td><td class="mono">2.0</td><td class="mono">02151</td><td><span class="chip chip-navy">AHD</span> <span class="chip chip-blue">THD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">CTE3310</td><td>Healthcare Career Exploration</td><td><span class="chip chip-amber">CTE</span></td><td class="mono">1.0</td><td class="mono">20052</td><td><span class="chip chip-green">Core 40</span></td><td><span class="chip chip-amber">New</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">ELA1100</td><td>English Language Arts 10</td><td><span class="chip chip-blue">ELA</span></td><td class="mono">2.0</td><td class="mono">01002</td><td><span class="chip chip-green">Core 40</span> <span class="chip chip-navy">AHD</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-          <tr><td class="mono">SST1050</td><td>World History &amp; Civilization</td><td><span class="chip chip-navy">Social Studies</span></td><td class="mono">2.0</td><td class="mono">04051</td><td><span class="chip chip-green">Core 40</span></td><td><span class="chip chip-green">Active</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
-        </tbody>
+        <tbody id="ccTableBody"></tbody>
       </table>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--slate)">
-      <span>Showing 8 of 2,847 records</span>
+      <span id="ccFooter">Loading&hellip;</span>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-secondary btn-sm">&larr; Prev</button>
-        <button class="btn btn-secondary btn-sm">Next &rarr;</button>
+        <button class="btn btn-secondary btn-sm" onclick="ccPage(-1)">&larr; Prev</button>
+        <button class="btn btn-secondary btn-sm" onclick="ccPage(1)">Next &rarr;</button>
       </div>
     </div>
   </div>
@@ -1553,21 +1542,43 @@ function buBuildResultScreen() {
   var warnRows = buRows.filter(function(r){return r.status==='warn';});
   var errRows = buRows.filter(function(r){return r.status==='error';});
   var importable = okRows.length + warnRows.length;
+
+  // Write importable rows into the course catalog
+  var today = new Date().toISOString().slice(0,10);
+  okRows.concat(warnRows).forEach(function(r) {
+    var existing = ccCourses.findIndex(function(c){ return c.code.toLowerCase() === r.id.toLowerCase(); });
+    var rec = {
+      code: r.id, name: r.name,
+      category: r.cat || (r.raw && r.raw['category']) || '—',
+      credits: (r.raw && r.raw['credit_hours']) || '—',
+      sced: (r.raw && r.raw['sced_code']) || '—',
+      flags: ccBuildFlags(r.raw || {}),
+      status: 'pending',
+      isNew: existing === -1,
+      importedOn: today,
+      issues: r.issue || ''
+    };
+    if (existing >= 0) { ccCourses[existing] = rec; }
+    else { ccCourses.push(rec); }
+  });
+  ccSave();
+  ccRender();
+
   var s3 = document.getElementById('buStep3');
-  var log = okRows.map(function(r){ return '<div class="lok">&#10003; ' + r.code + ' &mdash; ' + r.name + ' &mdash; imported successfully</div>'; }).join('') +
-    warnRows.map(function(r){ return '<div class="lwarn">&#9888; ' + r.code + ' &mdash; ' + r.name + ' &mdash; imported with warning: ' + r.issue + '</div>'; }).join('') +
-    errRows.map(function(r){ return '<div class="lerr">&#10007; ' + r.code + ' &mdash; ' + r.issue + ' &mdash; row skipped</div>'; }).join('');
+  var log = okRows.map(function(r){ return '<div class="lok">&#10003; ' + r.id + ' &mdash; ' + r.name + ' &mdash; added to catalog (Pending Approval)</div>'; }).join('') +
+    warnRows.map(function(r){ return '<div class="lwarn">&#9888; ' + r.id + ' &mdash; ' + r.name + ' &mdash; added with warning: ' + r.issue + '</div>'; }).join('') +
+    errRows.map(function(r){ return '<div class="lerr">&#10007; ' + r.id + ' &mdash; ' + r.issue + ' &mdash; row skipped</div>'; }).join('');
   s3.innerHTML = '<div class="bu-result-header"><div class="bu-result-icon">&#10003;</div><div class="bu-result-title">Import Complete</div><div class="bu-result-sub">SY 2025&ndash;26 Course Catalog &middot; ' + buRows.length + ' rows processed</div></div>' +
     '<div class="bu-result-grid">' +
-    '<div class="bu-result-stat g"><div class="bu-result-num">' + okRows.length + '</div><div class="bu-result-label">Records imported successfully</div></div>' +
-    '<div class="bu-result-stat a"><div class="bu-result-num">' + warnRows.length + '</div><div class="bu-result-label">Imported with warnings &mdash; review recommended</div></div>' +
+    '<div class="bu-result-stat g"><div class="bu-result-num">' + okRows.length + '</div><div class="bu-result-label">Added to catalog (Pending Approval)</div></div>' +
+    '<div class="bu-result-stat a"><div class="bu-result-num">' + warnRows.length + '</div><div class="bu-result-label">Added with warnings &mdash; review recommended</div></div>' +
     '<div class="bu-result-stat r"><div class="bu-result-num">' + errRows.length + '</div><div class="bu-result-label">Rows skipped due to errors</div></div>' +
     '</div>' +
     '<div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Import Log</div>' +
     '<div class="bu-log">' + (log || '<div style="color:var(--slate)">No rows processed.</div>') + '</div>' +
-    '<div style="margin-top:14px;background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate);display:flex;align-items:center;gap:10px"><span style="font-size:14px">&#9432;</span><span>All imported records are now in <strong>Pending Approval</strong> status. A Curriculum Director must approve before they appear in the published catalog.</span></div>';
-  document.getElementById('buFooterLeft').textContent = importable + ' records sent to Pending Approvals · ' + errRows.length + ' row' + (errRows.length!==1?'s':'') + ' skipped';
-  document.getElementById('buSubtitle').textContent = 'Import complete — records are now awaiting Curriculum Director approval';
+    '<div style="margin-top:14px;background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate);display:flex;align-items:center;gap:10px"><span style="font-size:14px">&#9432;</span><span>Records are now visible in <strong>Course Catalog</strong> with Pending Approval status. Search for them there now.</span></div>';
+  document.getElementById('buFooterLeft').textContent = importable + ' courses added to catalog · ' + errRows.length + ' row' + (errRows.length!==1?'s':'') + ' skipped';
+  document.getElementById('buSubtitle').textContent = 'Import complete — courses are now searchable in Course Catalog';
 }
 function buGoBack() {
   if (buStep === 2) buStep = 1;
@@ -1862,6 +1873,7 @@ function persistLoad() {
     var s = localStorage.getItem(LS_SCHEMAS);
     var q = localStorage.getItem(LS_QUEUE);
     if (s) { var parsed = JSON.parse(s); smSchemas.catalog = parsed.catalog; smSchemas.credentials = parsed.credentials; }
+    ccLoad();
     if (q) { apQueue.length = 0; JSON.parse(q).forEach(function(i){ apQueue.push(i); }); }
     return !!(s || q);
   } catch(e) { console.warn('localStorage load failed', e); return false; }
@@ -1874,6 +1886,10 @@ function persistReset() {
   smSchemas.credentials  = JSON.parse(JSON.stringify(smSchemasDefault.credentials));
   apQueue.length = 0;
   apQueueDefault.forEach(function(i){ apQueue.push(JSON.parse(JSON.stringify(i))); });
+  try { localStorage.removeItem(LS_COURSES); } catch(e) {}
+  ccCourses = JSON.parse(JSON.stringify(ccCoursesDefault));
+  ccSave();
+  ccRender();
   smRender(); apRender();
   showPersistBanner('Reset to defaults.', false);
 }
@@ -1887,9 +1903,11 @@ function showPersistBanner(msg, autohide) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  ccLoad();
   var loaded = persistLoad();
   smRender();
   apRender();
+  ccRender();
   if (loaded) showPersistBanner('Session restored from last visit.', true);
 });
 /* ── CSV TEMPLATE BUILDER ── */
@@ -1999,6 +2017,127 @@ function csvDownload() {
 function csvClose() {
   document.getElementById('csvOverlay').classList.add('hidden');
 }
+/* ── COURSE CATALOG ── */
+var LS_COURSES = 'ipr_courses_v1';
+var ccFilter = 'all';
+var ccPage_num = 0;
+var ccPageSize = 15;
+
+var ccCoursesDefault = [
+  {code:'ELA1000', name:'English Language Arts 9', category:'ELA', credits:'2.0', sced:'01001', flags:'Core 40, AHD', status:'active', isNew:false, importedOn:null, issues:''},
+  {code:'MTH1050', name:'Algebra I', category:'Mathematics', credits:'2.0', sced:'02051', flags:'Core 40, AHD', status:'active', isNew:false, importedOn:null, issues:''},
+  {code:'CTE2210', name:'Principles of Business', category:'Career & Technical Education', credits:'1.0', sced:'22001', flags:'Core 40', status:'active', isNew:false, importedOn:null, issues:''},
+  {code:'SCI2010', name:'Biology I', category:'Science', credits:'2.0', sced:'03001', flags:'Core 40, AHD, THD', status:'active', isNew:false, importedOn:null, issues:''},
+  {code:'MTH2060', name:'Precalculus', category:'Mathematics', credits:'2.0', sced:'02151', flags:'AHD, THD', status:'active', isNew:false, importedOn:null, issues:''},
+  {code:'CTE3310', name:'Healthcare Career Exploration', category:'Career & Technical Education', credits:'1.0', sced:'20052', flags:'Core 40', status:'pending', isNew:true, importedOn:'2026-03-28', issues:''},
+  {code:'ELA1100', name:'English Language Arts 10', category:'ELA', credits:'2.0', sced:'01002', flags:'Core 40, AHD', status:'active', isNew:false, importedOn:null, issues:''},
+  {code:'SST1050', name:'World History & Civilization', category:'Social Studies', credits:'2.0', sced:'04051', flags:'Core 40', status:'active', isNew:false, importedOn:null, issues:''},
+];
+
+var ccCourses = [];
+
+function ccLoad() {
+  try {
+    var s = localStorage.getItem(LS_COURSES);
+    if (s) { ccCourses = JSON.parse(s); return; }
+  } catch(e) {}
+  ccCourses = JSON.parse(JSON.stringify(ccCoursesDefault));
+}
+
+function ccSave() {
+  try { localStorage.setItem(LS_COURSES, JSON.stringify(ccCourses)); } catch(e) {}
+}
+
+function ccBuildFlags(raw) {
+  var flags = [];
+  if (raw['diploma_core40'] && raw['diploma_core40'].toLowerCase() === 'true') flags.push('Core 40');
+  if (raw['diploma_ahd'] && raw['diploma_ahd'].toLowerCase() === 'true') flags.push('AHD');
+  if (raw['diploma_thd'] && raw['diploma_thd'].toLowerCase() === 'true') flags.push('THD');
+  return flags.length ? flags.join(', ') : '—';
+}
+
+function ccCatChipClass(cat) {
+  var c = (cat||'').toLowerCase();
+  if (c.includes('ela') || c.includes('english')) return 'chip-blue';
+  if (c.includes('math')) return 'chip-green';
+  if (c.includes('science')) return 'chip-green';
+  if (c.includes('social')) return 'chip-navy';
+  if (c.includes('cte') || c.includes('career') || c.includes('technical')) return 'chip-amber';
+  return 'chip-gray';
+}
+
+function ccSetFilter(f, el) {
+  ccFilter = f;
+  ccPage_num = 0;
+  document.querySelectorAll('#panel-course-catalog .filter-pill').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+  ccRender();
+}
+
+function ccPage(dir) {
+  ccPage_num = Math.max(0, ccPage_num + dir);
+  ccRender();
+}
+
+function ccRender() {
+  var q = (document.getElementById('ccSearch').value || '').toLowerCase().trim();
+  var filtered = ccCourses.filter(function(c) {
+    if (c.status === 'retired') return false;
+    var matchSearch = !q || c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || (c.category||'').toLowerCase().includes(q);
+    if (!matchSearch) return false;
+    if (ccFilter === 'all') return true;
+    if (ccFilter === 'new') return c.isNew;
+    var cat = (c.category||'').toLowerCase();
+    if (ccFilter === 'ela') return cat.includes('ela') || cat.includes('english');
+    if (ccFilter === 'math') return cat.includes('math');
+    if (ccFilter === 'science') return cat.includes('science');
+    if (ccFilter === 'social studies') return cat.includes('social');
+    if (ccFilter === 'cte') return cat.includes('cte') || cat.includes('career') || cat.includes('technical');
+    return true;
+  });
+
+  var total = filtered.length;
+  var maxPage = Math.max(0, Math.ceil(total / ccPageSize) - 1);
+  ccPage_num = Math.min(ccPage_num, maxPage);
+  var start = ccPage_num * ccPageSize;
+  var page = filtered.slice(start, start + ccPageSize);
+
+  var tbody = document.getElementById('ccTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (page.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--slate);font-size:12px">' +
+      (q ? 'No courses match "' + q + '"' : 'No courses in this category yet.') + '</td></tr>';
+  } else {
+    page.forEach(function(c) {
+      var statusChip = c.status === 'pending'
+        ? '<span class="chip chip-amber">Pending</span>'
+        : c.isNew
+        ? '<span class="chip chip-blue">New</span>'
+        : '<span class="chip chip-green">Active</span>';
+      var flagsHtml = (c.flags && c.flags !== '—')
+        ? c.flags.split(',').map(function(f){ return '<span class="chip chip-green" style="margin-right:2px;font-size:9px">' + f.trim() + '</span>'; }).join('')
+        : '—';
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="mono">' + c.code + '</td>' +
+        '<td>' + c.name + (c.issues ? '<div style="font-size:10px;color:#92400E;margin-top:2px">⚠ ' + c.issues.split(' · ')[0] + '</div>' : '') + '</td>' +
+        '<td><span class="chip ' + ccCatChipClass(c.category) + '" style="font-size:9px">' + (c.category||'—') + '</span></td>' +
+        '<td class="mono">' + (c.credits||'—') + '</td>' +
+        '<td class="mono">' + (c.sced||'—') + '</td>' +
+        '<td>' + flagsHtml + '</td>' +
+        '<td>' + statusChip + '</td>' +
+        '<td><button class="btn btn-secondary btn-sm">Edit</button></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  var showing = total === 0 ? '0' : (start+1) + '–' + Math.min(start+ccPageSize, total);
+  document.getElementById('ccFooter').textContent = 'Showing ' + showing + ' of ' + total + ' record' + (total!==1?'s':'') + (q ? ' matching "' + q + '"' : '');
+  document.getElementById('ccSubtitle').textContent = 'Indiana Official Course List · ' + ccCourses.length + ' records · SY 2025–26';
+}
+
 </script>
 </body>
 </html>
