@@ -305,6 +305,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     </div>
   </div>
   <div class="topbar-right">
+    <div id="persistBanner" style="font-size:10px;color:var(--gold);opacity:0;transition:opacity .5s;letter-spacing:.04em;font-weight:500"></div>
     <div class="topbar-badge">SY 2025–26</div>
     <div class="topbar-badge" style="background:rgba(45,106,79,.2);border-color:rgba(45,106,79,.4);color:#52B788">&#9679; Live</div>
     <div class="topbar-user" title="Admin User">CIO</div>
@@ -826,6 +827,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
           <div class="panel-subtitle">Data contract definitions &middot; Changes require Curriculum Director approval</div>
         </div>
         <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm" onclick="persistReset()" style="color:var(--red);border-color:rgba(155,35,53,.3)">Reset Defaults</button>
           <button class="btn btn-secondary btn-sm" onclick="smOpenCsvBuilder()">&#11015; CSV Template</button>
           <button class="btn btn-secondary btn-sm" onclick="smOpenAdd()">+ Add Field</button>
         </div>
@@ -1327,6 +1329,8 @@ function apApprove(id) {
   }
   var card = document.getElementById(id);
   if (card) { card.style.transition = 'opacity .3s'; card.style.opacity = '0'; }
+  persistSave();
+  showPersistBanner('Approved — saved.', true);
   setTimeout(function(){ apRender(); }, 320);
 }
 
@@ -1346,6 +1350,8 @@ function apReject(id) {
   }
   var card = document.getElementById(id);
   if (card) { card.style.transition = 'opacity .3s'; card.style.opacity = '0'; }
+  persistSave();
+  showPersistBanner('Rejected — saved.', true);
   setTimeout(function(){ apRender(); }, 320);
 }
 
@@ -1832,10 +1838,60 @@ function smSubmit() {
   smCloseDrawer();
   smRender();
   apRender();
+  persistSave();
+  showPersistBanner('Change submitted — saved.', true);
   showPanel('approvals', document.querySelector('.nav-item[onclick*="approvals"]'));
 }
 
-document.addEventListener('DOMContentLoaded', function() { smRender(); apRender(); });
+/* ── PERSISTENCE (localStorage) ── */
+var LS_SCHEMAS = 'ipr_schemas_v1';
+var LS_QUEUE   = 'ipr_apqueue_v1';
+
+var smSchemasDefault = JSON.parse(JSON.stringify(smSchemas));
+var apQueueDefault   = JSON.parse(JSON.stringify(apQueue));
+
+function persistSave() {
+  try {
+    localStorage.setItem(LS_SCHEMAS, JSON.stringify(smSchemas));
+    localStorage.setItem(LS_QUEUE,   JSON.stringify(apQueue));
+  } catch(e) { console.warn('localStorage save failed', e); }
+}
+
+function persistLoad() {
+  try {
+    var s = localStorage.getItem(LS_SCHEMAS);
+    var q = localStorage.getItem(LS_QUEUE);
+    if (s) { var parsed = JSON.parse(s); smSchemas.catalog = parsed.catalog; smSchemas.credentials = parsed.credentials; }
+    if (q) { apQueue.length = 0; JSON.parse(q).forEach(function(i){ apQueue.push(i); }); }
+    return !!(s || q);
+  } catch(e) { console.warn('localStorage load failed', e); return false; }
+}
+
+function persistReset() {
+  if (!confirm('Reset all schema and approval data back to defaults? This cannot be undone.')) return;
+  try { localStorage.removeItem(LS_SCHEMAS); localStorage.removeItem(LS_QUEUE); } catch(e) {}
+  smSchemas.catalog      = JSON.parse(JSON.stringify(smSchemasDefault.catalog));
+  smSchemas.credentials  = JSON.parse(JSON.stringify(smSchemasDefault.credentials));
+  apQueue.length = 0;
+  apQueueDefault.forEach(function(i){ apQueue.push(JSON.parse(JSON.stringify(i))); });
+  smRender(); apRender();
+  showPersistBanner('Reset to defaults.', false);
+}
+
+function showPersistBanner(msg, autohide) {
+  var b = document.getElementById('persistBanner');
+  if (!b) return;
+  b.textContent = msg;
+  b.style.opacity = '1';
+  if (autohide !== false) setTimeout(function(){ b.style.opacity = '0'; }, 2200);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var loaded = persistLoad();
+  smRender();
+  apRender();
+  if (loaded) showPersistBanner('Session restored from last visit.', true);
+});
 /* ── CSV TEMPLATE BUILDER ── */
 function smOpenCsvBuilder() {
   var fields = smSchemas[smCurrentLib].filter(function(f){ return f.status === 'active'; });
