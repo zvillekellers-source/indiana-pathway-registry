@@ -1,4 +1,6 @@
-head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Indiana Pathway Registry</title>
@@ -182,6 +184,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 .drag-handle{color:rgba(12,35,64,.3);font-size:12px}
 
 /* ── SCHEMA EDITOR ── */
+.sm-sort-arrow{margin-left:3px;opacity:.6;font-size:9px}
 .sm-field-row{display:grid;grid-template-columns:180px 130px 56px 56px 1fr 120px 100px;align-items:center;padding:9px 12px;border-bottom:1px solid rgba(12,35,64,.05);font-size:12px;transition:background .12s;cursor:pointer}
 .sm-field-row:hover{background:var(--mist)}
 .sm-field-row.deprecated{opacity:.5}
@@ -198,6 +201,12 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 .sm-enum-chip{background:var(--mist);border:1px solid rgba(12,35,64,.12);border-radius:2px;padding:2px 8px;font-size:10px;color:var(--navy);font-family:var(--mono)}
 
 /* ── COURSE EDIT MODAL ── */
+.ce-prereq-chip{display:inline-flex;align-items:center;gap:5px;background:var(--mist);border:1px solid rgba(12,35,64,.15);border-radius:2px;padding:3px 8px;font-size:11px;font-family:var(--mono);color:var(--navy)}
+.ce-prereq-chip button{background:none;border:none;cursor:pointer;color:var(--slate);font-size:12px;line-height:1;padding:0 2px}
+.ce-prereq-chip button:hover{color:var(--red)}
+.ce-prereq-option{padding:8px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid rgba(12,35,64,.05);display:flex;align-items:center;justify-content:space-between}
+.ce-prereq-option:hover{background:var(--mist)}
+.ce-prereq-option .mono{font-family:var(--mono);font-size:10px;color:var(--slate)}
 .ce-tab{padding:10px 18px;font-size:12px;font-weight:600;color:var(--slate);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
 .ce-tab:hover{color:var(--navy);background:var(--mist)}
 .ce-tab.active{color:var(--navy);border-bottom-color:var(--gold)}
@@ -833,8 +842,14 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     </div>
 
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
-      <div style="background:var(--navy);display:grid;grid-template-columns:180px 130px 56px 56px 1fr 120px 100px;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:500;color:rgba(255,255,255,.7)">
-        <span>Field Name</span><span>Type</span><span>Nullable</span><span>Governed</span><span>Description</span><span>Status</span><span></span>
+      <div id="smSortHeader" style="background:var(--navy);display:grid;grid-template-columns:180px 130px 56px 56px 1fr 120px 100px;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:500;color:rgba(255,255,255,.7)">
+        <span onclick="smSort('name')" style="cursor:pointer;user-select:none" title="Sort by field name"><span id="smSH-name">Field Name</span></span>
+        <span onclick="smSort('type')" style="cursor:pointer;user-select:none" title="Sort by type"><span id="smSH-type">Type</span></span>
+        <span onclick="smSort('nullable')" style="cursor:pointer;user-select:none" title="Sort by nullable"><span id="smSH-nullable">Nullable</span></span>
+        <span onclick="smSort('governed')" style="cursor:pointer;user-select:none" title="Sort by governed"><span id="smSH-governed">Governed</span></span>
+        <span>Description</span>
+        <span onclick="smSort('status')" style="cursor:pointer;user-select:none" title="Sort by status"><span id="smSH-status">Status</span></span>
+        <span></span>
       </div>
       <div id="smFieldList"></div>
     </div>
@@ -1178,6 +1193,15 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       <label class="sm-label">Course Description</label>
       <textarea id="ceFldDesc" class="sm-input" rows="4" placeholder="Full course description (no character limit)"></textarea>
     </div>
+    <div class="sm-form-group" id="cePrereqSection">
+      <label class="sm-label">Prerequisites</label>
+      <div class="sm-hint" style="margin-bottom:6px">Search and select courses that must be completed before this course. Only active courses are shown.</div>
+      <div style="position:relative">
+        <input type="text" id="cePrereqSearch" class="sm-input" placeholder="Search by code or name…" oninput="cePrereqFilter()" style="margin-bottom:6px">
+        <div id="cePrereqDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid rgba(12,35,64,.2);border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:180px;overflow-y:auto;z-index:50"></div>
+      </div>
+      <div id="cePrereqSelected" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px 0"></div>
+    </div>
     <div class="sm-form-group">
       <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
       <textarea id="ceFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea>
@@ -1274,6 +1298,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
         <option value="BOOLEAN">Boolean (TRUE/FALSE)</option>
         <option value="DATE">Date</option>
         <option value="ENUM">Enumerated List (controlled vocabulary)</option>
+        <option value="PREREQ">Prerequisites (course list)</option>
       </select>
     </div>
 
@@ -1292,6 +1317,13 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
         <span style="font-size:12px;color:var(--slate)">total digits,</span>
         <input type="number" id="smFldScale" class="sm-input" placeholder="2" style="max-width:80px">
         <span style="font-size:12px;color:var(--slate)">decimal places</span>
+      </div>
+    </div>
+
+    <!-- PREREQ NOTE (shown when PREREQ) -->
+    <div class="sm-form-group" id="smPrereqNote" style="display:none">
+      <div style="background:#DBEAFE;border:1px solid #93C5FD;border-radius:var(--radius);padding:10px 12px;font-size:11px;color:#1E3A8A;line-height:1.6">
+        <strong>Prerequisites field</strong> — stores a list of course codes that must be completed before this course. In the course edit modal, staff will see a searchable multi-select picker populated from all active courses in the catalog.
       </div>
     </div>
 
@@ -1947,6 +1979,8 @@ function buUpdateStep() {
 }
 /* ── SCHEMA MANAGER ── */
 var smCurrentLib = 'catalog';
+var smSortCol = 'name';
+var smSortDir = 1;
 var smEditingIdx = null;
 var smRetiring = false;
 
@@ -1987,20 +2021,57 @@ var smSchemas = {
 function smTypeLabel(f) {
   if (f.type === 'VARCHAR') return 'VARCHAR(' + f.len + ')';
   if (f.type === 'TEXT') return 'TEXT';
+  if (f.type === 'PREREQ') return 'PREREQ';
   if (f.type === 'DECIMAL') return 'DECIMAL';
   if (f.type === 'ENUM') return 'ENUM (' + f.enumVals.length + ' values)';
   return f.type;
 }
 
+function smSort(col) {
+  if (smSortCol === col) { smSortDir *= -1; }
+  else { smSortCol = col; smSortDir = 1; }
+  // Update header indicators
+  ['name','type','nullable','governed','status'].forEach(function(c) {
+    var el = document.getElementById('smSH-' + c);
+    if (!el) return;
+    var arrow = smSortCol === c ? (smSortDir === 1 ? ' ▲' : ' ▼') : '';
+    el.textContent = c.charAt(0).toUpperCase() + c.slice(1).replace('nullable','Nullable').replace('governed','Governed').replace('status','Status').replace('name','Field Name').replace('type','Type') + arrow;
+  });
+  smRender();
+}
+
 function smRender() {
-  var fields = smSchemas[smCurrentLib];
-  var active = fields.filter(function(f){return f.status==='active';}).length;
-  var dep = fields.filter(function(f){return f.status==='deprecated';}).length;
-  document.getElementById('smFieldCount').textContent = fields.length + ' fields total · ' + active + ' active';
+  var fields = smSchemas[smCurrentLib].slice(); // copy so we don't mutate
+  // Sort
+  fields.sort(function(a, b) {
+    var av, bv;
+    if (smSortCol === 'name') { av = a.name; bv = b.name; }
+    else if (smSortCol === 'type') { av = a.type; bv = b.type; }
+    else if (smSortCol === 'nullable') { av = a.nullable ? 1 : 0; bv = b.nullable ? 1 : 0; }
+    else if (smSortCol === 'governed') { av = a.governed ? 1 : 0; bv = b.governed ? 1 : 0; }
+    else if (smSortCol === 'status') { av = a.status; bv = b.status; }
+    else { av = a.name; bv = b.name; }
+    if (av < bv) return -1 * smSortDir;
+    if (av > bv) return 1 * smSortDir;
+    return 0;
+  });
+  // Update header arrows on initial render
+  ['name','type','nullable','governed','status'].forEach(function(c) {
+    var el = document.getElementById('smSH-' + c);
+    if (!el) return;
+    var label = {name:'Field Name',type:'Type',nullable:'Nullable',governed:'Governed',status:'Status'}[c];
+    el.textContent = label + (smSortCol === c ? (smSortDir === 1 ? ' ▲' : ' ▼') : '');
+  });
+  var allFields = smSchemas[smCurrentLib];
+  var active = allFields.filter(function(f){return f.status==='active';}).length;
+  var dep = allFields.filter(function(f){return f.status==='deprecated';}).length;
+  document.getElementById('smFieldCount').textContent = allFields.length + ' fields total · ' + active + ' active';
   document.getElementById('smDepCount').textContent = dep;
   var list = document.getElementById('smFieldList');
   list.innerHTML = '';
   fields.forEach(function(f, idx) {
+    // Get the real index in the unsorted array for edit/retire
+    var realIdx = smSchemas[smCurrentLib].indexOf(f);
     var row = document.createElement('div');
     row.className = 'sm-field-row' + (f.status === 'deprecated' ? ' deprecated' : '');
     var govChip = f.ai ? '<span class="chip chip-green" style="font-size:9px">AI</span>' : (f.governed ? '<span class="chip chip-navy" style="font-size:9px">Yes</span>' : '<span class="chip" style="font-size:9px;background:#F1F5F9;color:#475569">No</span>');
@@ -2019,8 +2090,8 @@ function smRender() {
       '<span class="sm-field-desc">' + f.desc + enumHint + '</span>' +
       '<span>' + statusChip + '</span>' +
       '<span class="sm-row-actions">' +
-        '<button class="btn btn-secondary btn-sm" onclick="smOpenEdit(' + idx + ')">Edit</button>' +
-        (f.status !== 'deprecated' ? '<button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none" onclick="smOpenRetire(' + idx + ')">Retire</button>' : '') +
+        '<button class="btn btn-secondary btn-sm" onclick="smOpenEdit(' + realIdx + ')">Edit</button>' +
+        (f.status !== 'deprecated' ? '<button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none" onclick="smOpenRetire(' + realIdx + ')">Retire</button>' : '') +
       '</span>';
     list.appendChild(row);
   });
@@ -2121,6 +2192,7 @@ function smTypeChange() {
   document.getElementById('smVarcharLen').style.display = t === 'VARCHAR' ? 'block' : 'none';
   document.getElementById('smDecimalPrec').style.display = t === 'DECIMAL' ? 'block' : 'none';
   document.getElementById('smEnumSection').style.display = t === 'ENUM' ? 'block' : 'none';
+  document.getElementById('smPrereqNote').style.display = t === 'PREREQ' ? 'block' : 'none';
 }
 
 function smSlugify(inp) {
@@ -2182,7 +2254,6 @@ function smSubmit() {
   apRender();
   persistSave();
   showPersistBanner('Change submitted — saved.', true);
-  showPanel('approvals', document.querySelector('.nav-item[onclick*="approvals"]'));
 }
 
 /* ── PERSISTENCE (localStorage) ── */
@@ -2301,6 +2372,7 @@ function csvSelectNone() {
 
 function csvSampleValue(f) {
   if (f.type === 'TEXT') return 'Full description text goes here — no character limit';
+  if (f.type === 'PREREQ') return '';
   if (f.type === 'BOOLEAN') return 'TRUE';
   if (f.type === 'INTEGER') return '1001';
   if (f.type === 'DECIMAL') return '1.0';
@@ -2491,6 +2563,7 @@ function ccOpenAdd() {
   document.getElementById('ceFldCte').value = '';
   document.getElementById('ceFldDesc').value = '';
   document.getElementById('ceFldReason').value = '';
+  cePrereqInit([]);
   document.getElementById('ceFldCategory').selectedIndex = 0;
   document.getElementById('ceFlagCore40').checked = false;
   document.getElementById('ceFlagAHD').checked = false;
@@ -2604,6 +2677,7 @@ function ccOpenEditByCode(code) {
     footer.innerHTML = '<div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button></div>';
   }
 
+  cePrereqInit(c.prerequisites || []);
   ceShowTab('core');
   document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
   document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
@@ -2668,6 +2742,7 @@ function ceSubmit() {
     description: document.getElementById('ceFldDesc').value,
     subject: document.getElementById('ceFldSubject').value,
     flags: flags.join(', ') || '—',
+    prerequisites: cePrereqs.slice(),
     status: 'pending'
   };
 
@@ -2687,7 +2762,8 @@ function ceSubmit() {
       category: edits.category, credits: edits.credits,
       sced: edits.sced, cteCluster: edits.cteCluster,
       description: edits.description, subject: edits.subject,
-      flags: edits.flags, status: 'pending', isNew: true,
+      flags: edits.flags, prerequisites: edits.prerequisites || [],
+      status: 'pending', isNew: true,
       importedOn: today, issues: '',
       log: [{date: today, action: 'Created', by: 'Admin (CIO)', note: reason}]
     };
@@ -2728,7 +2804,7 @@ function ceSubmit() {
   persistSave();
   apRender();
   ceClose();
-  showPanel('approvals', document.querySelector('.nav-item[onclick*="approvals"]'));
+  showPersistBanner('Submitted for approval — saved.', true);
 }
 
 /* ── CREDENTIALS DATA LAYER ── */
@@ -2930,14 +3006,83 @@ function crSubmit() {
   apQueue.forEach(function(i){ if (i.credId === crCurrentId && i.status === 'pending') i.status = 'superseded'; });
   apQueue.push({id:apId, group:'Credentials', ref:'CRED · ' + crCurrentId, title:'Credential Edit — ' + name, meta:'Edited by Admin (CIO) · Submitted ' + today + ' · ' + reason, approverRole:'curriculum', schemaLib:null, schemaIdx:null, credId:crCurrentId, credEdit:edits, isNew:false, status:'pending'});
   crSave(); crRender(); persistSave(); apRender();
-  showPersistBanner('Edit submitted for approval — saved.', true);
+  showPersistBanner('Submitted for approval — saved.', true);
   crEditClose();
-  showPanel('approvals', document.querySelector('.nav-item[onclick*="approvals"]'));
 }
 
 function crOpenBulkUpload() {
   alert('Credential bulk upload coming soon. Use the Course Catalog bulk upload as a reference for the expected workflow.');
 }
+
+/* ── PREREQUISITES PICKER ── */
+var cePrereqs = []; // array of course codes currently selected
+
+function cePrereqInit(existingCodes) {
+  cePrereqs = existingCodes ? existingCodes.slice() : [];
+  cePrereqRenderChips();
+  document.getElementById('cePrereqSearch').value = '';
+  document.getElementById('cePrereqDropdown').style.display = 'none';
+}
+
+function cePrereqFilter() {
+  var q = document.getElementById('cePrereqSearch').value.toLowerCase().trim();
+  var dropdown = document.getElementById('cePrereqDropdown');
+  if (!q) { dropdown.style.display = 'none'; return; }
+  var currentCode = ceCurrentCode || '__NEW__';
+  var matches = ccCourses.filter(function(c) {
+    return c.status === 'active'
+      && c.code !== currentCode
+      && cePrereqs.indexOf(c.code) === -1
+      && (c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
+  }).slice(0, 8);
+  if (matches.length === 0) {
+    dropdown.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--slate)">No matching active courses</div>';
+  } else {
+    dropdown.innerHTML = matches.map(function(c) {
+      return '<div class="ce-prereq-option" onclick="cePrereqAdd(\'' + c.code + '\')">'
+        + '<span>' + c.name + '</span>'
+        + '<span class="mono">' + c.code + '</span>'
+        + '</div>';
+    }).join('');
+  }
+  dropdown.style.display = 'block';
+}
+
+function cePrereqAdd(code) {
+  if (cePrereqs.indexOf(code) === -1) cePrereqs.push(code);
+  document.getElementById('cePrereqSearch').value = '';
+  document.getElementById('cePrereqDropdown').style.display = 'none';
+  cePrereqRenderChips();
+}
+
+function cePrereqRemove(code) {
+  cePrereqs = cePrereqs.filter(function(c){ return c !== code; });
+  cePrereqRenderChips();
+}
+
+function cePrereqRenderChips() {
+  var container = document.getElementById('cePrereqSelected');
+  if (cePrereqs.length === 0) {
+    container.innerHTML = '<span style="font-size:11px;color:var(--slate);font-style:italic">No prerequisites — course has no requirements</span>';
+    return;
+  }
+  container.innerHTML = cePrereqs.map(function(code) {
+    var course = ccCourses.find(function(c){ return c.code === code; });
+    var label = course ? code + ' — ' + course.name : code;
+    return '<span class="ce-prereq-chip">' + label
+      + '<button onclick="cePrereqRemove(\'' + code + '\')" title="Remove">&#10005;</button>'
+      + '</span>';
+  }).join('');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('cePrereqDropdown');
+  var search = document.getElementById('cePrereqSearch');
+  if (dd && search && !dd.contains(e.target) && e.target !== search) {
+    dd.style.display = 'none';
+  }
+});
 
 </script>
 </body>
