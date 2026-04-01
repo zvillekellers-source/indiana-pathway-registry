@@ -1433,19 +1433,9 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       <button class="btn btn-secondary btn-sm" onclick="buDownloadTemplate()">&#11015; Download Template</button>
     </div>
     <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Required &amp; Optional Columns</div>
-    <table class="bu-req-table">
-      <thead><tr><th>Column Name</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
-      <tbody>
-        <tr><td style="font-family:var(--mono);font-size:10px">state_course_code</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(10)</td><td><span class="req-badge req-required">Required</span></td><td style="font-size:11px;color:var(--slate)">Must be unique. Existing code = update record.</td></tr>
-        <tr><td style="font-family:var(--mono);font-size:10px">course_name</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(255)</td><td><span class="req-badge req-required">Required</span></td><td style="font-size:11px;color:var(--slate)">Official course title</td></tr>
-        <tr><td style="font-family:var(--mono);font-size:10px">credit_hours</td><td style="font-family:var(--mono);font-size:10px">DECIMAL(3,1)</td><td><span class="req-badge req-required">Required</span></td><td style="font-size:11px;color:var(--slate)">Carnegie units (e.g. 1.0, 2.0)</td></tr>
-        <tr><td style="font-family:var(--mono);font-size:10px">category</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(50)</td><td><span class="req-badge req-required">Required</span></td><td style="font-size:11px;color:var(--slate)">ELA, Math, Science, Social Studies, CTE, Other</td></tr>
-        <tr><td style="font-family:var(--mono);font-size:10px">sced_code</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(5)</td><td><span class="req-badge req-optional">Optional</span></td><td style="font-size:11px;color:var(--slate)">AI will suggest if omitted</td></tr>
-        <tr><td style="font-family:var(--mono);font-size:10px">cte_cluster</td><td style="font-family:var(--mono);font-size:10px">VARCHAR(50)</td><td><span class="req-badge req-optional">Optional</span></td><td style="font-size:11px;color:var(--slate)">Required if category = CTE</td></tr>
-        <tr><td style="font-family:var(--mono);font-size:10px">diploma_core40</td><td style="font-family:var(--mono);font-size:10px">BOOLEAN</td><td><span class="req-badge req-optional">Optional</span></td><td style="font-size:11px;color:var(--slate)">TRUE / FALSE. Defaults to FALSE.</td></tr>
-        <tr><td style="font-family:var(--mono);font-size:10px">diploma_ahd</td><td style="font-family:var(--mono);font-size:10px">BOOLEAN</td><td><span class="req-badge req-optional">Optional</span></td><td style="font-size:11px;color:var(--slate)">Academic Honors Diploma flag</td></tr>
-      </tbody>
-    </table>
+    <div id="buSchemaRefTable">
+      <div style="font-size:11px;color:var(--slate);font-style:italic">Loading schema fields…</div>
+    </div>
   </div>
 
   <!-- STEP 2: PREVIEW -->
@@ -1710,7 +1700,25 @@ var buRows = [
   {code:'ELA3100',name:'AP Literature',cat:'ELA',credits:'2.0',sced:'01011',flags:'AHD, THD',status:'warn',issue:'Duplicate course name found with different code (ELA3101)'},
   {code:'CTE9999TOOLONG',name:'Missing field test',cat:'CTE',credits:'1.0',sced:'—',flags:'—',status:'error',issue:'state_course_code exceeds 10 characters — row will be skipped'}
 ];
+function buRenderSchemaRef() {
+  var schema = smSchemas['catalog'].filter(function(f){ return f.status === 'active'; });
+  var html = '<table class="bu-req-table"><thead><tr><th>Column Name</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead><tbody>';
+  schema.forEach(function(f) {
+    var typeLabel = f.type === 'VARCHAR' ? 'VARCHAR(' + f.len + ')' : f.type === 'DECIMAL' ? 'DECIMAL' : f.type === 'ENUM' ? 'ENUM' : f.type;
+    var reqBadge = f.nullable
+      ? '<span class="req-badge req-optional">Optional</span>'
+      : '<span class="req-badge req-required">Required</span>';
+    var notes = f.desc ? f.desc.substring(0, 60) + (f.desc.length > 60 ? '…' : '') : '';
+    if (f.type === 'ENUM' && f.enumVals.length) notes = f.enumVals.slice(0,3).join(', ') + (f.enumVals.length > 3 ? ' +' + (f.enumVals.length-3) + ' more' : '');
+    html += '<tr><td style="font-family:var(--mono);font-size:10px">' + f.name + '</td><td style="font-family:var(--mono);font-size:10px">' + typeLabel + '</td><td>' + reqBadge + '</td><td style="font-size:11px;color:var(--slate)">' + notes + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  var el = document.getElementById('buSchemaRefTable');
+  if (el) el.innerHTML = html;
+}
+
 function openBulkUpload() {
+  buRenderSchemaRef();
   buStep = 1;
   document.getElementById('buBtnNext').disabled = true;
   document.getElementById('buBtnNext').textContent = 'Next: Preview →';
@@ -1883,19 +1891,53 @@ function buBuildResultScreen() {
   var importable = okRows.length + warnRows.length;
 
   // Write importable rows into the course catalog
+  // Derive field mappings from live schema — no hardcoded field names
   var today = new Date().toISOString().slice(0,10);
+  var schema = smSchemas['catalog'].filter(function(f){ return f.status === 'active'; });
+  var idFieldName   = (schema.find(function(f){ return f.name.includes('code') && !f.nullable; }) || schema[0]).name;
+  var nameFieldName = (schema.find(function(f){ return f.name.includes('name') && !f.nullable; }) || schema[1]).name;
+  var catFieldName  = (schema.find(function(f){ return f.type === 'ENUM' && !f.nullable; }) || {}).name;
+  var creditsField  = (schema.find(function(f){ return f.type === 'DECIMAL' && !f.nullable; }) || {}).name;
+  var scedField     = (schema.find(function(f){ return f.name.includes('sced'); }) || {}).name;
+  var boolFields    = schema.filter(function(f){ return f.type === 'BOOLEAN'; });
+
   okRows.concat(warnRows).forEach(function(r) {
+    var raw = r.raw || {};
     var existing = ccCourses.findIndex(function(c){ return c.code.toLowerCase() === r.id.toLowerCase(); });
+
+    // Build flags dynamically from all BOOLEAN fields in the schema
+    var flags = [];
+    boolFields.forEach(function(f) {
+      var val = raw[f.name];
+      if (val && ['true','1','yes'].indexOf(val.toLowerCase()) >= 0) {
+        // Convert field name to display label: diploma_core40 → Core 40, diploma_ahd → AHD, etc.
+        var label = f.name
+          .replace('diploma_', '')
+          .replace('_', ' ')
+          .replace(/\w/g, function(c){ return c.toUpperCase(); });
+        flags.push(label);
+      }
+    });
+
+    // Build a raw data snapshot of all schema fields present in the upload
+    var fieldSnapshot = {};
+    schema.forEach(function(f) {
+      if (raw[f.name] !== undefined) fieldSnapshot[f.name] = raw[f.name];
+    });
+
     var rec = {
-      code: r.id, name: r.name,
-      category: r.cat || (r.raw && r.raw['category']) || '—',
-      credits: (r.raw && r.raw['credit_hours']) || '—',
-      sced: (r.raw && r.raw['sced_code']) || '—',
-      flags: ccBuildFlags(r.raw || {}),
-      status: 'pending',
-      isNew: existing === -1,
-      importedOn: today,
-      issues: r.issue || ''
+      code:        raw[idFieldName]   || r.id   || '—',
+      name:        raw[nameFieldName] || r.name  || '—',
+      category:    catFieldName ? (raw[catFieldName] || r.cat || '—') : (r.cat || '—'),
+      credits:     creditsField ? (raw[creditsField] || '—') : '—',
+      sced:        scedField    ? (raw[scedField]    || '—') : '—',
+      flags:       flags.join(', ') || '—',
+      fieldData:   fieldSnapshot,
+      status:      'pending',
+      isNew:       existing === -1,
+      importedOn:  today,
+      issues:      r.issue || '',
+      log:         []
     };
     if (existing >= 0) { ccCourses[existing] = rec; }
     else { ccCourses.push(rec); }
@@ -1913,7 +1955,7 @@ function buBuildResultScreen() {
         id: apId,
         group: 'Course Catalog',
         ref: 'COURSE · ' + r.id,
-        title: (r.raw && r.raw['state_course_code'] ? 'New' : 'Updated') + ' Course — ' + r.name,
+        title: (ccCourses.find(function(c){ return c.code === r.id && !c.isNew; }) ? 'Updated' : 'New') + ' Course — ' + r.name,
         meta: 'Bulk import · ' + (r.raw && r.raw['category'] ? r.raw['category'] : '—') + ' · Submitted ' + today + (r.issue ? ' · ⚠ ' + r.issue.split(' · ')[0] : ''),
         approverRole: 'curriculum',
         schemaLib: null,
@@ -2457,10 +2499,19 @@ function ccSave() {
 }
 
 function ccBuildFlags(raw) {
+  // Derive flag labels from BOOLEAN fields in the live schema
+  var boolFields = smSchemas['catalog'].filter(function(f){ return f.type === 'BOOLEAN' && f.status === 'active'; });
   var flags = [];
-  if (raw['diploma_core40'] && raw['diploma_core40'].toLowerCase() === 'true') flags.push('Core 40');
-  if (raw['diploma_ahd'] && raw['diploma_ahd'].toLowerCase() === 'true') flags.push('AHD');
-  if (raw['diploma_thd'] && raw['diploma_thd'].toLowerCase() === 'true') flags.push('THD');
+  boolFields.forEach(function(f) {
+    var val = raw[f.name];
+    if (val && ['true','1','yes'].indexOf(val.toLowerCase()) >= 0) {
+      var label = f.name
+        .replace(/^diploma_/, '')
+        .replace(/_/g, ' ')
+        .toUpperCase();
+      flags.push(label);
+    }
+  });
   return flags.length ? flags.join(', ') : '—';
 }
 
