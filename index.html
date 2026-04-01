@@ -2063,30 +2063,101 @@ function buBuildResultScreen() {
 }
 
 function buDownloadManifest(okRows, warnRows, errRows, today) {
-  var lines = [
-    '# Indiana Pathway Registry — Bulk Upload Manifest',
-    '# Generated: ' + today,
-    '# Total rows processed: ' + (okRows.length + warnRows.length + errRows.length),
-    '# Imported successfully: ' + okRows.length,
-    '# Imported with warnings: ' + warnRows.length,
-    '# Skipped (errors): ' + errRows.length,
-    '',
-    'result,identifier,name,category,issues'
+  var allRows = okRows.concat(warnRows).concat(errRows);
+  var total = allRows.length;
+
+  // ── Sheet 1: Summary ──
+  var summaryData = [
+    ['Indiana Pathway Registry — Bulk Upload Manifest'],
+    [''],
+    ['Generated', today],
+    ['Library', 'Course Catalog'],
+    ['Cohort', 'SY 2025-26'],
+    [''],
+    ['RESULTS', ''],
+    ['Total rows processed', total],
+    ['Imported successfully', okRows.length],
+    ['Imported with warnings', warnRows.length],
+    ['Skipped (errors)', errRows.length],
+    [''],
+    ['NOTES', ''],
+    ['Imported records', 'Visible in Course Catalog with Pending Approval status'],
+    ['Warning records', 'Imported but flagged — review Reason column in Detail sheet'],
+    ['Error records', 'Not imported — fix issues and re-upload these rows'],
+    [''],
+    ['NEXT STEPS', ''],
+    ['1', 'Go to Pending Approvals and approve imported courses'],
+    ['2', 'Review WARNING rows in the Detail sheet'],
+    ['3', 'Fix ERROR rows and re-upload using a corrected file'],
   ];
+
+  // ── Sheet 2: Detail — all original columns + result + reason ──
+  // Collect all unique column headers from uploaded data
+  var colSet = {};
+  allRows.forEach(function(r) {
+    if (r.raw) Object.keys(r.raw).forEach(function(k){ colSet[k] = 1; });
+  });
+  var dataCols = Object.keys(colSet);
+
+  var detailHeaders = ['result', 'reason'].concat(dataCols);
+  var detailData = [detailHeaders];
+
   okRows.forEach(function(r) {
-    lines.push('IMPORTED,"' + r.id + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.cat||'') + '",');
+    var row = ['IMPORTED', ''];
+    dataCols.forEach(function(c){ row.push(r.raw ? (r.raw[c] !== undefined ? r.raw[c] : '') : ''); });
+    detailData.push(row);
   });
   warnRows.forEach(function(r) {
-    lines.push('WARNING,"' + r.id + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.cat||'') + '","' + (r.issue||'').replace(/"/g,'""') + '"');
+    var row = ['WARNING', r.issue || ''];
+    dataCols.forEach(function(c){ row.push(r.raw ? (r.raw[c] !== undefined ? r.raw[c] : '') : ''); });
+    detailData.push(row);
   });
   errRows.forEach(function(r) {
-    lines.push('ERROR,"' + r.id + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.cat||'') + '","' + (r.issue||'').replace(/"/g,'""') + '"');
+    var row = ['ERROR', r.issue || ''];
+    dataCols.forEach(function(c){ row.push(r.raw ? (r.raw[c] !== undefined ? r.raw[c] : '') : ''); });
+    detailData.push(row);
   });
-  var csv = lines.join('\n');
-  var a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'ipr_upload_manifest_' + today + '.csv';
-  a.click();
+
+  // ── Build workbook with SheetJS ──
+  try {
+    var wb = XLSX.utils.book_new();
+
+    var wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    // Style the title row bold (SheetJS CE supports basic cell props)
+    if (wsSummary['A1']) wsSummary['A1'].s = {font:{bold:true, sz:13}};
+    wsSummary['!cols'] = [{wch:35},{wch:55}];
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+    var wsDetail = XLSX.utils.aoa_to_sheet(detailData);
+    // Auto-width columns — cap at 40
+    var colWidths = detailHeaders.map(function(h, i) {
+      var max = h.length;
+      detailData.slice(1).forEach(function(row){
+        var v = row[i] !== undefined && row[i] !== null ? String(row[i]) : '';
+        if (v.length > max) max = v.length;
+      });
+      return { wch: Math.min(max + 2, 40) };
+    });
+    wsDetail['!cols'] = colWidths;
+    XLSX.utils.book_append_sheet(wb, wsDetail, 'Detail');
+
+    XLSX.writeFile(wb, 'ipr_upload_manifest_' + today + '.xlsx');
+  } catch(err) {
+    // Fallback to CSV if SheetJS write fails
+    var lines = ['result,reason,' + dataCols.join(',')];
+    okRows.forEach(function(r){
+      var vals = ['IMPORTED', ''].concat(dataCols.map(function(c){ return '"' + (r.raw && r.raw[c] !== undefined ? String(r.raw[c]).replace(/"/g,'""') : '') + '"'; }));
+      lines.push(vals.join(','));
+    });
+    warnRows.concat(errRows).forEach(function(r){
+      var vals = [r.status === 'warn' ? 'WARNING' : 'ERROR', '"' + (r.issue||'').replace(/"/g,'""') + '"'].concat(dataCols.map(function(c){ return '"' + (r.raw && r.raw[c] !== undefined ? String(r.raw[c]).replace(/"/g,'""') : '') + '"'; }));
+      lines.push(vals.join(','));
+    });
+    var a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(lines.join('\n'));
+    a.download = 'ipr_upload_manifest_' + today + '.csv';
+    a.click();
+  }
 }
 function buGoBack() {
   if (buStep === 2) buStep = 1;
