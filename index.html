@@ -829,7 +829,8 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
           <div class="panel-subtitle">Data contract definitions &middot; Changes require Curriculum Director approval</div>
         </div>
         <div class="panel-actions">
-          <button class="btn btn-secondary btn-sm" onclick="persistReset()" style="color:var(--red);border-color:rgba(155,35,53,.3)">Reset Defaults</button>
+          <button class="btn btn-secondary btn-sm" onclick="persistReset()" style="color:var(--gold);border-color:rgba(200,151,58,.4)" title="Resets courses, credentials and queue — schema is preserved">Reset Data</button>
+          <button class="btn btn-secondary btn-sm" onclick="persistResetSchema()" style="color:var(--red);border-color:rgba(155,35,53,.3)" title="Resets schema fields only — course data is preserved">Reset Schema</button>
           <button class="btn btn-secondary btn-sm" onclick="smOpenCsvBuilder()">&#11015; CSV Template</button>
           <button class="btn btn-secondary btn-sm" onclick="smOpenAdd()">+ Add Field</button>
         </div>
@@ -1505,6 +1506,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 function showPanel(id, navEl) {
   document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
@@ -1735,22 +1737,57 @@ function buDragLeave() { document.getElementById('buDropZone').classList.remove(
 function buDrop(e) { e.preventDefault(); document.getElementById('buDropZone').classList.remove('drag-over'); if (e.dataTransfer.files[0]) buParseFile(e.dataTransfer.files[0]); }
 function buFileSelect(e) { if (e.target.files[0]) buParseFile(e.target.files[0]); }
 function buParseFile(file) {
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var text = e.target.result;
-    var lines = text.split(/\r?\n/).filter(function(l) { return l.trim() !== '' && !l.trim().startsWith('#'); });
-    if (lines.length < 2) { alert('File appears empty or has no data rows.'); return; }
-    var headers = lines[0].split(',').map(function(h) { return h.trim().toLowerCase().replace(/"/g,''); });
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'xlsx' || ext === 'xls') {
+    // Excel path — use SheetJS
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var wb = XLSX.read(e.target.result, {type:'array'});
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        var raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        if (!raw || raw.length < 2) { alert('File appears empty or has no data rows.'); return; }
+        var headers = raw[0].map(function(h){ return String(h).trim().toLowerCase(); });
+        var dataRows = raw.slice(1).filter(function(r){ return r.some(function(v){ return v !== ''; }); });
+        buProcessRows(headers, dataRows.map(function(r){
+          var obj = {};
+          headers.forEach(function(h,i){ obj[h] = r[i] !== undefined && r[i] !== null ? String(r[i]).trim() : ''; });
+          return obj;
+        }), file.name);
+      } catch(err) {
+        alert('Could not read Excel file: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    // CSV path — plain text
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var text = e.target.result;
+      var lines = text.split(/\r?\n/).filter(function(l){ return l.trim() !== '' && !l.trim().startsWith('#'); });
+      if (lines.length < 2) { alert('File appears empty or has no data rows.'); return; }
+      var headers = lines[0].split(',').map(function(h){ return h.trim().toLowerCase().replace(/"/g,''); });
+      var objs = [];
+      for (var i = 1; i < lines.length; i++) {
+        var vals = buSplitCSV(lines[i]);
+        var obj = {};
+        headers.forEach(function(h, idx){ obj[h] = (vals[idx] || '').trim().replace(/^"|"$/g,''); });
+        objs.push(obj);
+      }
+      buProcessRows(headers, objs, file.name);
+    };
+    reader.readAsText(file);
+  }
+}
+
+function buProcessRows(headers, objs, fileName) {
     var schema = smSchemas['catalog'].filter(function(f){ return f.status === 'active'; });
     var requiredFields = schema.filter(function(f){ return !f.nullable; });
     var idField = schema.find(function(f){ return f.name.includes('code') && !f.nullable; }) || schema[0];
     var nameField = schema.find(function(f){ return f.name.includes('name') && !f.nullable; }) || schema[1];
     var catField = schema.find(function(f){ return f.type === 'ENUM' && !f.nullable; });
     buRows = [];
-    for (var i = 1; i < lines.length; i++) {
-      var vals = buSplitCSV(lines[i]);
-      var obj = {};
-      headers.forEach(function(h, idx) { obj[h] = (vals[idx] || '').trim().replace(/^"|"$/g,''); });
+    objs.forEach(function(obj) {
       var issues = [];
       var status = 'ok';
       requiredFields.forEach(function(f) {
@@ -1801,13 +1838,11 @@ function buParseFile(file) {
       var nameVal = nameField ? (obj[nameField.name] || '—') : '—';
       var catVal = catField ? (obj[catField.name] || '—') : '—';
       buRows.push({ id: idVal, name: nameVal, cat: catVal, status: status, issue: issues.join(' · '), raw: obj });
-    }
+    });
     var dz = document.getElementById('buDropZone');
-    document.getElementById('buDropTitle').textContent = '✓ ' + file.name + ' — ' + buRows.length + ' data rows found';
+    document.getElementById('buDropTitle').textContent = '✓ ' + fileName + ' — ' + buRows.length + ' data rows found';
     dz.style.borderColor = 'var(--green)'; dz.style.background = '#F0FFF4';
     document.getElementById('buBtnNext').disabled = false;
-  };
-  reader.readAsText(file);
 }
 function buSplitCSV(line) {
   var result = []; var cur = ''; var inQuotes = false;
@@ -2043,6 +2078,20 @@ var smSchemas = {
     {name:'course_name', type:'VARCHAR', len:255, nullable:false, governed:true, ai:false, status:'active', desc:'Official course title as published by IDOE.', enumVals:[]},
     {name:'course_subject', type:'ENUM', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Broad subject area for the course. Controlled vocabulary of 25 values.', enumVals:['English Language Arts','Mathematics','Science','Social Studies','Career & Technical Education','Fine Arts','Physical Education','World Language','Health','Journalism','Library Science','Drama/Theatre','Speech & Debate','Psychology','Philosophy','Economics','Government','Geography','Computer Science','Architecture','Agriculture','Business','Marketing','Finance','Hospitality']},
     {name:'credit_hours', type:'DECIMAL', len:null, nullable:false, governed:false, ai:false, status:'active', desc:'Carnegie unit credit value (e.g. 1.0, 2.0).', enumVals:[]},
+    {name:'course_description', type:'TEXT', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Full course description. No character limit.', enumVals:[]},
+    {name:'course_prerequisite', type:'TEXT', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Prerequisite courses or recommendations as free text.', enumVals:[]},
+    {name:'abbreviated_name', type:'VARCHAR', len:20, nullable:true, governed:false, ai:false, status:'active', desc:'Short display name for the course (e.g. ADV ENG CC).', enumVals:[]},
+    {name:'recommended_grade', type:'VARCHAR', len:20, nullable:true, governed:false, ai:false, status:'active', desc:'Recommended grade level(s) for enrollment (e.g. 11, 12).', enumVals:[]},
+    {name:'course_duration_semesters', type:'INTEGER', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Number of semesters the course spans (typically 1 or 2).', enumVals:[]},
+    {name:'credits_per_semester', type:'DECIMAL', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Credit hours awarded per semester.', enumVals:[]},
+    {name:'max_credits', type:'DECIMAL', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Maximum total credits a student can earn for this course.', enumVals:[]},
+    {name:'dual_credit', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Course is offered for dual credit (secondary + post-secondary).', enumVals:[]},
+    {name:'ap_course', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Course is an Advanced Placement (AP) course.', enumVals:[]},
+    {name:'ib_course', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Course is an International Baccalaureate (IB) course.', enumVals:[]},
+    {name:'lab_course', type:'BOOLEAN', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Course includes a laboratory component.', enumVals:[]},
+    {name:'cambridge_course', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Course is offered through the Cambridge International program.', enumVals:[]},
+    {name:'applie_units_eligible', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Course is eligible for APPLIE (Applied Learning) units. Note: field name matches source system spelling.', enumVals:[]},
+    {name:'curriculum_notes', type:'TEXT', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Internal curriculum notes. Not published to API or student-facing tools.', enumVals:[]},
     {name:'sced_code', type:'VARCHAR', len:5, nullable:true, governed:true, ai:true, status:'active', desc:'Standard Course Equivalency Description code. AI-suggested if omitted.', enumVals:[]},
     {name:'ceds_code', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Common Education Data Standards code.', enumVals:[]},
     {name:'edfi_code', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Ed-Fi ODS course code for SIS integration.', enumVals:[]},
@@ -2335,21 +2384,28 @@ function persistLoad() {
 }
 
 function persistReset() {
-  if (!confirm('Reset all schema and approval data back to defaults? This cannot be undone.')) return;
-  try { localStorage.removeItem(LS_SCHEMAS); localStorage.removeItem(LS_QUEUE); } catch(e) {}
-  smSchemas.catalog      = JSON.parse(JSON.stringify(smSchemasDefault.catalog));
-  smSchemas.credentials  = JSON.parse(JSON.stringify(smSchemasDefault.credentials));
+  // Resets course catalog, credentials, and approval queue ONLY.
+  // Schema changes are NEVER reset here — use persistResetSchema() for that.
+  if (!confirm('Reset course catalog, credentials, and approval queue back to demo data?\n\nYour schema changes will NOT be affected.')) return;
   apQueue.length = 0;
   apQueueDefault.forEach(function(i){ apQueue.push(JSON.parse(JSON.stringify(i))); });
-  try { localStorage.removeItem(LS_COURSES); localStorage.removeItem(LS_CREDS); } catch(e) {}
+  try { localStorage.removeItem(LS_COURSES); localStorage.removeItem(LS_CREDS); localStorage.removeItem(LS_QUEUE); } catch(e) {}
   ccCourses = JSON.parse(JSON.stringify(ccCoursesDefault));
   crCreds = JSON.parse(JSON.stringify(crCredsDefault));
-  crSave();
-  ccSave();
-  ccRender();
-  crRender();
-  smRender(); apRender();
-  showPersistBanner('Reset to defaults.', false);
+  crSave(); ccSave(); persistSave();
+  ccRender(); crRender(); apRender();
+  showPersistBanner('Courses, credentials and queue reset. Schema preserved.', false);
+}
+
+function persistResetSchema() {
+  // Separate, clearly destructive action — resets schema only.
+  if (!confirm('Reset SCHEMA to built-in defaults?\n\nAll fields you added or edited will be permanently lost.\nCourse catalog and credentials will NOT be affected.')) return;
+  try { localStorage.removeItem(LS_SCHEMAS); } catch(e) {}
+  smSchemas.catalog     = JSON.parse(JSON.stringify(smSchemasDefault.catalog));
+  smSchemas.credentials = JSON.parse(JSON.stringify(smSchemasDefault.credentials));
+  persistSave();
+  smRender();
+  showPersistBanner('Schema reset to defaults.', false);
 }
 
 function showPersistBanner(msg, autohide) {
