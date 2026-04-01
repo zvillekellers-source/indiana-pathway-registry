@@ -1754,9 +1754,20 @@ function buParseFile(file) {
       var issues = [];
       var status = 'ok';
       requiredFields.forEach(function(f) {
-        if (!obj[f.name] || obj[f.name] === '') {
-          issues.push(f.name + ' is required but missing');
+        var colPresent = headers.indexOf(f.name) >= 0;
+        var val = obj[f.name];
+        if (colPresent && (!val || val === '')) {
+          // Column exists in file but value is empty — hard error
+          issues.push(f.name + ' column is present but value is empty');
           status = 'error';
+        } else if (!colPresent) {
+          // Column not in file at all — warn only for user-supplied fields,
+          // skip system fields silently
+          var systemFields = ['cohort_version','record_status'];
+          if (systemFields.indexOf(f.name) === -1) {
+            issues.push(f.name + ' column not found in file');
+            if (status !== 'error') status = 'warn';
+          }
         }
       });
       schema.forEach(function(f) {
@@ -2030,17 +2041,17 @@ var smSchemas = {
   catalog: [
     {name:'state_course_code', type:'VARCHAR', len:10, nullable:false, governed:true, ai:false, status:'active', desc:'Primary identifier, stable across all year instances of the course.', enumVals:[]},
     {name:'course_name', type:'VARCHAR', len:255, nullable:false, governed:true, ai:false, status:'active', desc:'Official course title as published by IDOE.', enumVals:[]},
-    {name:'course_subject', type:'ENUM', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Broad subject area for the course. Controlled vocabulary of 25 values.', enumVals:['English Language Arts','Mathematics','Science','Social Studies','Career & Technical Education','Fine Arts','Physical Education','World Language','Health','Journalism','Library Science','Drama/Theatre','Speech & Debate','Psychology','Philosophy','Economics','Government','Geography','Computer Science','Architecture','Agriculture','Business','Marketing','Finance','Hospitality']},
+    {name:'course_subject', type:'ENUM', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Broad subject area for the course. Controlled vocabulary of 25 values.', enumVals:['English Language Arts','Mathematics','Science','Social Studies','Career & Technical Education','Fine Arts','Physical Education','World Language','Health','Journalism','Library Science','Drama/Theatre','Speech & Debate','Psychology','Philosophy','Economics','Government','Geography','Computer Science','Architecture','Agriculture','Business','Marketing','Finance','Hospitality']},
     {name:'credit_hours', type:'DECIMAL', len:null, nullable:false, governed:false, ai:false, status:'active', desc:'Carnegie unit credit value (e.g. 1.0, 2.0).', enumVals:[]},
     {name:'sced_code', type:'VARCHAR', len:5, nullable:true, governed:true, ai:true, status:'active', desc:'Standard Course Equivalency Description code. AI-suggested if omitted.', enumVals:[]},
     {name:'ceds_code', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Common Education Data Standards code.', enumVals:[]},
     {name:'edfi_code', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Ed-Fi ODS course code for SIS integration.', enumVals:[]},
     {name:'cte_cluster', type:'VARCHAR', len:50, nullable:true, governed:true, ai:false, status:'active', desc:'CTE career cluster. Required when course_subject = CTE.', enumVals:[]},
-    {name:'diploma_core40', type:'BOOLEAN', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Satisfies Indiana Core 40 diploma requirement.', enumVals:[]},
-    {name:'diploma_ahd', type:'BOOLEAN', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Counts toward Academic Honors Diploma.', enumVals:[]},
-    {name:'diploma_thd', type:'BOOLEAN', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Counts toward Technical Honors Diploma.', enumVals:[]},
-    {name:'cohort_version', type:'VARCHAR', len:10, nullable:false, governed:true, ai:false, status:'active', desc:'Cohort year anchor (e.g. SY2025-26). Set at record creation.', enumVals:[]},
-    {name:'record_status', type:'ENUM', len:null, nullable:false, governed:true, ai:false, status:'active', desc:'Lifecycle status of the course record.', enumVals:['Active','Pending Approval','Deprecated','Retired']},
+    {name:'diploma_core40', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Satisfies Indiana Core 40 diploma requirement.', enumVals:[]},
+    {name:'diploma_ahd', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Counts toward Academic Honors Diploma.', enumVals:[]},
+    {name:'diploma_thd', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Counts toward Technical Honors Diploma.', enumVals:[]},
+    {name:'cohort_version', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Cohort year anchor (e.g. SY2025-26). Set by system at record creation — do not include in bulk upload.', enumVals:[]},
+    {name:'record_status', type:'ENUM', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Lifecycle status. Set by system — do not include in bulk upload.', enumVals:['Active','Pending Approval','Deprecated','Retired']},
   ],
   credentials: [
     {name:'credential_guid', type:'VARCHAR', len:36, nullable:false, governed:true, ai:false, status:'active', desc:'System-assigned GUID. Immutable after creation.', enumVals:[]},
