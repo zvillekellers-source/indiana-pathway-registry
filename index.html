@@ -592,7 +592,15 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--slate)">
       <span id="ccFooter">Loading&hellip;</span>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-size:11px;color:var(--slate)">Show</label>
+        <select id="ccPageSizeSelect" class="search-input" style="min-width:80px;padding:4px 8px;font-size:11px" onchange="ccSetPageSize(this.value)">
+          <option value="50">50</option>
+          <option value="100" selected>100</option>
+          <option value="250">250</option>
+          <option value="500">500</option>
+          <option value="9999">All</option>
+        </select>
         <button class="btn btn-secondary btn-sm" onclick="ccPage(-1)">&larr; Prev</button>
         <button class="btn btn-secondary btn-sm" onclick="ccPage(1)">Next &rarr;</button>
       </div>
@@ -689,13 +697,15 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
           <div class="panel-title">Pending Approvals</div>
           <div class="panel-subtitle" id="apSubtitle">Loading&hellip;</div>
         </div>
-        <div class="panel-actions">
+        <div class="panel-actions" style="align-items:center">
           <select class="search-input" style="min-width:200px" id="apRoleSelect" onchange="apRender()">
             <option value="curriculum">Role: Curriculum Director</option>
             <option value="cte">Role: CTE SME</option>
             <option value="labormarket">Role: Labor Market SME</option>
             <option value="math">Role: Math SME</option>
           </select>
+          <button class="btn btn-secondary btn-sm" id="apBulkRejectBtn" onclick="apBulkReject()" style="display:none;color:var(--red);border-color:rgba(155,35,53,.3)">Reject Selected</button>
+          <button class="btn btn-gold btn-sm" id="apBulkApproveBtn" onclick="apBulkApprove()" style="display:none">Approve Selected</button>
         </div>
       </div>
     </div>
@@ -1563,14 +1573,30 @@ function apRender() {
     if (!groups[item.group]) groups[item.group] = [];
     groups[item.group].push(item);
   });
+  var canAct = (role === 'curriculum');
   var html = '';
   Object.keys(groups).forEach(function(group) {
-    html += '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:8px;margin-top:16px;font-weight:600">' + group + ' (' + groups[group].length + ')</div>';
+    var groupIds = groups[group].map(function(i){ return i.id; });
+    var groupCheckId = 'apgcb-' + group.replace(/\s+/g,'_');
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-top:16px;margin-bottom:8px">';
+    if (canAct) {
+      html += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none">' +
+        '<input type="checkbox" id="' + groupCheckId + '" onchange="apGroupCheck(this,\''+group+'\')" style="width:14px;height:14px;cursor:pointer">' +
+        '<span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);font-weight:600">' + group + ' (' + groups[group].length + ')</span>' +
+        '</label>';
+    } else {
+      html += '<span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);font-weight:600">' + group + ' (' + groups[group].length + ')</span>';
+    }
+    html += '</div>';
     groups[group].forEach(function(item) {
-      var canAct = (role === 'curriculum');
       var btnStyle = canAct ? '' : 'opacity:.35;cursor:not-allowed;pointer-events:none';
       var schemaTag = (item.schemaLib !== null) ? '<span class="chip chip-blue" style="font-size:9px;margin-left:6px">Schema Change</span>' : '';
-      html += '<div class="approval-card" id="' + item.id + '">' +
+      var cbHtml = canAct
+        ? '<input type="checkbox" class="ap-item-cb" data-id="' + item.id + '" data-group="' + group + '" onchange="apUpdateBulkBtn()" style="width:14px;height:14px;cursor:pointer;flex-shrink:0">'
+        : '';
+      html += '<div class="approval-card" id="' + item.id + '" style="display:flex;align-items:flex-start;gap:10px">' +
+        cbHtml +
+        '<div style="flex:1">' +
         '<div class="approval-card-header"><span class="approval-card-id">' + item.ref + '</span><div style="display:flex;align-items:center;gap:6px"><span class="chip chip-amber">Pending</span>' + schemaTag + '</div></div>' +
         '<div class="approval-card-title">' + item.title + '</div>' +
         '<div class="approval-card-meta">' + item.meta + '</div>' +
@@ -1578,10 +1604,11 @@ function apRender() {
         '<button class="btn-approve" style="' + btnStyle + '" onclick="apApprove(\'' + item.id + '\')">Approve</button>' +
         '<button class="btn-reject" style="' + btnStyle + '" onclick="apReject(\'' + item.id + '\')">Reject</button>' +
         (!canAct ? '<span style="font-size:11px;color:var(--slate);margin-left:4px">Curriculum Director approval required</span>' : '') +
-        '</div></div>';
+        '</div></div></div>';
     });
   });
   container.innerHTML = html;
+  apUpdateBulkBtn();
 }
 
 function apApprove(id) {
@@ -2030,6 +2057,36 @@ function buBuildResultScreen() {
     '<div style="margin-top:14px;background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate);display:flex;align-items:center;gap:10px"><span style="font-size:14px">&#9432;</span><span>Records are now visible in <strong>Course Catalog</strong> with Pending Approval status. Search for them there now.</span></div>';
   document.getElementById('buFooterLeft').textContent = importable + ' courses added to catalog · ' + errRows.length + ' row' + (errRows.length!==1?'s':'') + ' skipped';
   document.getElementById('buSubtitle').textContent = 'Import complete — courses are now searchable in Course Catalog';
+
+  // Auto-download manifest
+  buDownloadManifest(okRows, warnRows, errRows, today);
+}
+
+function buDownloadManifest(okRows, warnRows, errRows, today) {
+  var lines = [
+    '# Indiana Pathway Registry — Bulk Upload Manifest',
+    '# Generated: ' + today,
+    '# Total rows processed: ' + (okRows.length + warnRows.length + errRows.length),
+    '# Imported successfully: ' + okRows.length,
+    '# Imported with warnings: ' + warnRows.length,
+    '# Skipped (errors): ' + errRows.length,
+    '',
+    'result,identifier,name,category,issues'
+  ];
+  okRows.forEach(function(r) {
+    lines.push('IMPORTED,"' + r.id + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.cat||'') + '",');
+  });
+  warnRows.forEach(function(r) {
+    lines.push('WARNING,"' + r.id + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.cat||'') + '","' + (r.issue||'').replace(/"/g,'""') + '"');
+  });
+  errRows.forEach(function(r) {
+    lines.push('ERROR,"' + r.id + '","' + (r.name||'').replace(/"/g,'""') + '","' + (r.cat||'') + '","' + (r.issue||'').replace(/"/g,'""') + '"');
+  });
+  var csv = lines.join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'ipr_upload_manifest_' + today + '.csv';
+  a.click();
 }
 function buGoBack() {
   if (buStep === 2) buStep = 1;
@@ -2538,7 +2595,7 @@ function csvClose() {
 var LS_COURSES = 'ipr_courses_v1';
 var ccFilter = 'all';
 var ccPage_num = 0;
-var ccPageSize = 15;
+var ccPageSize = 100;
 
 var ccCoursesDefault = [
   {code:'ELA1000', name:'English Language Arts 9', category:'English Language and Literature', credits:'2.0', sced:'01001', flags:'Core 40, AHD', status:'active', isNew:false, importedOn:null, issues:''},
@@ -3201,6 +3258,43 @@ document.addEventListener('click', function(e) {
     dd.style.display = 'none';
   }
 });
+
+/* ── BULK APPROVE ── */
+function apGroupCheck(cb, group) {
+  document.querySelectorAll('.ap-item-cb[data-group="' + group + '"]').forEach(function(c){ c.checked = cb.checked; });
+  apUpdateBulkBtn();
+}
+
+function apUpdateBulkBtn() {
+  var checked = document.querySelectorAll('.ap-item-cb:checked');
+  var approveBtn = document.getElementById('apBulkApproveBtn');
+  var rejectBtn = document.getElementById('apBulkRejectBtn');
+  if (!approveBtn) return;
+  var n = checked.length;
+  if (n > 0) {
+    approveBtn.style.display = '';
+    approveBtn.textContent = 'Approve Selected (' + n + ')';
+    rejectBtn.style.display = '';
+    rejectBtn.textContent = 'Reject Selected (' + n + ')';
+  } else {
+    approveBtn.style.display = 'none';
+    rejectBtn.style.display = 'none';
+  }
+}
+
+function apBulkApprove() {
+  var checked = Array.from(document.querySelectorAll('.ap-item-cb:checked'));
+  if (checked.length === 0) return;
+  if (!confirm('Approve ' + checked.length + ' selected item' + (checked.length !== 1 ? 's' : '') + '?')) return;
+  checked.forEach(function(cb) { apApprove(cb.dataset.id); });
+}
+
+function apBulkReject() {
+  var checked = Array.from(document.querySelectorAll('.ap-item-cb:checked'));
+  if (checked.length === 0) return;
+  if (!confirm('Reject ' + checked.length + ' selected item' + (checked.length !== 1 ? 's' : '') + '?')) return;
+  checked.forEach(function(cb) { apReject(cb.dataset.id); });
+}
 
 </script>
 </body>
