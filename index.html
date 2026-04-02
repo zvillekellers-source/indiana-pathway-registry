@@ -857,54 +857,17 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       <div class="panel-header-row">
         <div>
           <div class="panel-title">Modal Editor</div>
-          <div class="panel-subtitle">Controls how fields are presented in edit modals &middot; Independent of schema</div>
+          <div class="panel-subtitle">Configure which fields appear on which tabs in each record type's edit modal</div>
         </div>
         <div class="panel-actions">
-          <div class="filter-pill active" style="margin:0">Course Catalog</div>
-          <div class="filter-pill" style="margin:0;cursor:pointer">Credentials</div>
-          <div class="filter-pill" style="margin:0;cursor:pointer">Patterns</div>
+          <div class="filter-pill active" data-lib="catalog" onclick="meSwitchLib('catalog',this)" style="cursor:pointer">Course Catalog</div>
+          <div class="filter-pill" data-lib="credentials" onclick="meSwitchLib('credentials',this)" style="cursor:pointer">Credentials</div>
+          <button class="btn btn-secondary btn-sm" onclick="meResetConfig(meCurrentLib)" style="color:var(--red);border-color:rgba(155,35,53,.3)">Reset to Defaults</button>
         </div>
       </div>
     </div>
-    <div class="card" style="background:#FEF3C7;border:1px solid #D97706;padding:10px 14px;margin-bottom:16px">
-      <div style="font-size:11px;color:#92400E"><strong>2 unassigned fields</strong> &mdash; Fields exist in schema but are not placed in any modal section. They will not appear to editors.</div>
-    </div>
-    <div class="modal-editor-layout">
-      <div class="field-list">
-        <div class="field-list-header">Available Fields</div>
-        <div class="field-list-item"><span class="drag-handle">&#10783;</span> state_course_code</div>
-        <div class="field-list-item"><span class="drag-handle">&#10783;</span> course_name</div>
-        <div class="field-list-item"><span class="drag-handle">&#10783;</span> sced_code</div>
-        <div class="field-list-item"><span class="drag-handle">&#10783;</span> credit_hours</div>
-        <div class="field-list-item"><span class="drag-handle">&#10783;</span> cte_cluster</div>
-        <div class="field-list-item"><span class="drag-handle">&#10783;</span> diploma_core40</div>
-        <div class="field-list-item" style="color:var(--gold)"><span class="drag-handle">&#10783;</span> ceds_code &#9888; unassigned</div>
-        <div class="field-list-item" style="color:var(--gold)"><span class="drag-handle">&#10783;</span> edfi_code &#9888; unassigned</div>
-      </div>
-      <div>
-        <div class="card" style="margin-bottom:10px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:12px;font-weight:600;color:var(--navy)">Tab: Core</div>
-            <span class="chip chip-green">2-column layout</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)"><div style="font-size:9px;color:var(--slate);text-transform:uppercase;letter-spacing:.06em">Grounding</div>course_name</div>
-            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">state_course_code</div>
-            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">credit_hours</div>
-            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">cte_cluster</div>
-          </div>
-        </div>
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:12px;font-weight:600;color:var(--navy)">Tab: Standards &amp; Alignment</div>
-            <span class="chip chip-green">2-column layout</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div style="background:#FEF9EC;border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(200,151,58,.4)"><div style="font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em">Grounding (read-only)</div>course_name</div>
-            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">sced_code</div>
-          </div>
-        </div>
-      </div>
+    <div id="meContent">
+      <div style="padding:48px;text-align:center;color:var(--slate);font-size:12px">Loading…</div>
     </div>
   </div>
 
@@ -1624,6 +1587,7 @@ function showPanel(id, navEl) {
   if (navEl) navEl.classList.add('active');
   if (id === 'credentials') crRender();
   if (id === 'publication') pubRender();
+  if (id === 'modal-editor') meRender();
   if (id === 'course-catalog') ccRender();
   if (id === 'approvals') apRender();
 }
@@ -2638,6 +2602,7 @@ function persistReset() {
   crSave(); ccSave();
   pubVersions = JSON.parse(JSON.stringify(pubVersionsDefault)); pubSave();
   crPubVersions = JSON.parse(JSON.stringify(crPubVersionsDefault)); crPubSave();
+  meConfigs = JSON.parse(JSON.stringify(meConfigsDefault)); meSave();
   persistSave();
   ccRender(); crRender(); apRender();
   showPersistBanner('Courses, credentials and queue reset. Schema preserved.', false);
@@ -2667,6 +2632,7 @@ document.addEventListener('DOMContentLoaded', function() {
   crLoad();
   pubLoad();
   crPubLoad();
+  meLoad();
   var loaded = persistLoad();
   smRender();
   apRender();
@@ -2789,29 +2755,29 @@ var ccPage_num = 0;
 var ccPageSize = 100;
 
 var ccCoursesDefault = [
-  {code:'1002', name:'English 9', subject:'English Language Arts', category:'English Language and Literature', credits:'2.0', maxCredits:'2.0', sced:'01001', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'1006', name:'English 11', subject:'English Language Arts', category:'English Language and Literature', credits:'2.0', maxCredits:'2.0', sced:'01003', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'1010', name:'Language Arts Lab', subject:'English Language Arts', category:'English Language and Literature', credits:'8.0', maxCredits:'8.0', sced:'01005', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'1056', name:'AP English Language and Composition', subject:'English Language Arts', category:'English Language and Literature', credits:'2.0', maxCredits:'2.0', sced:'01102', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'1124', name:'Advanced English/Language Arts, College Credit', subject:'English Language Arts', category:'English Language and Literature', credits:'1.0', maxCredits:'1.0', sced:'01199', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'2544', name:'Advanced Mathematics, College Credit', subject:'Mathematics', category:'Mathematics', credits:'1.0', maxCredits:'1.0', sced:'02199', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'2562', name:'AP Calculus AB', subject:'Mathematics', category:'Mathematics', credits:'2.0', maxCredits:'2.0', sced:'02101', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'8156', name:'Cambridge Advanced Mathematics (Pure and Probability & Statistics) (A Level)', subject:'Mathematics', category:'Mathematics', credits:'2.0', maxCredits:'2.0', sced:'08099', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:true, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'3090', name:'Advanced Science, College Credit', subject:'Science', category:'Science', credits:'1.0', maxCredits:'1.0', sced:'03199', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:true, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'3020', name:'AP Biology', subject:'Science', category:'Science', credits:'2.0', maxCredits:'2.0', sced:'03102', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:true, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'3060', name:'AP Chemistry', subject:'Science', category:'Science', credits:'2.0', maxCredits:'2.0', sced:'03103', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:true, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'1562', name:'AP United States History', subject:'Social Studies', category:'Social Sciences and History', credits:'2.0', maxCredits:'2.0', sced:'04105', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'1552', name:'AP Comparative Government and Politics', subject:'Social Studies', category:'Social Sciences and History', credits:'2.0', maxCredits:'2.0', sced:'04101', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'1574', name:'Advanced Social Sciences, College Credit', subject:'Social Studies', category:'Social Sciences and History', credits:'1.0', maxCredits:'1.0', sced:'04199', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'0518', name:'Musical Theater', subject:'Fine Arts', category:'Fine Arts', credits:'1.0', maxCredits:'1.0', sced:'09005', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'4060', name:'Drawing', subject:'Fine Arts', category:'Fine Arts', credits:'1.0', maxCredits:'1.0', sced:'05012', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:true, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'2152', name:'Advanced World Language, College Credit', subject:'World Language', category:'World Language', credits:'1.0', maxCredits:'1.0', sced:'07999', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'2032', name:'AP French Language and Culture', subject:'World Language', category:'World Language', credits:'2.0', maxCredits:'2.0', sced:'07101', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'4519', name:'AP Business with Personal Finance', subject:'Business', category:'Career & Technical Education', credits:'2.0', maxCredits:'2.0', sced:'08051', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'8100', name:'Cambridge Advanced Accounting (A Level)', subject:'Business', category:'Career & Technical Education', credits:'2.0', maxCredits:'2.0', sced:'08051', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:true, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'4590', name:'AP Networking', subject:'Computer Science', category:'Career & Technical Education', credits:'2.0', maxCredits:'2.0', sced:'08103', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'4592', name:'AP Cybersecurity', subject:'Computer Science', category:'Career & Technical Education', credits:'2.0', maxCredits:'2.0', sced:'08104', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
-  {code:'3546', name:'Cambridge Advanced Sport & Physical Education (AS Level)', subject:'Physical Education', category:'Physical Education', credits:'2.0', maxCredits:'2.0', sced:'06103', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:true, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[]},
+  {code:'1002', name:'English 9', subject:'English Language Arts', category:'English Language and Literature', credits:'2.0', maxCredits:'2.0', sced:'01001', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'1006', name:'English 11', subject:'English Language Arts', category:'English Language and Literature', credits:'2.0', maxCredits:'2.0', sced:'01003', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'1010', name:'Language Arts Lab', subject:'English Language Arts', category:'English Language and Literature', credits:'8.0', maxCredits:'8.0', sced:'01005', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'1056', name:'AP English Language and Composition', subject:'English Language Arts', category:'English Language and Literature', credits:'2.0', maxCredits:'2.0', sced:'01102', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'1124', name:'Advanced English/Language Arts, College Credit', subject:'English Language Arts', category:'English Language and Literature', credits:'1.0', maxCredits:'1.0', sced:'01199', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'2544', name:'Advanced Mathematics, College Credit', subject:'Mathematics', category:'Mathematics', credits:'1.0', maxCredits:'1.0', sced:'02199', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'2562', name:'AP Calculus AB', subject:'Mathematics', category:'Mathematics', credits:'2.0', maxCredits:'2.0', sced:'02101', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'8156', name:'Cambridge Advanced Mathematics (Pure and Probability & Statistics) (A Level)', subject:'Mathematics', category:'Mathematics', credits:'2.0', maxCredits:'2.0', sced:'08099', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:true, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'3090', name:'Advanced Science, College Credit', subject:'Science', category:'Science', credits:'1.0', maxCredits:'1.0', sced:'03199', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:true, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'3020', name:'AP Biology', subject:'Science', category:'Science', credits:'2.0', maxCredits:'2.0', sced:'03102', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:true, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'3060', name:'AP Chemistry', subject:'Science', category:'Science', credits:'2.0', maxCredits:'2.0', sced:'03103', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:true, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'1562', name:'AP United States History', subject:'Social Studies', category:'Social Sciences and History', credits:'2.0', maxCredits:'2.0', sced:'04105', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'1552', name:'AP Comparative Government and Politics', subject:'Social Studies', category:'Social Sciences and History', credits:'2.0', maxCredits:'2.0', sced:'04101', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'1574', name:'Advanced Social Sciences, College Credit', subject:'Social Studies', category:'Social Sciences and History', credits:'1.0', maxCredits:'1.0', sced:'04199', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'0518', name:'Musical Theater', subject:'Fine Arts', category:'Fine Arts', credits:'1.0', maxCredits:'1.0', sced:'09005', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'4060', name:'Drawing', subject:'Fine Arts', category:'Fine Arts', credits:'1.0', maxCredits:'1.0', sced:'05012', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:true, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'2152', name:'Advanced World Language, College Credit', subject:'World Language', category:'World Language', credits:'1.0', maxCredits:'1.0', sced:'07999', flags:'', recordStatus:'Active', dualCredit:true, apCourse:false, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'2032', name:'AP French Language and Culture', subject:'World Language', category:'World Language', credits:'2.0', maxCredits:'2.0', sced:'07101', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'4519', name:'AP Business with Personal Finance', subject:'Business', category:'Career & Technical Education', credits:'2.0', maxCredits:'2.0', sced:'08051', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'8100', name:'Cambridge Advanced Accounting (A Level)', subject:'Business', category:'Career & Technical Education', credits:'2.0', maxCredits:'2.0', sced:'08051', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:true, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'4590', name:'AP Networking', subject:'Computer Science', category:'Career & Technical Education', credits:'2.0', maxCredits:'2.0', sced:'08103', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'4592', name:'AP Cybersecurity', subject:'Computer Science', category:'Career & Technical Education', credits:'2.0', maxCredits:'2.0', sced:'08104', flags:'', recordStatus:'Active', dualCredit:false, apCourse:true, ibCourse:false, cambridgeCourse:false, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
+  {code:'3546', name:'Cambridge Advanced Sport & Physical Education (AS Level)', subject:'Physical Education', category:'Physical Education', credits:'2.0', maxCredits:'2.0', sced:'06103', flags:'', recordStatus:'Active', dualCredit:false, apCourse:false, ibCourse:false, cambridgeCourse:true, labCourse:false, status:'active', isNew:false, importedOn:null, issues:'', log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Course Catalog SY 2025-26 import.'}]},
 ];
 
 var ccCourses = [];
@@ -3199,12 +3165,12 @@ var crPageSize = 100;
 var crCurrentId = null;
 
 var crCredsDefault = [
-  {id:'CR1042', name:'AWS Certified Cloud Practitioner', shortName:'AWS CCP', issuer:'Amazon Web Services', credType:'Industry Certification', cluster:'Information Technology', national:true, econValue:4.5, upskillValue:4.8, covScore:4.8, sealTier:'Employment Honors+', status:'active', isNew:false, importedOn:null, log:[]},
-  {id:'CR1087', name:'CompTIA A+ Certification', shortName:'CompTIA A+', issuer:'CompTIA', credType:'Industry Certification', cluster:'Information Technology', national:true, econValue:4.2, upskillValue:4.5, covScore:4.5, sealTier:'Employment Honors+', status:'active', isNew:false, importedOn:null, log:[]},
-  {id:'CR2014', name:'Certified Nurse Aide (CNA)', shortName:'CNA', issuer:'Indiana State Dept. Health', credType:'Certificate', cluster:'Health Science', national:false, econValue:3.5, upskillValue:3.6, covScore:3.7, sealTier:'Employment Honors', status:'active', isNew:false, importedOn:null, log:[]},
-  {id:'CR3001', name:'Welding Technology AS', shortName:'Welding AS', issuer:'Ivy Tech Community College', credType:'Associate of Applied Science', cluster:'Manufacturing', national:false, econValue:3.8, upskillValue:3.9, covScore:4.2, sealTier:'Employment Honors+', status:'active', isNew:false, importedOn:null, log:[]},
-  {id:'CR1203', name:'OSHA 10-Hour General Industry', shortName:'OSHA 10', issuer:'OSHA', credType:'Industry Certification', cluster:'Manufacturing', national:true, econValue:2.0, upskillValue:2.2, covScore:2.4, sealTier:'Below Threshold', status:'active', isNew:false, importedOn:null, log:[]},
-  {id:'CR4088', name:'Cybersecurity Fundamentals TC', shortName:'Cyber TC', issuer:'Ivy Tech Community College', credType:'Technical Certificate', cluster:'Information Technology', national:false, econValue:2.8, upskillValue:3.0, covScore:3.1, sealTier:'Employment Honors', status:'pending', isNew:true, importedOn:'2026-03-25', log:[]},
+  {id:'CR1042', name:'AWS Certified Cloud Practitioner', shortName:'AWS CCP', issuer:'Amazon Web Services', credType:'Industry Certification', cluster:'Information Technology', national:true, econValue:4.5, upskillValue:4.8, covScore:4.8, sealTier:'Employment Honors+', status:'active', isNew:false, importedOn:null, log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Credentials of Value library SY 2025-26.'}]},
+  {id:'CR1087', name:'CompTIA A+ Certification', shortName:'CompTIA A+', issuer:'CompTIA', credType:'Industry Certification', cluster:'Information Technology', national:true, econValue:4.2, upskillValue:4.5, covScore:4.5, sealTier:'Employment Honors+', status:'active', isNew:false, importedOn:null, log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Credentials of Value library SY 2025-26.'}]},
+  {id:'CR2014', name:'Certified Nurse Aide (CNA)', shortName:'CNA', issuer:'Indiana State Dept. Health', credType:'Certificate', cluster:'Health Science', national:false, econValue:3.5, upskillValue:3.6, covScore:3.7, sealTier:'Employment Honors', status:'active', isNew:false, importedOn:null, log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Credentials of Value library SY 2025-26.'}]},
+  {id:'CR3001', name:'Welding Technology AS', shortName:'Welding AS', issuer:'Ivy Tech Community College', credType:'Associate of Applied Science', cluster:'Manufacturing', national:false, econValue:3.8, upskillValue:3.9, covScore:4.2, sealTier:'Employment Honors+', status:'active', isNew:false, importedOn:null, log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Credentials of Value library SY 2025-26.'}]},
+  {id:'CR1203', name:'OSHA 10-Hour General Industry', shortName:'OSHA 10', issuer:'OSHA', credType:'Industry Certification', cluster:'Manufacturing', national:true, econValue:2.0, upskillValue:2.2, covScore:2.4, sealTier:'Below Threshold', status:'active', isNew:false, importedOn:null, log:[{date:'2025-07-01', action:'Record Created', by:'System', note:'Seeded from IDOE Credentials of Value library SY 2025-26.'}]},
+  {id:'CR4088', name:'Cybersecurity Fundamentals TC', shortName:'Cyber TC', issuer:'Ivy Tech Community College', credType:'Technical Certificate', cluster:'Information Technology', national:false, econValue:2.8, upskillValue:3.0, covScore:3.1, sealTier:'Employment Honors', status:'pending', isNew:true, importedOn:'2026-03-25', log:[{date:'2026-03-25', action:'Record Created', by:'Admin (CIO)', note:'Added during prototype build session.'}]},
 ];
 var crCreds = [];
 
@@ -3978,6 +3944,232 @@ function crPubRejectPromotion(id) {
   v.status = 'draft'; v.submittedDate = null;
   crPubSave(); pubRender();
   showPersistBanner('Promotion rejected — returned to Draft.', true);
+}
+
+/* ── MODAL EDITOR ── */
+var LS_MODAL_CONFIGS = 'ipr_modal_configs_v1';
+var meConfigs = {};
+var meCurrentLib = 'catalog';
+
+var meConfigsDefault = {
+  catalog: {
+    tabs: [
+      {id:'tab1', label:'Core', fields:['credit_hours','sced_code','cte_cluster','abbreviated_name','recommended_grade'], order:0},
+      {id:'tab2', label:'Standards', fields:['ceds_code','edfi_code','course_duration_semesters','credits_per_semester','max_credits'], order:1},
+      {id:'tab3', label:'Enrollment', fields:['dual_credit','course_prerequisite'], order:2},
+      {id:'tab4', label:'Tab 4', fields:[], order:3},
+      {id:'flags', label:'Flags', fields:[], order:4},
+      {id:'log',   label:'Log',   fields:[], order:5}
+    ]
+  },
+  credentials: {
+    tabs: [
+      {id:'tab1', label:'Core', fields:['issuing_organization','credential_type','career_cluster','short_name'], order:0},
+      {id:'tab2', label:'CoV Scoring', fields:['cov_economic_value','cov_upskilling_value','national_recognition','cov_score'], order:1},
+      {id:'tab3', label:'Tab 3', fields:[], order:2},
+      {id:'tab4', label:'Tab 4', fields:[], order:3},
+      {id:'flags', label:'Flags', fields:[], order:4},
+      {id:'log',   label:'Log',   fields:[], order:5}
+    ]
+  }
+};
+
+function meLoad() {
+  try {
+    var s = localStorage.getItem(LS_MODAL_CONFIGS);
+    if (s) { meConfigs = JSON.parse(s); return; }
+  } catch(e) {}
+  meConfigs = JSON.parse(JSON.stringify(meConfigsDefault));
+}
+
+function meSave() {
+  try { localStorage.setItem(LS_MODAL_CONFIGS, JSON.stringify(meConfigs)); } catch(e) {}
+}
+
+function meGetConfig(lib) {
+  meLoad();
+  return meConfigs[lib] || null;
+}
+
+function meRender() {
+  meLoad();
+  meSwitchLib(meCurrentLib, null);
+}
+
+function meSwitchLib(lib, el) {
+  meCurrentLib = lib;
+  document.querySelectorAll('#panel-modal-editor .filter-pill').forEach(function(p){ p.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  else {
+    var pills = document.querySelectorAll('#panel-modal-editor .filter-pill');
+    pills.forEach(function(p){
+      if (p.dataset.lib === lib) p.classList.add('active');
+    });
+  }
+
+  var cfg = meConfigs[lib];
+  if (!cfg) { document.getElementById('meContent').innerHTML = '<div style="padding:24px;color:var(--slate);font-size:12px">No configuration for this library yet.</div>'; return; }
+
+  var schema = smSchemas[lib] ? smSchemas[lib].filter(function(f){ return f.status === 'active'; }) : [];
+  var boolFields = schema.filter(function(f){ return f.type === 'BOOLEAN'; });
+  var allAssigned = [];
+  cfg.tabs.forEach(function(t){ if (t.id !== 'flags' && t.id !== 'log') allAssigned = allAssigned.concat(t.fields); });
+  var unassigned = schema.filter(function(f){
+    return f.type !== 'BOOLEAN' && allAssigned.indexOf(f.name) === -1;
+  });
+
+  // Warning banner
+  var warnHtml = unassigned.length > 0
+    ? '<div class="card" style="background:#FEF3C7;border:1px solid #D97706;padding:10px 14px;margin-bottom:16px"><div style="font-size:11px;color:#92400E"><strong>' + unassigned.length + ' unassigned field' + (unassigned.length!==1?'s':'') + '</strong> — these fields exist in the schema but are not placed in any tab. They will not appear in the edit modal.</div></div>'
+    : '<div class="card" style="background:#D8F3DC;border:1px solid #52B788;padding:10px 14px;margin-bottom:16px"><div style="font-size:11px;color:#1B5E32"><strong>All fields assigned</strong> — every active schema field appears in the edit modal.</div></div>';
+
+  // Grounding strip explanation
+  var groundHtml = '<div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:11px;color:var(--slate)">' +
+    '<strong style="color:var(--navy)">Automatic grounding strip</strong> — every tab always shows the record ID, name, and description at the top automatically. ' +
+    'These are not part of the field assignment system. A tab with <em>only</em> grounding content is hidden in the edit modal.</div>';
+
+  // Tabs
+  var tabsHtml = '';
+  var sortedTabs = cfg.tabs.slice().sort(function(a,b){ return a.order - b.order; });
+
+  sortedTabs.forEach(function(tab) {
+    var isLog = tab.id === 'log';
+    var isFlag = tab.id === 'flags';
+    var isSystem = isLog || isFlag;
+
+    // Skip flag tab if no boolean fields
+    if (isFlag && boolFields.length === 0) return;
+
+    var tabFields = isFlag ? boolFields.map(function(f){ return f.name; }) : tab.fields;
+    var hasContent = tabFields.length > 0;
+    var hiddenNote = !hasContent && !isLog ? '<span class="chip chip-amber" style="font-size:9px;margin-left:6px">Hidden in modal — no fields</span>' : '';
+    var systemNote = isSystem ? '<span class="chip chip-blue" style="font-size:9px;margin-left:6px">' + (isLog ? 'Always last' : 'Auto-populated') + '</span>' : '';
+
+    var headerHtml = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+      '<div style="display:flex;align-items:center;gap:6px">';
+
+    if (!isSystem) {
+      headerHtml += '<input type="text" value="' + tab.label + '" class="sm-input" style="font-weight:600;font-size:12px;color:var(--navy);width:140px;padding:3px 6px" onchange="meRenameTab(\'' + lib + '\',\'' + tab.id + '\',this.value)">';
+    } else {
+      headerHtml += '<span style="font-size:12px;font-weight:600;color:var(--navy)">' + tab.label + '</span>';
+    }
+    headerHtml += hiddenNote + systemNote + '</div>';
+
+    // Reorder buttons for non-system tabs
+    if (!isSystem) {
+      var canUp = tab.order > 0;
+      var canDown = tab.order < sortedTabs.filter(function(t){ return t.id !== 'flags' && t.id !== 'log'; }).length - 1;
+      headerHtml += '<div style="display:flex;gap:4px">';
+      headerHtml += '<button class="btn btn-secondary btn-sm" style="padding:2px 6px;font-size:10px" ' + (canUp ? 'onclick="meMoveTab(\'' + lib + '\',\'' + tab.id + '\',-1)"' : 'disabled style="opacity:.35"') + '>▲</button>';
+      headerHtml += '<button class="btn btn-secondary btn-sm" style="padding:2px 6px;font-size:10px" ' + (canDown ? 'onclick="meMoveTab(\'' + lib + '\',\'' + tab.id + '\',1)"' : 'disabled style="opacity:.35"') + '>▼</button>';
+      headerHtml += '</div>';
+    }
+    headerHtml += '</div>';
+
+    // Field list
+    var fieldsHtml = '';
+    if (isLog) {
+      fieldsHtml = '<div style="font-size:11px;color:var(--slate);font-style:italic">Read-only audit trail. Automatically maintained by the system — no fields to assign.</div>';
+    } else if (isFlag) {
+      if (boolFields.length === 0) {
+        fieldsHtml = '<div style="font-size:11px;color:var(--slate);font-style:italic">No Boolean fields in schema.</div>';
+      } else {
+        fieldsHtml = boolFields.map(function(f){
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:var(--mist);border-radius:var(--radius);margin-bottom:4px;font-size:11px">' +
+            '<span style="font-family:var(--mono)">' + f.name + '</span>' +
+            '<span class="chip chip-blue" style="font-size:9px">Auto-assigned</span>' +
+            '</div>';
+        }).join('');
+      }
+    } else {
+      // Assigned fields with remove button
+      var assignedHtml = tab.fields.map(function(fname){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:var(--mist);border-radius:var(--radius);margin-bottom:4px;font-size:11px">' +
+          '<span style="font-family:var(--mono)">' + fname + '</span>' +
+          '<button onclick="meRemoveField(\'' + lib + '\',\'' + tab.id + '\',\'' + fname + '\')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px" title="Remove from tab">&#10005;</button>' +
+          '</div>';
+      }).join('');
+
+      // Unassigned field dropdown
+      var dropdownHtml = '<div style="margin-top:8px;display:flex;gap:6px;align-items:center">' +
+        '<select id="meAddSel-' + tab.id + '" class="sm-input" style="font-size:11px;flex:1">' +
+        '<option value="">— Add a field to this tab —</option>' +
+        unassigned.filter(function(f){ return f.type !== 'BOOLEAN'; }).map(function(f){
+          return '<option value="' + f.name + '">' + f.name + ' (' + f.type + ')</option>';
+        }).join('') +
+        '</select>' +
+        '<button class="btn btn-secondary btn-sm" onclick="meAddField(\'' + lib + '\',\'' + tab.id + '\')">Add</button>' +
+        '</div>';
+
+      fieldsHtml = (tab.fields.length === 0
+        ? '<div style="font-size:11px;color:var(--slate);font-style:italic;margin-bottom:8px">No fields assigned — tab will be hidden in modal.</div>'
+        : assignedHtml) + dropdownHtml;
+    }
+
+    tabsHtml += '<div class="card" style="margin-bottom:10px">' + headerHtml + fieldsHtml + '</div>';
+  });
+
+  // Unassigned field list
+  var unassignedHtml = unassigned.length > 0
+    ? '<div class="card" style="margin-top:16px"><div style="font-size:11px;font-weight:600;color:var(--navy);margin-bottom:8px">Unassigned Fields — not shown in modal</div>' +
+      unassigned.map(function(f){
+        return '<div style="padding:5px 8px;font-size:11px;font-family:var(--mono);color:var(--slate);border-bottom:1px solid rgba(12,35,64,.06)">' + f.name + ' <span style="color:var(--gold)">&#9888;</span></div>';
+      }).join('') + '</div>'
+    : '';
+
+  document.getElementById('meContent').innerHTML = warnHtml + groundHtml + tabsHtml + unassignedHtml;
+}
+
+function meRenameTab(lib, tabId, newLabel) {
+  var tab = meConfigs[lib].tabs.find(function(t){ return t.id === tabId; });
+  if (tab) { tab.label = newLabel || tab.label; meSave(); }
+}
+
+function meMoveTab(lib, tabId, dir) {
+  var tabs = meConfigs[lib].tabs;
+  var movable = tabs.filter(function(t){ return t.id !== 'flags' && t.id !== 'log'; });
+  var tab = tabs.find(function(t){ return t.id === tabId; });
+  var newOrder = tab.order + dir;
+  if (newOrder < 0 || newOrder >= movable.length) return;
+  var other = movable.find(function(t){ return t.order === newOrder; });
+  if (other) { other.order = tab.order; tab.order = newOrder; }
+  meSave();
+  meRender();
+}
+
+function meAddField(lib, tabId) {
+  var sel = document.getElementById('meAddSel-' + tabId);
+  if (!sel || !sel.value) return;
+  var fname = sel.value;
+  // Remove from any other tab first
+  meConfigs[lib].tabs.forEach(function(t){ t.fields = t.fields.filter(function(f){ return f !== fname; }); });
+  var tab = meConfigs[lib].tabs.find(function(t){ return t.id === tabId; });
+  if (tab && tab.fields.indexOf(fname) === -1) tab.fields.push(fname);
+  meSave();
+  meSwitchLib(lib, null);
+}
+
+function meRemoveField(lib, tabId, fname) {
+  var tab = meConfigs[lib].tabs.find(function(t){ return t.id === tabId; });
+  if (tab) { tab.fields = tab.fields.filter(function(f){ return f !== fname; }); }
+  meSave();
+  meSwitchLib(lib, null);
+}
+
+function meResetConfig(lib) {
+  if (!confirm('Reset Modal Editor configuration for ' + lib + ' to defaults? This cannot be undone.')) return;
+  meConfigs[lib] = JSON.parse(JSON.stringify(meConfigsDefault[lib]));
+  meSave();
+  meRender();
+  showPersistBanner('Modal Editor reset to defaults.', true);
+}
+
+/* ── HELPER: get ordered field list for a tab from config ── */
+function meGetTabFields(lib, tabId) {
+  var cfg = meGetConfig(lib);
+  if (!cfg) return null;
+  var tab = cfg.tabs.find(function(t){ return t.id === tabId; });
+  return tab ? tab.fields : [];
 }
 
 </script>
