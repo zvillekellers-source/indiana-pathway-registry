@@ -1,4 +1,2334 @@
-student can earn for this course.', enumVals:[]},
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indiana Pathway Registry</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0C2340;--gold:#C8973A;--light:#F5F2EC;--white:#fff;
+  --slate:#4A5568;--mist:#E8EEF5;--green:#2D6A4F;
+  --blue-mid:#1B4F8A;--red:#9B2335;
+  --serif:'Libre Baskerville',Georgia,serif;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --radius:4px;
+  --shadow:0 1px 3px rgba(12,35,64,.12),0 1px 2px rgba(12,35,64,.08);
+  --shadow-lg:0 4px 16px rgba(12,35,64,.16);
+}
+body{font-family:var(--sans);background:var(--light);color:var(--navy);min-height:100vh;font-size:14px;line-height:1.5}
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* TOP BAR */
+.topbar{background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;flex-shrink:0;border-bottom:3px solid var(--gold)}
+.brand{display:flex;align-items:center;gap:10px;cursor:pointer}
+.brand-logo{width:30px;height:30px;background:var(--gold);border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;color:var(--navy);font-size:12px}
+.brand-name{font-family:var(--serif);font-size:14px;font-weight:700;letter-spacing:.02em}
+.brand-sub{font-size:9px;color:rgba(255,255,255,.55);letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-badge{background:rgba(200,151,58,.2);border:1px solid rgba(200,151,58,.4);color:var(--gold);font-size:10px;padding:3px 8px;border-radius:2px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.topbar-user{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#9B7729);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--navy);cursor:pointer}
+
+/* BODY LAYOUT */
+.body{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR NAV */
+.sidebar{width:220px;flex-shrink:0;background:var(--navy);color:#fff;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+.sidebar-top{padding:16px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sidebar-app-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:2px}
+.sidebar-app-name{font-family:var(--serif);font-size:13px;font-weight:700;color:var(--gold)}
+.nav-section{padding:16px 0 4px}
+.nav-section-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:0 16px;margin-bottom:4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.65);transition:all .15s;border-left:2px solid transparent;font-weight:500}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-item.active{background:rgba(200,151,58,.12);color:#fff;border-left-color:var(--gold)}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.nav-badge{background:var(--gold);color:var(--navy);font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;margin-left:auto}
+.nav-badge.amber{background:rgba(200,151,58,.25);color:var(--gold)}
+.nav-divider{border:none;border-top:1px solid rgba(255,255,255,.07);margin:8px 0}
+.nav-apps-item{display:flex;align-items:center;gap:8px;padding:8px 16px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.65);transition:all .15s;border-left:2px solid transparent;font-weight:500;background:rgba(200,151,58,.06)}
+.nav-apps-item:hover{background:rgba(200,151,58,.14);color:#fff}
+.nav-apps-item.active{background:rgba(200,151,58,.18);color:#fff;border-left-color:var(--gold)}
+
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;background:var(--light)}
+.panel{display:none;padding:24px;animation:fadeIn .2s ease}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* PANEL HEADERS */
+.panel-header{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(12,35,64,.1)}
+.panel-title{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--navy)}
+.panel-subtitle{font-size:12px;color:var(--slate);margin-top:3px}
+.panel-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.panel-actions{display:flex;gap:8px;flex-shrink:0;margin-top:2px}
+
+/* BUTTONS */
+.btn{padding:7px 14px;border-radius:var(--radius);border:none;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;letter-spacing:.02em}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover{background:var(--blue-mid)}
+.btn-secondary{background:#fff;color:var(--navy);border:1px solid rgba(12,35,64,.2)}
+.btn-secondary:hover{background:var(--mist)}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover{background:#B8872A}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* CARDS */
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px}
+.card-grid{display:grid;gap:12px}
+.card-grid-2{grid-template-columns:repeat(2,1fr)}
+.card-grid-3{grid-template-columns:repeat(3,1fr)}
+.card-grid-4{grid-template-columns:repeat(4,1fr)}
+
+/* KPI TILES */
+.kpi-tile{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px;border-top:3px solid var(--navy)}
+.kpi-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);margin-bottom:6px}
+.kpi-value{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--navy);line-height:1}
+.kpi-sub{font-size:11px;color:var(--slate);margin-top:4px}
+.kpi-tile.gold{border-top-color:var(--gold)}
+.kpi-tile.green{border-top-color:var(--green)}
+
+/* STATUS CHIPS */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:2px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.chip-green{background:#D8F3DC;color:#1B5E32}
+.chip-amber{background:#FEF3C7;color:#92400E}
+.chip-red{background:#FEE2E2;color:#7F1D1D}
+.chip-blue{background:#DBEAFE;color:#1E3A8A}
+.chip-gray{background:#F1F5F9;color:#475569}
+.chip-navy{background:rgba(12,35,64,.1);color:var(--navy)}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{background:var(--navy);color:rgba(255,255,255,.85);padding:8px 12px;text-align:left;font-weight:500;letter-spacing:.04em;font-size:10px;text-transform:uppercase}
+.data-table td{padding:9px 12px;border-bottom:1px solid rgba(12,35,64,.06);color:var(--navy)}
+.data-table tr:hover td{background:var(--mist)}
+.data-table .mono{font-family:var(--mono);font-size:11px;color:var(--slate)}
+
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-pill{padding:5px 12px;border-radius:20px;border:1px solid rgba(12,35,64,.15);background:#fff;font-size:11px;font-weight:500;cursor:pointer;color:var(--slate);transition:all .15s}
+.filter-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.filter-pill:hover:not(.active){background:var(--mist);color:var(--navy)}
+.search-input{padding:6px 12px;border:1px solid rgba(12,35,64,.15);border-radius:var(--radius);font-family:var(--sans);font-size:12px;background:#fff;color:var(--navy);outline:none;min-width:200px}
+.search-input:focus{border-color:var(--navy)}
+
+/* PLACEHOLDER CONTENT */
+.placeholder-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--slate)}
+.placeholder-icon{font-size:36px;margin-bottom:12px;opacity:.5}
+.placeholder-title{font-family:var(--serif);font-size:16px;color:var(--navy);margin-bottom:6px}
+.placeholder-sub{font-size:12px;color:var(--slate);max-width:320px;line-height:1.6}
+
+/* COLLAPSIBLE BLOCKS */
+.collapse-block{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.collapse-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none}
+.collapse-header:hover{background:var(--mist)}
+.collapse-title{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--navy)}
+.collapse-chips{display:flex;gap:6px;align-items:center}
+.collapse-arrow{font-size:10px;color:var(--slate);transition:transform .2s}
+.collapse-arrow.open{transform:rotate(180deg)}
+.collapse-body{display:none;padding:0 18px 16px;border-top:1px solid rgba(12,35,64,.06)}
+.collapse-body.open{display:block}
+
+/* WIREFRAME LINK BANNER */
+.wireframe-banner{background:linear-gradient(135deg,var(--navy),var(--blue-mid));border-radius:var(--radius);padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wireframe-banner-text{color:rgba(255,255,255,.85);font-size:12px}
+.wireframe-banner-text strong{color:var(--gold);font-weight:600}
+.wireframe-link{background:var(--gold);color:var(--navy);padding:6px 14px;border-radius:var(--radius);font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.wireframe-link:hover{background:#B8872A;color:#fff}
+
+/* SHERPA APP */
+.sherpa-header{background:linear-gradient(135deg,var(--navy),var(--blue-mid));padding:20px 24px;margin:-24px -24px 24px;border-bottom:3px solid var(--gold)}
+.sherpa-title{font-family:var(--serif);font-size:18px;color:#fff;font-weight:700}
+.sherpa-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
+
+/* APPROVAL CARDS */
+.approval-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--gold)}
+.approval-card.pending{border-left-color:var(--gold)}
+.approval-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.approval-card-id{font-family:var(--mono);font-size:11px;color:var(--slate)}
+.approval-card-title{font-size:13px;font-weight:600;color:var(--navy)}
+.approval-card-meta{font-size:11px;color:var(--slate);margin-bottom:10px}
+.approval-card-actions{display:flex;gap:6px}
+.btn-approve{background:#D8F3DC;color:#1B5E32;border:none;padding:5px 12px;border-radius:var(--radius);font-size:11px;font-weight:600;cursor:pointer}
+.btn-reject{background:#FEE2E2;color:#7F1D1D;border:none;padding:5px 12px;border-radius:var(--radius);font-size:11px;font-weight:600;cursor:pointer}
+
+/* PUBLICATION CARDS */
+.version-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 20px;margin-bottom:12px}
+.version-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.version-api{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--navy)}
+.version-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.version-stat{text-align:center;padding:8px;background:var(--light);border-radius:var(--radius)}
+.version-stat-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate)}
+.version-stat-value{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--navy);margin-top:2px}
+
+/* SCHEMA */
+.schema-field-row{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(12,35,64,.05);gap:10px;font-size:12px}
+.schema-field-row:hover{background:var(--mist)}
+.field-name{font-family:var(--mono);font-size:11px;color:var(--navy);width:160px;flex-shrink:0}
+.field-type{font-size:10px;background:rgba(12,35,64,.07);color:var(--slate);padding:1px 6px;border-radius:2px;font-family:var(--mono)}
+.field-nullable{font-size:10px;color:var(--slate);width:50px;text-align:center}
+
+/* ANALYTICS */
+.map-placeholder{background:#E8EEF5;border-radius:var(--radius);height:200px;display:flex;align-items:center;justify-content:center;color:var(--slate);font-size:12px;border:1px dashed rgba(12,35,64,.2)}
+.trend-bar{height:40px;background:var(--mist);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;position:relative}
+.trend-fill{height:100%;background:linear-gradient(90deg,var(--navy),var(--blue-mid));border-radius:var(--radius);display:flex;align-items:center;padding:0 10px;color:#fff;font-size:11px;font-weight:500}
+
+/* MODAL EDITOR */
+.modal-editor-layout{display:grid;grid-template-columns:240px 1fr;gap:16px}
+.field-list{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.field-list-header{background:var(--navy);color:#fff;padding:10px 14px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.field-list-item{padding:9px 14px;border-bottom:1px solid rgba(12,35,64,.06);font-size:12px;cursor:grab;display:flex;align-items:center;gap:8px;color:var(--navy)}
+.field-list-item:hover{background:var(--mist)}
+.drag-handle{color:rgba(12,35,64,.3);font-size:12px}
+
+/* ── SCHEMA EDITOR ── */
+.sm-sort-arrow{margin-left:3px;opacity:.6;font-size:9px}
+.sm-field-row{display:grid;grid-template-columns:180px 130px 56px 56px 1fr 120px 100px;align-items:center;padding:9px 12px;border-bottom:1px solid rgba(12,35,64,.05);font-size:12px;transition:background .12s;cursor:pointer}
+.sm-field-row:hover{background:var(--mist)}
+.sm-field-row.deprecated{opacity:.5}
+.sm-field-name{font-family:var(--mono);font-size:11px;color:var(--navy);font-weight:500}
+.sm-field-type{font-size:10px;background:rgba(12,35,64,.07);color:var(--slate);padding:2px 6px;border-radius:2px;font-family:var(--mono);display:inline-block}
+.sm-field-center{text-align:center;font-size:11px;color:var(--slate)}
+.sm-field-desc{font-size:11px;color:var(--slate);padding-right:8px}
+.sm-row-actions{display:flex;gap:4px;justify-content:flex-end}
+.sm-form-group{margin-bottom:16px}
+.sm-label{display:block;font-size:11px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.sm-input{width:100%;padding:7px 10px;border:1px solid rgba(12,35,64,.2);border-radius:var(--radius);font-family:var(--sans);font-size:12px;color:var(--navy);background:#fff;outline:none;transition:border-color .15s}
+.sm-input:focus{border-color:var(--navy)}
+.sm-hint{font-size:10px;color:var(--slate);margin-top:3px;line-height:1.5}
+.sm-enum-chip{background:var(--mist);border:1px solid rgba(12,35,64,.12);border-radius:2px;padding:2px 8px;font-size:10px;color:var(--navy);font-family:var(--mono)}
+
+/* ── COURSE EDIT MODAL ── */
+.ce-prereq-chip{display:inline-flex;align-items:center;gap:5px;background:var(--mist);border:1px solid rgba(12,35,64,.15);border-radius:2px;padding:3px 8px;font-size:11px;font-family:var(--mono);color:var(--navy)}
+.ce-prereq-chip button{background:none;border:none;cursor:pointer;color:var(--slate);font-size:12px;line-height:1;padding:0 2px}
+.ce-prereq-chip button:hover{color:var(--red)}
+.ce-prereq-option{padding:8px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid rgba(12,35,64,.05);display:flex;align-items:center;justify-content:space-between}
+.ce-prereq-option:hover{background:var(--mist)}
+.ce-prereq-option .mono{font-family:var(--mono);font-size:10px;color:var(--slate)}
+.ce-tab{padding:10px 18px;font-size:12px;font-weight:600;color:var(--slate);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.ce-tab:hover{color:var(--navy);background:var(--mist)}
+.ce-tab.active{color:var(--navy);border-bottom-color:var(--gold)}
+.ce-panel{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column}
+.ce-flag-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(12,35,64,.07)}
+.ce-toggle{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
+.ce-toggle input{opacity:0;width:0;height:0}
+.ce-toggle-slider{position:absolute;cursor:pointer;inset:0;background:rgba(12,35,64,.15);border-radius:22px;transition:.2s}
+.ce-toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.ce-toggle input:checked + .ce-toggle-slider{background:var(--green)}
+.ce-toggle input:checked + .ce-toggle-slider:before{transform:translateX(18px)}
+.ce-log-entry{padding:10px 12px;border-left:3px solid var(--mist);margin-bottom:8px;background:#fff;border-radius:0 var(--radius) var(--radius) 0}
+.ce-log-date{font-size:10px;color:var(--slate);font-family:var(--mono);margin-bottom:2px}
+.ce-log-action{font-size:12px;font-weight:600;color:var(--navy)}
+.ce-log-note{font-size:11px;color:var(--slate);margin-top:2px}
+
+/* ── BULK UPLOAD MODAL ── */
+.bu-overlay{position:fixed;inset:0;background:rgba(12,35,64,.55);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;animation:buFadeIn .2s ease}
+.bu-overlay.hidden{display:none}
+@keyframes buFadeIn{from{opacity:0}to{opacity:1}}
+.bu-modal{background:#fff;border-radius:6px;box-shadow:0 4px 20px rgba(12,35,64,.18);width:100%;max-width:860px;max-height:88vh;display:flex;flex-direction:column;animation:buSlideIn .2s ease}
+@keyframes buSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.bu-header{background:var(--navy);border-radius:6px 6px 0 0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:3px solid var(--gold)}
+.bu-title{font-family:var(--serif);font-size:16px;font-weight:700;color:#fff}
+.bu-subtitle{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.bu-close{background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.bu-close:hover{background:rgba(255,255,255,.2)}
+.bu-stepbar{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid rgba(12,35,64,.08);background:#fff;flex-shrink:0}
+.bu-step{display:flex;align-items:center;gap:8px;flex:1}
+.bu-stepnum{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all .2s}
+.bu-stepnum.active{background:var(--navy);color:#fff}
+.bu-stepnum.done{background:var(--green);color:#fff}
+.bu-stepnum.pending{background:rgba(12,35,64,.08);color:var(--slate)}
+.bu-steplabel{font-size:11px;font-weight:600}
+.bu-steplabel.active{color:var(--navy)}
+.bu-steplabel.done{color:var(--green)}
+.bu-steplabel.pending{color:var(--slate)}
+.bu-connector{flex:1;height:1px;background:rgba(12,35,64,.12);margin:0 8px;max-width:60px}
+.bu-connector.done{background:var(--green)}
+.bu-body{flex:1;overflow-y:auto;padding:24px}
+.bu-body::-webkit-scrollbar{width:4px}
+.bu-body::-webkit-scrollbar-thumb{background:rgba(12,35,64,.15);border-radius:2px}
+.bu-footer{padding:14px 20px;border-top:1px solid rgba(12,35,64,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#fff;border-radius:0 0 6px 6px}
+.bu-footer-left{font-size:11px;color:var(--slate)}
+.bu-drop{border:2px dashed rgba(12,35,64,.2);border-radius:6px;padding:40px 24px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;margin-bottom:20px}
+.bu-drop:hover,.bu-drop.drag-over{border-color:var(--navy);background:var(--mist)}
+.bu-drop-icon{font-size:32px;margin-bottom:10px}
+.bu-drop-title{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.bu-drop-sub{font-size:12px;color:var(--slate);margin-bottom:14px}
+.bu-formats{font-size:10px;color:var(--slate);background:var(--mist);display:inline-block;padding:4px 10px;border-radius:20px;letter-spacing:.04em}
+.bu-template{background:var(--mist);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.bu-template-info strong{display:block;font-size:12px;font-weight:600;color:var(--navy);margin-bottom:2px}
+.bu-template-info span{font-size:11px;color:var(--slate)}
+.bu-req-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:12px}
+.bu-req-table th{text-align:left;padding:6px 10px;background:var(--navy);color:rgba(255,255,255,.8);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+.bu-req-table td{padding:6px 10px;border-bottom:1px solid rgba(12,35,64,.06);color:var(--navy)}
+.bu-req-table tr:hover td{background:var(--mist)}
+.req-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;text-transform:uppercase;letter-spacing:.04em}
+.req-required{background:#FEE2E2;color:#7F1D1D}
+.req-optional{background:#F1F5F9;color:#475569}
+.bu-prev-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.bu-prev-stat{background:#fff;border-radius:var(--radius);padding:12px 14px;border-top:3px solid var(--navy);box-shadow:var(--shadow)}
+.bu-prev-stat.warn{border-top-color:var(--gold)}
+.bu-prev-stat.error{border-top-color:var(--red)}
+.bu-prev-stat.ok{border-top-color:var(--green)}
+.bu-prev-stat-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:4px}
+.bu-prev-stat-value{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--navy)}
+.bu-prev-table-wrap{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.bu-prev-table{width:100%;border-collapse:collapse;font-size:11px}
+.bu-prev-table th{background:var(--navy);color:rgba(255,255,255,.85);padding:8px 10px;text-align:left;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.bu-prev-table td{padding:8px 10px;border-bottom:1px solid rgba(12,35,64,.05);color:var(--navy);background:#fff;vertical-align:top}
+.bu-prev-table tr.row-warn td{background:#FFFBEB}
+.bu-prev-table tr.row-error td{background:#FFF5F5}
+.bu-prev-table tr:hover td{filter:brightness(.97)}
+.bu-status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.bu-status-dot.ok{background:var(--green)}
+.bu-status-dot.warn{background:var(--gold)}
+.bu-status-dot.error{background:var(--red)}
+.bu-issue{font-size:10px;color:#92400E;margin-top:3px;font-style:italic}
+.bu-issue.err{color:#7F1D1D}
+.bu-filter-row{display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+.bu-fpill{padding:4px 10px;border-radius:20px;border:1px solid rgba(12,35,64,.15);background:#fff;font-size:11px;font-weight:500;cursor:pointer;color:var(--slate);transition:all .15s}
+.bu-fpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.bu-fpill.wp.active{background:#92400E;border-color:#92400E;color:#fff}
+.bu-fpill.ep.active{background:var(--red);border-color:var(--red);color:#fff}
+.bu-result-header{text-align:center;padding:20px 16px 16px}
+.bu-result-icon{font-size:40px;margin-bottom:10px}
+.bu-result-title{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.bu-result-sub{font-size:12px;color:var(--slate)}
+.bu-result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 20px}
+.bu-result-stat{background:#fff;border-radius:var(--radius);padding:14px 16px;text-align:center;box-shadow:var(--shadow)}
+.bu-result-stat.g{border-top:3px solid var(--green)}
+.bu-result-stat.a{border-top:3px solid var(--gold)}
+.bu-result-stat.r{border-top:3px solid var(--red)}
+.bu-result-num{font-family:var(--mono);font-size:28px;font-weight:500;color:var(--navy)}
+.bu-result-label{font-size:11px;color:var(--slate);margin-top:4px}
+.bu-log{background:var(--mist);border-radius:var(--radius);padding:14px 16px;font-size:11px;font-family:var(--mono);color:var(--slate);line-height:2}
+.bu-log .lok{color:var(--green)}
+.bu-log .lwarn{color:#92400E}
+.bu-log .lerr{color:var(--red)}
+
+/* SCROLLBAR */
+.sidebar::-webkit-scrollbar,.main::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-track{background:transparent}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
+.main::-webkit-scrollbar-track{background:transparent}
+.main::-webkit-scrollbar-thumb{background:rgba(12,35,64,.15);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand" onclick="showPanel('summary-stats')">
+    <div class="brand-logo">IPR</div>
+    <div>
+      <div class="brand-name">Indiana Pathway Registry</div>
+      <div class="brand-sub">Indiana Dept. of Education</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div id="persistBanner" style="font-size:10px;color:var(--gold);opacity:0;transition:opacity .5s;letter-spacing:.04em;font-weight:500"></div>
+    <div class="topbar-badge">SY 2025–26</div>
+    <div class="topbar-badge" style="background:rgba(45,106,79,.2);border-color:rgba(45,106,79,.4);color:#52B788">&#9679; Live</div>
+    <div class="topbar-user" title="Admin User">CIO</div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-top">
+    <div class="sidebar-app-label">Application</div>
+    <div class="sidebar-app-name">Admin Console</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" onclick="showPanel('summary-stats',this)">
+      <span class="nav-icon">&#9672;</span> Summary Stats
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Data Registry</div>
+    <div class="nav-item" onclick="showPanel('course-catalog',this)">
+      <span class="nav-icon">&#128203;</span> Course Catalog
+    </div>
+    <div class="nav-item" onclick="showPanel('credentials',this)">
+      <span class="nav-icon">&#127941;</span> Credentials
+    </div>
+    <div class="nav-item" onclick="showPanel('patterns',this)">
+      <span class="nav-icon">&#11041;</span> Course Patterns
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Governance</div>
+    <div class="nav-item" onclick="showPanel('approvals',this)">
+      <span class="nav-icon">&#10003;</span> Pending Approvals
+      <span class="nav-badge">7</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('ai-staging',this)">
+      <span class="nav-icon">&#9678;</span> AI Staging Area
+      <span class="nav-badge amber">12</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('publication',this)">
+      <span class="nav-icon">&#11041;</span> Publication
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Analytics</div>
+    <div class="nav-item" onclick="showPanel('analytics',this)">
+      <span class="nav-icon">&#9638;</span> Trends &amp; Utilization
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Configuration</div>
+    <div class="nav-item" onclick="showPanel('schema',this)">
+      <span class="nav-icon">&#8862;</span> Schema Manager
+    </div>
+    <div class="nav-item" onclick="showPanel('modal-editor',this)">
+      <span class="nav-icon">&#8993;</span> Modal Editor
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Apps</div>
+    <hr class="nav-divider">
+    <div class="nav-apps-item" onclick="showPanel('sherpa',this)">
+      <span class="nav-icon">&#129517;</span> Course Sherpa
+    </div>
+    <div class="nav-apps-item" onclick="window.open('https://autumn-snowflake-4243.zvillekellers.workers.dev/','_blank')">
+      <span class="nav-icon">&#11041;</span> View Wireframe &#8599;
+    </div>
+  </div>
+</div>
+
+<!-- MAIN PANELS -->
+<div class="main">
+
+  <!-- SUMMARY STATS -->
+  <div class="panel active" id="panel-summary-stats">
+    <div class="wireframe-banner">
+      <div class="wireframe-banner-text">
+        <strong>Design Reference:</strong> The original interactive wireframe prototype is available for your dev team.
+      </div>
+      <a class="wireframe-link" href="https://autumn-snowflake-4243.zvillekellers.workers.dev/" target="_blank">Open Wireframe &#8599;</a>
+    </div>
+
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Summary Stats</div>
+          <div class="panel-subtitle">Registry-wide overview &middot; SY 2025&ndash;26 &middot; Last updated March 29, 2026</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Export Report</button>
+          <button class="btn btn-primary btn-sm">Refresh Data</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid card-grid-4" style="margin-bottom:20px">
+      <div class="kpi-tile">
+        <div class="kpi-label">Students Covered</div>
+        <div class="kpi-value">142,847</div>
+        <div class="kpi-sub">Active pathway plans</div>
+      </div>
+      <div class="kpi-tile gold">
+        <div class="kpi-label">Changes Pending Approval</div>
+        <div class="kpi-value">7</div>
+        <div class="kpi-sub">Awaiting Curriculum Director</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">API Versions Live</div>
+        <div class="kpi-value">4</div>
+        <div class="kpi-sub">SY 2022&ndash;23 through 2025&ndash;26</div>
+      </div>
+      <div class="kpi-tile green">
+        <div class="kpi-label">API Calls / Week</div>
+        <div class="kpi-value">284K</div>
+        <div class="kpi-sub">&#8593; 12% from last week</div>
+      </div>
+    </div>
+
+    <div class="collapse-block">
+      <div class="collapse-header" onclick="toggleCollapse(this)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="collapse-title">Course Catalog</span>
+          <div class="collapse-chips">
+            <span class="chip chip-navy">2,847 courses</span>
+            <span class="chip chip-green">2,614 active</span>
+            <span class="chip chip-amber">48 new this year</span>
+          </div>
+        </div>
+        <span class="collapse-arrow">&#9660;</span>
+      </div>
+      <div class="collapse-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Courses by Category</div>
+            <div class="trend-bar"><div class="trend-fill" style="width:35%">ELA &mdash; 35%</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:28%;background:linear-gradient(90deg,var(--green),#52B788)">Math &mdash; 28%</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:22%;background:linear-gradient(90deg,#1A8A7C,#5DCAA5)">CTE &mdash; 22%</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:15%;background:linear-gradient(90deg,var(--gold),#E8B96A)">Other &mdash; 15%</div></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Year-over-Year Change</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+              <div class="kpi-tile" style="border-top-color:var(--green);padding:10px 12px"><div class="kpi-label" style="font-size:9px">Added</div><div class="kpi-value" style="font-size:18px">+48</div></div>
+              <div class="kpi-tile" style="border-top-color:var(--gold);padding:10px 12px"><div class="kpi-label" style="font-size:9px">Modified</div><div class="kpi-value" style="font-size:18px">127</div></div>
+              <div class="kpi-tile" style="border-top-color:var(--red);padding:10px 12px"><div class="kpi-label" style="font-size:9px">Retired</div><div class="kpi-value" style="font-size:18px">23</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="collapse-block">
+      <div class="collapse-header" onclick="toggleCollapse(this)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="collapse-title">Credentials</span>
+          <div class="collapse-chips">
+            <span class="chip chip-navy">487 active</span>
+            <span class="chip chip-green">312 Employment Honors+</span>
+            <span class="chip chip-amber">8 pending score review</span>
+          </div>
+        </div>
+        <span class="collapse-arrow">&#9660;</span>
+      </div>
+      <div class="collapse-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">CoV Score Distribution</div>
+            <div class="trend-bar"><div class="trend-fill" style="width:64%;background:linear-gradient(90deg,var(--green),#52B788)">&ge;4.0 Employment Honors+ (64%)</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:22%;background:linear-gradient(90deg,var(--gold),#E8B96A)">3.0&ndash;3.9 Employment Honors (22%)</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:14%;background:linear-gradient(90deg,var(--slate),#888)">Below 3.0 (14%)</div></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">By Credential Type</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
+              <div class="kpi-tile" style="padding:8px 10px;border-top-color:var(--navy)"><div class="kpi-label" style="font-size:9px">Industry Cert</div><div class="kpi-value" style="font-size:16px">218</div></div>
+              <div class="kpi-tile" style="padding:8px 10px;border-top-color:var(--blue-mid)"><div class="kpi-label" style="font-size:9px">AS / AAS</div><div class="kpi-value" style="font-size:16px">94</div></div>
+              <div class="kpi-tile" style="padding:8px 10px;border-top-color:var(--green)"><div class="kpi-label" style="font-size:9px">Tech Cert</div><div class="kpi-value" style="font-size:16px">112</div></div>
+              <div class="kpi-tile" style="padding:8px 10px;border-top-color:var(--gold)"><div class="kpi-label" style="font-size:9px">Certificate</div><div class="kpi-value" style="font-size:16px">63</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="collapse-block">
+      <div class="collapse-header" onclick="toggleCollapse(this)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="collapse-title">Course Patterns</span>
+          <div class="collapse-chips">
+            <span class="chip chip-navy">847 patterns</span>
+            <span class="chip chip-green">612 established</span>
+            <span class="chip chip-amber">14 shifting (CUSUM)</span>
+          </div>
+        </div>
+        <span class="collapse-arrow">&#9660;</span>
+      </div>
+      <div class="collapse-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Pattern Lifecycle</div>
+            <div class="trend-bar"><div class="trend-fill" style="width:72%">Established &mdash; 612</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:14%;background:linear-gradient(90deg,var(--gold),#E8B96A)">Emerging &mdash; 118</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:8%;background:linear-gradient(90deg,var(--red),#C0392B)">Shifting &mdash; 14</div></div>
+            <div class="trend-bar"><div class="trend-fill" style="width:6%;background:linear-gradient(90deg,var(--slate),#888)">Quarantine &mdash; 4</div></div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">CUSUM Alert</div>
+            <div class="card" style="border-left:3px solid var(--gold);padding:12px">
+              <div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:4px">14 patterns flagged as Shifting</div>
+              <div style="font-size:11px;color:var(--slate);margin-bottom:8px">DGC review required. 6 pending review, 8 under review.</div>
+              <button class="btn btn-secondary btn-sm" onclick="showPanel('patterns')">View Patterns &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE CATALOG -->
+  <div class="panel" id="panel-course-catalog">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Course Catalog</div>
+          <div class="panel-subtitle" id="ccSubtitle">Indiana Official Course List &middot; SY 2025&ndash;26</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openBulkUpload()">Bulk Upload</button>
+          <button class="btn btn-secondary btn-sm" onclick="pubOpenCreateVersion()">&#9636; Create Version</button>
+          <button class="btn btn-primary btn-sm" onclick="ccOpenAdd()">+ Add Course</button>
+        </div>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="search-input" id="ccSearch" type="text" placeholder="Search course name or code&hellip;" oninput="ccRender()">
+      <div class="filter-pill active" onclick="ccSetFilter('all',this)">All Active</div>
+      <div class="filter-pill" onclick="ccSetFilter('english',this)">English Language &amp; Literature</div>
+      <div class="filter-pill" onclick="ccSetFilter('math',this)">Mathematics</div>
+      <div class="filter-pill" onclick="ccSetFilter('science',this)">Science</div>
+      <div class="filter-pill" onclick="ccSetFilter('social',this)">Social Sciences &amp; History</div>
+      <div class="filter-pill" onclick="ccSetFilter('cte',this)">CTE</div>
+      <div class="filter-pill" onclick="ccSetFilter('new',this)">New This Year</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead>
+          <tr><th>Course Code</th><th>Course Name</th><th>Subject</th><th>Max Credits</th><th>Record Status</th><th></th></tr>
+        </thead>
+        <tbody id="ccTableBody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--slate)">
+      <span id="ccFooter">Loading&hellip;</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-size:11px;color:var(--slate)">Show</label>
+        <select id="ccPageSizeSelect" class="search-input" style="min-width:80px;padding:4px 8px;font-size:11px" onchange="ccSetPageSize(this.value)">
+          <option value="50">50</option>
+          <option value="100" selected>100</option>
+          <option value="250">250</option>
+          <option value="500">500</option>
+          <option value="9999">All</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="ccPage(-1)">&larr; Prev</button>
+        <button class="btn btn-secondary btn-sm" onclick="ccPage(1)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREDENTIALS -->
+  <div class="panel" id="panel-credentials">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Credentials</div>
+          <div class="panel-subtitle" id="crSubtitle">Credentials of Value (CoV) Library &middot; SY 2025&ndash;26</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm" onclick="crOpenBulkUpload()">Bulk Upload</button>
+          <button class="btn btn-secondary btn-sm" onclick="crPubOpenCreateVersion()">&#9636; Create Version</button>
+          <button class="btn btn-primary btn-sm" onclick="crOpenAdd()">+ Add Credential</button>
+        </div>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="search-input" id="crSearch" type="text" placeholder="Search credential name or ID&hellip;" oninput="crRender()">
+      <div class="filter-pill active" onclick="crSetFilter('all',this)">All Active</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead>
+          <tr><th>Credential ID</th><th>Credential Name</th><th>Type</th><th>Issuer</th><th>CoV Score</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody id="crTableBody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--slate)">
+      <span id="crFooter">Loading&hellip;</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-size:11px;color:var(--slate)">Show</label>
+        <select id="crPageSizeSelect" class="search-input" style="min-width:80px;padding:4px 8px;font-size:11px" onchange="crSetPageSize(this.value)">
+          <option value="50">50</option>
+          <option value="100" selected>100</option>
+          <option value="250">250</option>
+          <option value="500">500</option>
+          <option value="9999">All</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="crPage(-1)">&larr; Prev</button>
+        <button class="btn btn-secondary btn-sm" onclick="crPage(1)">Next &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE PATTERNS -->
+  <div class="panel" id="panel-patterns">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Course Patterns</div>
+          <div class="panel-subtitle">Career Pathway Pattern Library &middot; 847 patterns &middot; SY 2025&ndash;26</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Import Batch</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background:#FEF3C7;border:1px solid #D97706;padding:12px 16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:16px">&#9888;</span>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#92400E">CUSUM Alert &mdash; 14 Patterns Flagged as Shifting</div>
+          <div style="font-size:11px;color:#92400E;margin-top:2px">Sustained directional shift detected. DGC review required before next publication cycle.</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto;flex-shrink:0">Review &rarr;</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="search-input" type="text" placeholder="Search pattern ID or career cluster&hellip;">
+      <div class="filter-pill active">All</div>
+      <div class="filter-pill">Established</div>
+      <div class="filter-pill">Emerging</div>
+      <div class="filter-pill">Shifting</div>
+      <div class="filter-pill">Quarantine</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead>
+          <tr><th>Pattern ID</th><th>Career Cluster</th><th>Cohort Anchor</th><th>Utility Score</th><th>Completers (N)</th><th>Lifecycle</th><th>Rec Type</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">PAT-00441</td><td>Health Science</td><td>2023</td><td class="mono">0.87</td><td class="mono">412</td><td><span class="chip chip-green">Established</span></td><td><span class="chip chip-blue">Confirmatory</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">PAT-00812</td><td>Information Technology</td><td>2023</td><td class="mono">0.91</td><td class="mono">287</td><td><span class="chip chip-green">Established</span></td><td><span class="chip chip-navy">Sequence Nudge</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">PAT-01204</td><td>Manufacturing</td><td>2024</td><td class="mono">0.74</td><td class="mono">156</td><td><span class="chip chip-amber">Emerging</span></td><td><span class="chip chip-green">Leveling-Up</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">PAT-00334</td><td>Business Management</td><td>2022</td><td class="mono">0.62</td><td class="mono">891</td><td><span class="chip chip-red">Shifting</span></td><td><span class="chip chip-amber">Continuity Risk</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+          <tr><td class="mono">PAT-00588</td><td>Agriculture</td><td>2023</td><td class="mono">0.79</td><td class="mono">203</td><td><span class="chip chip-green">Established</span></td><td><span class="chip chip-blue">Regional Conditional</span></td><td><button class="btn btn-secondary btn-sm">Edit</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PENDING APPROVALS -->
+  <div class="panel" id="panel-approvals">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Pending Approvals</div>
+          <div class="panel-subtitle" id="apSubtitle">Loading&hellip;</div>
+        </div>
+        <div class="panel-actions" style="align-items:center">
+          <select class="search-input" style="min-width:200px" id="apRoleSelect" onchange="apRender()">
+            <option value="curriculum">Role: Curriculum Director</option>
+            <option value="cte">Role: CTE SME</option>
+            <option value="labormarket">Role: Labor Market SME</option>
+            <option value="math">Role: Math SME</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" id="apBulkRejectBtn" onclick="apBulkReject()" style="display:none;color:var(--red);border-color:rgba(155,35,53,.3)">Reject Selected</button>
+          <button class="btn btn-gold btn-sm" id="apBulkApproveBtn" onclick="apBulkApprove()" style="display:none">Approve Selected</button>
+        </div>
+      </div>
+    </div>
+    <div id="apRoleBanner" style="display:none;border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;border:1px solid"></div>
+    <div id="apCardContainer"></div>
+  </div>
+
+  <!-- AI STAGING AREA -->
+  <div class="panel" id="panel-ai-staging">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">AI Staging Area</div>
+          <div class="panel-subtitle">12 AI-generated suggestions awaiting human review</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm">Accept All High-Confidence</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-grid card-grid-3" style="margin-bottom:16px">
+      <div class="kpi-tile" style="border-top-color:var(--navy)"><div class="kpi-label">SCED Suggestions</div><div class="kpi-value">8</div><div class="kpi-sub">avg confidence 91%</div></div>
+      <div class="kpi-tile gold"><div class="kpi-label">Diploma Category Suggestions</div><div class="kpi-value">3</div><div class="kpi-sub">avg confidence 84%</div></div>
+      <div class="kpi-tile green"><div class="kpi-label">Delta Narratives</div><div class="kpi-value">1</div><div class="kpi-sub">Ready for edit</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="data-table">
+        <thead><tr><th>Record</th><th>Suggestion Type</th><th>Current Value</th><th>AI Suggestion</th><th>Confidence</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">CTE3310</td><td>SCED Code</td><td class="mono">&mdash;</td><td class="mono">20052 <span class="chip chip-green" style="font-size:9px">High</span></td><td class="mono" style="color:var(--green)">97%</td><td><button class="btn-approve" onclick="dismissCard(this)">Accept</button> <button class="btn-reject" onclick="dismissCard(this)">Reject</button></td></tr>
+          <tr><td class="mono">MTH2060</td><td>SCED Code</td><td class="mono">02150</td><td class="mono">02151 <span class="chip chip-green" style="font-size:9px">High</span></td><td class="mono" style="color:var(--green)">94%</td><td><button class="btn-approve" onclick="dismissCard(this)">Accept</button> <button class="btn-reject" onclick="dismissCard(this)">Reject</button></td></tr>
+          <tr><td class="mono">SCI3020</td><td>Diploma Flag</td><td>Core 40</td><td>Core 40 + AHD <span class="chip chip-amber" style="font-size:9px">Med</span></td><td class="mono" style="color:var(--gold)">78%</td><td><button class="btn-approve" onclick="dismissCard(this)">Accept</button> <button class="btn-reject" onclick="dismissCard(this)">Reject</button></td></tr>
+          <tr><td class="mono">SY 2025-26</td><td>Delta Narrative</td><td>&mdash;</td><td style="font-size:11px;color:var(--slate)">48 new courses added, 23 retired&hellip;</td><td class="mono">&mdash;</td><td><button class="btn btn-secondary btn-sm">Edit Draft</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PUBLICATION -->
+  <div class="panel" id="panel-publication">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Publication</div>
+          <div class="panel-subtitle" id="pubSubtitle">API version management &middot; Rolling 4-year window</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm" onclick="showPanel('course-catalog',document.querySelector('.nav-item[onclick*=\'course-catalog\']'))">&#8592; Back to Course Catalog</button>
+        </div>
+      </div>
+    </div>
+    <div id="pubVersionList"></div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="panel" id="panel-analytics">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Trends &amp; Utilization</div>
+          <div class="panel-subtitle">Course and credential enrollment trends across Indiana school corporations</div>
+        </div>
+        <div class="panel-actions">
+          <select class="search-input" style="min-width:200px"><option>Course: Biology I (SCI2010)</option></select>
+          <button class="btn btn-secondary btn-sm">Export</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-grid card-grid-4" style="margin-bottom:16px">
+      <div class="kpi-tile"><div class="kpi-label">Total Enrollment</div><div class="kpi-value">18,442</div><div class="kpi-sub">SY 2025&ndash;26</div></div>
+      <div class="kpi-tile gold"><div class="kpi-label">School Corporations</div><div class="kpi-value">287</div><div class="kpi-sub">offering this course</div></div>
+      <div class="kpi-tile green"><div class="kpi-label">Completers</div><div class="kpi-value">14,108</div><div class="kpi-sub">76.5% completion rate</div></div>
+      <div class="kpi-tile"><div class="kpi-label">YoY Change</div><div class="kpi-value">+4.2%</div><div class="kpi-sub">enrollment growth</div></div>
+    </div>
+    <div class="card-grid card-grid-2">
+      <div class="card">
+        <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Indiana County Map</div>
+        <div class="map-placeholder">[ Indiana County Choropleth Map &mdash; dynamic binding in production ]</div>
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--slate)">
+          <span>&#9632; High enrollment</span><span>&#9632; Medium</span><span>&#9632; Low</span><span>&#9633; No data</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Enrollment Trend (5-Year)</div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:70%">2021&ndash;22 &middot; 14,210</div></div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:75%">2022&ndash;23 &middot; 15,601</div></div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:80%">2023&ndash;24 &middot; 16,882</div></div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:84%">2024&ndash;25 &middot; 17,700</div></div>
+        <div class="trend-bar" style="height:48px"><div class="trend-fill" style="width:88%">2025&ndash;26 &middot; 18,442 &#8593;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEMA MANAGER -->
+  <div class="panel" id="panel-schema">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Schema Manager</div>
+          <div class="panel-subtitle">Data contract definitions &middot; Changes require Curriculum Director approval</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-secondary btn-sm" onclick="persistReset()" style="color:var(--gold);border-color:rgba(200,151,58,.4)" title="Resets courses, credentials and queue — schema is preserved">Reset Data</button>
+          <button class="btn btn-secondary btn-sm" onclick="persistResetSchema()" style="color:var(--red);border-color:rgba(155,35,53,.3)" title="Resets schema fields only — course data is preserved">Reset Schema</button>
+          <button class="btn btn-secondary btn-sm" onclick="smOpenCsvBuilder()">&#11015; CSV Template</button>
+          <button class="btn btn-secondary btn-sm" onclick="smOpenAdd()">+ Add Field</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-pill active" onclick="smSwitchLib('catalog',this)">Course Catalog</div>
+      <div class="filter-pill" onclick="smSwitchLib('credentials',this)">Credentials</div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
+      <div id="smSortHeader" style="background:var(--navy);display:grid;grid-template-columns:180px 130px 56px 56px 1fr 120px 100px;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:500;color:rgba(255,255,255,.7)">
+        <span onclick="smSort('name')" style="cursor:pointer;user-select:none" title="Sort by field name"><span id="smSH-name">Field Name</span></span>
+        <span onclick="smSort('type')" style="cursor:pointer;user-select:none" title="Sort by type"><span id="smSH-type">Type</span></span>
+        <span onclick="smSort('nullable')" style="cursor:pointer;user-select:none" title="Sort by nullable"><span id="smSH-nullable">Nullable</span></span>
+        <span onclick="smSort('governed')" style="cursor:pointer;user-select:none" title="Sort by governed"><span id="smSH-governed">Governed</span></span>
+        <span>Description</span>
+        <span onclick="smSort('status')" style="cursor:pointer;user-select:none" title="Sort by status"><span id="smSH-status">Status</span></span>
+        <span></span>
+      </div>
+      <div id="smFieldList"></div>
+    </div>
+
+    <div style="font-size:11px;color:var(--slate);display:flex;align-items:center;gap:16px">
+      <span id="smFieldCount"></span>
+      <span>&middot; <strong style="color:var(--navy)" id="smDepCount"></strong> deprecated</span>
+      <span>&middot; Changes require Curriculum Director sign-off before taking effect</span>
+    </div>
+  </div>
+
+  <!-- MODAL EDITOR -->
+  <div class="panel" id="panel-modal-editor">
+    <div class="panel-header">
+      <div class="panel-header-row">
+        <div>
+          <div class="panel-title">Modal Editor</div>
+          <div class="panel-subtitle">Controls how fields are presented in edit modals &middot; Independent of schema</div>
+        </div>
+        <div class="panel-actions">
+          <div class="filter-pill active" style="margin:0">Course Catalog</div>
+          <div class="filter-pill" style="margin:0;cursor:pointer">Credentials</div>
+          <div class="filter-pill" style="margin:0;cursor:pointer">Patterns</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background:#FEF3C7;border:1px solid #D97706;padding:10px 14px;margin-bottom:16px">
+      <div style="font-size:11px;color:#92400E"><strong>2 unassigned fields</strong> &mdash; Fields exist in schema but are not placed in any modal section. They will not appear to editors.</div>
+    </div>
+    <div class="modal-editor-layout">
+      <div class="field-list">
+        <div class="field-list-header">Available Fields</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> state_course_code</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> course_name</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> sced_code</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> credit_hours</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> cte_cluster</div>
+        <div class="field-list-item"><span class="drag-handle">&#10783;</span> diploma_core40</div>
+        <div class="field-list-item" style="color:var(--gold)"><span class="drag-handle">&#10783;</span> ceds_code &#9888; unassigned</div>
+        <div class="field-list-item" style="color:var(--gold)"><span class="drag-handle">&#10783;</span> edfi_code &#9888; unassigned</div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:600;color:var(--navy)">Tab: Core</div>
+            <span class="chip chip-green">2-column layout</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)"><div style="font-size:9px;color:var(--slate);text-transform:uppercase;letter-spacing:.06em">Grounding</div>course_name</div>
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">state_course_code</div>
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">credit_hours</div>
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">cte_cluster</div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:600;color:var(--navy)">Tab: Standards &amp; Alignment</div>
+            <span class="chip chip-green">2-column layout</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:#FEF9EC;border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(200,151,58,.4)"><div style="font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em">Grounding (read-only)</div>course_name</div>
+            <div style="background:var(--mist);border-radius:var(--radius);padding:8px 10px;font-size:11px;border:1px dashed rgba(12,35,64,.2)">sced_code</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE SHERPA -->
+  <div class="panel" id="panel-sherpa">
+    <div class="sherpa-header">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="sherpa-title">&#129517; Course Sherpa</div>
+          <div class="sherpa-sub">AI-powered student diploma planning &middot; Bring Your Own Key (BYOK) model</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <span class="chip chip-amber">No student login required</span>
+          <span class="chip chip-green">Sessionless &middot; Email persistence</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-grid card-grid-3" style="margin-bottom:20px">
+      <div class="card" style="border-top:3px solid var(--gold)">
+        <div style="font-size:11px;font-weight:600;color:var(--navy);margin-bottom:6px">Step 1 &mdash; Enter API Key</div>
+        <div style="font-size:11px;color:var(--slate);margin-bottom:10px;line-height:1.6">Student or counselor enters their Anthropic API key. Key stored in browser memory only &mdash; never sent to IDOE servers.</div>
+        <div style="background:#FEF3C7;border-radius:var(--radius);padding:8px 10px;font-size:10px;color:#92400E;line-height:1.5"><strong>Required disclosure:</strong> Your API key will be visible in browser network traffic. Set a spending limit on your Anthropic account before using this feature.</div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--navy)">
+        <div style="font-size:11px;font-weight:600;color:var(--navy);margin-bottom:6px">Step 2 &mdash; Upload Transcript (optional)</div>
+        <div style="font-size:11px;color:var(--slate);margin-bottom:10px;line-height:1.6">Upload a .json / .csv / .txt transcript file. Read by browser FileReader API &mdash; never sent to IDOE servers. Sent directly to Anthropic with user's key.</div>
+        <div style="background:#D8F3DC;border-radius:var(--radius);padding:8px 10px;font-size:10px;color:#1B5E32">FERPA note: IDOE servers are not in the data chain. Browser &rarr; Anthropic directly.</div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--green)">
+        <div style="font-size:11px;font-weight:600;color:var(--navy);margin-bottom:6px">Step 3 &mdash; AI Course Assistant</div>
+        <div style="font-size:11px;color:var(--slate);margin-bottom:10px;line-height:1.6">Student asks questions. Browser assembles: Sherpa API context bundle + transcript + conversation history &rarr; calls api.anthropic.com directly.</div>
+        <div style="font-size:10px;color:var(--slate)">Quick questions: What courses do I still need? &middot; Am I on track for Employment Honors? &middot; What CTE pathway fits me?</div>
+      </div>
+    </div>
+    <div class="card" style="border:2px dashed rgba(12,35,64,.15);background:var(--mist);text-align:center;padding:32px">
+      <div style="font-size:24px;margin-bottom:8px">&#129517;</div>
+      <div style="font-family:var(--serif);font-size:15px;color:var(--navy);font-weight:700;margin-bottom:6px">Course Sherpa Student Interface</div>
+      <div style="font-size:12px;color:var(--slate);margin-bottom:16px;max-width:360px;margin-left:auto;margin-right:auto;line-height:1.6">The full student-facing four-year planner with AI counselor will be built in a subsequent session.</div>
+      <a href="https://autumn-snowflake-4243.zvillekellers.workers.dev/" target="_blank" class="btn btn-primary">View Full Wireframe &rarr;</a>
+    </div>
+  </div>
+
+</div><!-- end .main -->
+</div><!-- end .body -->
+</div><!-- end .app -->
+
+<!-- CSV TEMPLATE BUILDER MODAL -->
+<div class="bu-overlay hidden" id="csvOverlay" onclick="if(event.target===this)csvClose()">
+<div class="bu-modal" style="max-width:640px">
+  <div class="bu-header">
+    <div>
+      <div class="bu-title" id="csvTitle">Generate CSV Template</div>
+      <div class="bu-subtitle" id="csvSubtitle">Select fields to include. Required fields are pre-checked.</div>
+    </div>
+    <button class="bu-close" onclick="csvClose()">&#10005;</button>
+  </div>
+  <div class="bu-body" style="padding:20px">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--slate)">
+        <span id="csvSelectedCount" style="font-weight:600;color:var(--navy)">0</span> fields selected
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="csvSelectAll()">Select All</button>
+        <button class="btn btn-secondary btn-sm" onclick="csvSelectRequired()">Required Only</button>
+        <button class="btn btn-secondary btn-sm" onclick="csvSelectNone()">Clear</button>
+      </div>
+    </div>
+
+    <div style="border:1px solid rgba(12,35,64,.1);border-radius:var(--radius);overflow:hidden;margin-bottom:16px">
+      <div style="background:var(--navy);display:grid;grid-template-columns:32px 1fr 120px 80px;padding:7px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.7);font-weight:500">
+        <span></span><span>Field Name</span><span>Type</span><span>Required</span>
+      </div>
+      <div id="csvFieldList"></div>
+    </div>
+
+    <div style="background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate)">
+      <strong style="color:var(--navy);display:block;margin-bottom:4px">&#9432; About the generated template</strong>
+      The CSV will include your selected column headers plus one sample data row showing the expected format for each field type. Enumerated fields will show allowed values in a comment row.
+    </div>
+  </div>
+  <div class="bu-footer">
+    <div class="bu-footer-left" id="csvFooterNote">Choose fields above then download</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="csvClose()">Cancel</button>
+      <button class="btn btn-gold" id="csvDownloadBtn" onclick="csvDownload()" disabled>&#11015; Download Template</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CREDENTIAL EDIT MODAL -->
+<div id="crOverlay" style="position:fixed;inset:0;background:rgba(12,35,64,.45);z-index:900;display:none" onclick="if(event.target===this)crEditClose()"></div>
+<div id="crDrawer" style="position:fixed;top:0;right:0;width:520px;height:100vh;background:#fff;z-index:901;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(12,35,64,.18);transform:translateX(100%);transition:transform .25s ease">
+  <div style="background:var(--navy);border-bottom:3px solid var(--gold);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div style="font-family:var(--serif);font-size:15px;font-weight:700;color:#fff" id="crDrawerTitle">Edit Credential</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px" id="crDrawerSub">Changes will go to Pending Approvals</div>
+    </div>
+    <button onclick="crEditClose()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:16px">&#10005;</button>
+  </div>
+  <div style="display:flex;border-bottom:1px solid rgba(12,35,64,.1);flex-shrink:0;background:#fff">
+    <div class="ce-tab active" id="crTab-core" onclick="crShowTab('core')">Core</div>
+    <div class="ce-tab" id="crTab-cov" onclick="crShowTab('cov')">CoV Scoring</div>
+    <div class="ce-tab" id="crTab-log" onclick="crShowTab('log')">Log</div>
+  </div>
+
+  <!-- TAB: CORE -->
+  <div id="crPanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
+    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
+      <strong style="color:var(--navy)" id="crGroundingId"></strong> &mdash; <span id="crGroundingName"></span>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Credential ID</label>
+      <input type="text" id="crFldId" class="sm-input" readonly style="background:var(--mist);color:var(--slate)">
+      <div class="sm-hint">Format: CR + four digits, e.g. CR1001. Cannot be changed after creation.</div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Credential Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="crFldName" class="sm-input" placeholder="Full credential name as issued">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Short Name</label>
+      <input type="text" id="crFldShort" class="sm-input" placeholder="Abbreviated display name (optional)">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Issuing Organization <span style="color:var(--red)">*</span></label>
+      <input type="text" id="crFldIssuer" class="sm-input" placeholder="e.g. CompTIA, Ivy Tech, Indiana State Dept. Health">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Credential Type <span style="color:var(--red)">*</span></label>
+      <select id="crFldType" class="sm-input">
+        <option value="">— Select type —</option>
+        <option>Industry Certification</option>
+        <option>Associate of Science</option>
+        <option>Associate of Applied Science</option>
+        <option>Technical Certificate</option>
+        <option>Certificate</option>
+        <option>Apprenticeship</option>
+      </select>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Career Cluster</label>
+      <select id="crFldCluster" class="sm-input">
+        <option value="">— Select cluster —</option>
+        <option>Agriculture</option><option>Architecture &amp; Construction</option><option>Arts A/V</option>
+        <option>Business Management</option><option>Education</option><option>Finance</option>
+        <option>Government</option><option>Health Science</option><option>Hospitality</option>
+        <option>Human Services</option><option>Information Technology</option><option>Law</option>
+        <option>Manufacturing</option><option>Marketing</option><option>Science &amp; Technology</option>
+        <option>Transportation</option>
+      </select>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">National Recognition</label>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+        <label class="ce-toggle"><input type="checkbox" id="crFldNational"><span class="ce-toggle-slider"></span></label>
+        <span style="font-size:12px;color:var(--slate)">Nationally recognized (+0.3 Signaling bonus in CoV score)</span>
+      </div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
+      <textarea id="crFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea>
+    </div>
+  </div>
+
+  <!-- TAB: CoV SCORING -->
+  <div id="crPanel-cov" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
+    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
+      <strong style="color:var(--navy)" id="crGroundingId2"></strong> &mdash; <span id="crGroundingName2"></span>
+    </div>
+    <div style="font-size:12px;color:var(--slate);margin-bottom:16px;line-height:1.7">
+      CoV scores are computed from Economic Value + Upskilling Value, with bonuses for national recognition and stackability. Scores are cohort-locked on July 1 each year.
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Economic Value (0.0 – 5.0) <span style="color:var(--red)">*</span></label>
+      <input type="number" id="crFldEcon" class="sm-input" min="0" max="5" step="0.1" placeholder="0.0 – 5.0" oninput="crCalcCoV()">
+      <div class="sm-hint">Wages, employment rates, and regional labor market demand.</div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Upskilling Value (0.0 – 5.0) <span style="color:var(--red)">*</span></label>
+      <input type="number" id="crFldUpskill" class="sm-input" min="0" max="5" step="0.1" placeholder="0.0 – 5.0" oninput="crCalcCoV()">
+      <div class="sm-hint">Stackability toward further credentials and degrees.</div>
+    </div>
+    <div style="background:#fff;border:1px solid rgba(12,35,64,.1);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin-bottom:10px;font-weight:600">Live CoV Calculator</div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--slate)">Base (Econ + Upskill) ÷ 2</span><span id="crCalcBase" style="font-family:var(--mono);font-weight:600">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--slate)">National Recognition bonus</span><span id="crCalcNat" style="font-family:var(--mono)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--slate)">Stackability bonus (by type)</span><span id="crCalcStack" style="font-family:var(--mono)">—</span></div>
+        <div style="border-top:1px solid rgba(12,35,64,.1);margin-top:4px;padding-top:8px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:600;color:var(--navy)">Final CoV Score (max 5.0)</span>
+          <span id="crCalcFinal" style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--navy)">—</span>
+        </div>
+        <div id="crCalcTier" style="text-align:right;font-size:11px;margin-top:2px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: LOG -->
+  <div id="crPanel-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
+    <div style="font-size:11px;color:var(--slate);margin-bottom:12px">Read-only audit trail for this credential record.</div>
+    <div id="crLogEntries"></div>
+  </div>
+
+  <div style="padding:14px 20px;border-top:1px solid rgba(12,35,64,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:#fff" id="crFooterBar">
+    <div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="crEditClose()">Cancel</button>
+      <button class="btn btn-gold" onclick="crSubmit()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- COURSE EDIT MODAL -->
+<div id="ceOverlay" style="position:fixed;inset:0;background:rgba(12,35,64,.45);z-index:900;display:none" onclick="if(event.target===this)ceClose()"></div>
+<div id="ceDrawer" style="position:fixed;top:0;right:0;width:520px;height:100vh;background:#fff;z-index:901;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(12,35,64,.18);transform:translateX(100%);transition:transform .25s ease">
+  <div style="background:var(--navy);border-bottom:3px solid var(--gold);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div style="font-family:var(--serif);font-size:15px;font-weight:700;color:#fff" id="ceDrawerTitle">Edit Course</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px" id="ceDrawerSub">Changes will go to Pending Approvals</div>
+    </div>
+    <button onclick="ceClose()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:16px">&#10005;</button>
+  </div>
+
+  <!-- TAB BAR -->
+  <div style="display:flex;border-bottom:1px solid rgba(12,35,64,.1);flex-shrink:0;background:#fff">
+    <div class="ce-tab active" id="ceTab-core" onclick="ceShowTab('core')">Core</div>
+    <div class="ce-tab" id="ceTab-diploma" onclick="ceShowTab('diploma')">Diploma Flags</div>
+    <div class="ce-tab" id="ceTab-log" onclick="ceShowTab('log')">Log</div>
+  </div>
+
+  <!-- TAB: CORE -->
+  <div id="cePanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
+    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
+      <strong style="color:var(--navy)" id="ceGroundingCode"></strong> &mdash; <span id="ceGroundingName"></span>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">State Course Code</label>
+      <input type="text" id="ceFldCode" class="sm-input" placeholder="e.g. ELA1200">
+      <div class="sm-hint">Course code cannot be changed after creation.</div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Course Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="ceFldName" class="sm-input" placeholder="Official course title">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Category <span style="color:var(--red)">*</span></label>
+      <select id="ceFldCategory" class="sm-input">
+        <option value="">— Select —</option>
+        <option>English Language and Literature</option><option>Mathematics</option><option>Science</option>
+        <option>Social Sciences and History</option><option>Career &amp; Technical Education</option>
+        <option>Fine Arts</option><option>Physical Education</option><option>World Language</option><option>Other</option>
+      </select>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Credit Hours <span style="color:var(--red)">*</span></label>
+      <input type="number" id="ceFldCredits" class="sm-input" step="0.5" min="0.5" max="8" placeholder="e.g. 1.0">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Course Subject</label>
+      <select id="ceFldSubject" class="sm-input">
+        <option value="">— Select subject —</option>
+      </select>
+      <div class="sm-hint">Controlled vocabulary — 25 values defined in Schema Manager.</div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">SCED Code</label>
+      <input type="text" id="ceFldSced" class="sm-input" placeholder="e.g. 01001" maxlength="5">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">CTE Cluster</label>
+      <input type="text" id="ceFldCte" class="sm-input" placeholder="e.g. Health Science">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Course Description</label>
+      <textarea id="ceFldDesc" class="sm-input" rows="4" placeholder="Full course description (no character limit)"></textarea>
+    </div>
+    <div class="sm-form-group" id="cePrereqSection">
+      <label class="sm-label">Prerequisites</label>
+      <div class="sm-hint" style="margin-bottom:6px">Search and select courses that must be completed before this course. Only active courses are shown.</div>
+      <div style="position:relative">
+        <input type="text" id="cePrereqSearch" class="sm-input" placeholder="Search by code or name…" oninput="cePrereqFilter()" style="margin-bottom:6px">
+        <div id="cePrereqDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid rgba(12,35,64,.2);border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:180px;overflow-y:auto;z-index:50"></div>
+      </div>
+      <div id="cePrereqSelected" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px 0"></div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
+      <textarea id="ceFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea>
+    </div>
+  </div>
+
+  <!-- TAB: DIPLOMA FLAGS -->
+  <div id="cePanel-diploma" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
+    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
+      <strong style="color:var(--navy)" id="ceGroundingCode2"></strong> &mdash; <span id="ceGroundingName2"></span>
+    </div>
+    <div style="font-size:12px;color:var(--slate);margin-bottom:16px;line-height:1.6">
+      Diploma flags determine which Indiana diploma programs this course can satisfy. Changes require Curriculum Director approval.
+    </div>
+    <div class="ce-flag-row">
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">Core 40</div>
+        <div style="font-size:11px;color:var(--slate);margin-top:2px">Indiana Core 40 diploma requirement</div>
+      </div>
+      <label class="ce-toggle"><input type="checkbox" id="ceFlagCore40"><span class="ce-toggle-slider"></span></label>
+    </div>
+    <div class="ce-flag-row">
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">Academic Honors Diploma (AHD)</div>
+        <div style="font-size:11px;color:var(--slate);margin-top:2px">Counts toward Indiana Academic Honors Diploma</div>
+      </div>
+      <label class="ce-toggle"><input type="checkbox" id="ceFlagAHD"><span class="ce-toggle-slider"></span></label>
+    </div>
+    <div class="ce-flag-row">
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">Technical Honors Diploma (THD)</div>
+        <div style="font-size:11px;color:var(--slate);margin-top:2px">Counts toward Indiana Technical Honors Diploma</div>
+      </div>
+      <label class="ce-toggle"><input type="checkbox" id="ceFlagTHD"><span class="ce-toggle-slider"></span></label>
+    </div>
+    <div class="ce-flag-row" style="border-bottom:none">
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">Core 40 with Technical Honors (2029)</div>
+        <div style="font-size:11px;color:var(--slate);margin-top:2px">2029 diploma framework flag</div>
+      </div>
+      <label class="ce-toggle"><input type="checkbox" id="ceFlagTH29"><span class="ce-toggle-slider"></span></label>
+    </div>
+  </div>
+
+  <!-- TAB: LOG -->
+  <div id="cePanel-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
+    <div style="font-size:11px;color:var(--slate);margin-bottom:12px">Read-only audit trail for this course record.</div>
+    <div id="ceLogEntries"></div>
+  </div>
+
+  <div style="padding:14px 20px;border-top:1px solid rgba(12,35,64,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:#fff" id="ceFooterBar">
+    <div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="ceClose()">Cancel</button>
+      <button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- CREATE VERSION MODAL -->
+<div class="bu-overlay hidden" id="pubCreateOverlay" onclick="if(event.target===this)pubCloseCreate()">
+<div class="bu-modal" style="max-width:560px">
+  <div class="bu-header">
+    <div>
+      <div class="bu-title" id="pubCreateTitle">Create Version Snapshot</div>
+      <div class="bu-subtitle" id="pubCreateSubtitle">Snapshot all active courses for publication</div>
+    </div>
+    <button class="bu-close" onclick="pubCloseCreate()">&#10005;</button>
+  </div>
+  <div class="bu-body" style="padding:20px">
+
+    <div id="pubPendingWarning" style="display:none;background:#FEF3C7;border:1px solid #D97706;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:12px;color:#92400E">
+      <strong>&#9888; Pending courses will be excluded</strong> — <span id="pubPendingCount"></span> course(s) are awaiting Curriculum Director approval and will not be included in this snapshot. Approve them first if they should be in this version.
+    </div>
+
+    <div class="sm-form-group">
+      <label class="sm-label">Version Type <span style="color:var(--red)">*</span></label>
+      <select id="pubVersionType" class="sm-input" onchange="pubVersionTypeChange()">
+        <option value="golden">Golden Snapshot — new API version (major release)</option>
+        <option value="correction">Correction — patch to current live version</option>
+      </select>
+      <div class="sm-hint" id="pubVersionTypeHint">Creates a new API version string. Use for annual July 1 releases.</div>
+    </div>
+
+    <div class="sm-form-group">
+      <label class="sm-label">Cohort Year <span style="color:var(--red)">*</span></label>
+      <input type="text" id="pubCohortYear" class="sm-input" placeholder="e.g. SY 2026-27">
+    </div>
+
+    <div class="sm-form-group">
+      <label class="sm-label">Effective Date <span style="color:var(--red)">*</span></label>
+      <input type="date" id="pubEffectiveDate" class="sm-input">
+      <div class="sm-hint">Defaults to July 1 of the cohort year for Golden Snapshots. Editable — adjust for corrections or early releases.</div>
+    </div>
+
+    <div class="sm-form-group" id="pubApiVersionGroup">
+      <label class="sm-label">API Version String</label>
+      <input type="text" id="pubApiVersion" class="sm-input" placeholder="e.g. v2027" readonly style="background:var(--mist);color:var(--slate)">
+      <div class="sm-hint">Auto-generated from cohort year. Read-only for Golden Snapshots.</div>
+    </div>
+
+    <div class="sm-form-group">
+      <label class="sm-label">Promotion Notes</label>
+      <textarea id="pubNotes" class="sm-input" rows="3" placeholder="Describe what changed in this version — new courses, corrections, schema changes..."></textarea>
+    </div>
+
+    <div style="background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate)">
+      <strong style="color:var(--navy);display:block;margin-bottom:4px">&#9432; What happens next</strong>
+      This creates a <strong>Draft</strong> snapshot. You can then review it and submit it for Curriculum Director approval on the Publication panel. Once approved it becomes <strong>Live</strong>.
+    </div>
+  </div>
+  <div class="bu-footer">
+    <div class="bu-footer-left" id="pubCreateFooter">Active courses will be snapshotted</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="pubCloseCreate()">Cancel</button>
+      <button class="btn btn-gold" onclick="pubCreateVersion()">Create Draft Snapshot</button>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<!-- CREDENTIAL CREATE VERSION MODAL -->
+<div class="bu-overlay hidden" id="crPubCreateOverlay" onclick="if(event.target===this)crPubCloseCreate()">
+<div class="bu-modal" style="max-width:560px">
+  <div class="bu-header">
+    <div>
+      <div class="bu-title">Create Credential Version Snapshot</div>
+      <div class="bu-subtitle">Snapshot all active credentials for publication</div>
+    </div>
+    <button class="bu-close" onclick="crPubCloseCreate()">&#10005;</button>
+  </div>
+  <div class="bu-body" style="padding:20px">
+    <div id="crPubPendingWarning" style="display:none;background:#FEF3C7;border:1px solid #D97706;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:12px;color:#92400E">
+      <strong>&#9888; Pending credentials will be excluded</strong> — <span id="crPubPendingCount"></span> credential(s) are awaiting approval and will not be included in this snapshot.
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Version Type <span style="color:var(--red)">*</span></label>
+      <select id="crPubVersionType" class="sm-input" onchange="crPubVersionTypeChange()">
+        <option value="golden">Golden Snapshot — new API version (major release)</option>
+        <option value="correction">Correction — patch to current live version</option>
+      </select>
+      <div class="sm-hint" id="crPubVersionTypeHint">Creates a new API version string. Use for annual July 1 releases.</div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Cohort Year <span style="color:var(--red)">*</span></label>
+      <input type="text" id="crPubCohortYear" class="sm-input" placeholder="e.g. SY 2026-27">
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Effective Date <span style="color:var(--red)">*</span></label>
+      <input type="date" id="crPubEffectiveDate" class="sm-input">
+      <div class="sm-hint">Defaults to July 1 of the cohort year. Editable for corrections or early releases.</div>
+    </div>
+    <div class="sm-form-group" id="crPubApiVersionGroup">
+      <label class="sm-label">API Version String</label>
+      <input type="text" id="crPubApiVersion" class="sm-input" placeholder="e.g. cv2027" readonly style="background:var(--mist);color:var(--slate)">
+      <div class="sm-hint">Auto-generated from cohort year. Credential versions use prefix "cv" to distinguish from course versions.</div>
+    </div>
+    <div class="sm-form-group">
+      <label class="sm-label">Promotion Notes</label>
+      <textarea id="crPubNotes" class="sm-input" rows="3" placeholder="Describe what changed in this version — new credentials, CoV score changes, retirements..."></textarea>
+    </div>
+    <div style="background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate)">
+      <strong style="color:var(--navy);display:block;margin-bottom:4px">&#9432; What happens next</strong>
+      Creates a <strong>Draft</strong> snapshot visible on the Publication panel under the Credentials tab. Submit for Curriculum Director approval to promote to Live.
+    </div>
+  </div>
+  <div class="bu-footer">
+    <div class="bu-footer-left" id="crPubCreateFooter">Active credentials will be snapshotted</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="crPubCloseCreate()">Cancel</button>
+      <button class="btn btn-gold" onclick="crPubCreateVersion()">Create Draft Snapshot</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- SCHEMA FIELD EDITOR SLIDE-OUT -->
+<div id="smOverlay" style="position:fixed;inset:0;background:rgba(12,35,64,.45);z-index:900;display:none" onclick="smCloseIfOverlay(event)"></div>
+<div id="smDrawer" style="position:fixed;top:0;right:0;width:480px;height:100vh;background:#fff;z-index:901;display:none;flex-direction:column;box-shadow:-4px 0 20px rgba(12,35,64,.18);transform:translateX(100%);transition:transform .25s ease">
+  <div style="background:var(--navy);border-bottom:3px solid var(--gold);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div style="font-family:var(--serif);font-size:15px;font-weight:700;color:#fff" id="smDrawerTitle">Add Field</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px" id="smDrawerSub">Define field properties. Change will go to Pending Approvals.</div>
+    </div>
+    <button onclick="smCloseDrawer()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:16px">&#10005;</button>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:20px" id="smDrawerBody">
+
+    <!-- RETIRE NOTICE (shown only when retiring) -->
+    <div id="smRetireNotice" style="display:none;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:12px;color:#7F1D1D">
+      <strong>Retiring this field</strong> marks it as deprecated. It remains in the schema for backward compatibility but is hidden from the Modal Editor and flagged in API documentation. This action requires Curriculum Director approval.
+    </div>
+
+    <!-- FIELD NAME -->
+    <div class="sm-form-group">
+      <label class="sm-label">Field Name <span style="color:var(--red)">*</span></label>
+      <input type="text" id="smFldName" class="sm-input" placeholder="e.g. course_subject" oninput="smSlugify(this)">
+      <div class="sm-hint">Lowercase, underscores only. Cannot be changed after approval.</div>
+    </div>
+
+    <!-- DATA TYPE -->
+    <div class="sm-form-group">
+      <label class="sm-label">Data Type <span style="color:var(--red)">*</span></label>
+      <select id="smFldType" class="sm-input" onchange="smTypeChange()">
+        <option value="">— Select type —</option>
+        <option value="VARCHAR">Text — short (VARCHAR)</option>
+        <option value="TEXT">Text — long (TEXT, no length limit)</option>
+        <option value="INTEGER">Integer</option>
+        <option value="DECIMAL">Decimal</option>
+        <option value="BOOLEAN">Boolean (TRUE/FALSE)</option>
+        <option value="DATE">Date</option>
+        <option value="ENUM">Enumerated List (controlled vocabulary)</option>
+        <option value="PREREQ">Prerequisites (course list)</option>
+      </select>
+    </div>
+
+    <!-- VARCHAR LENGTH (shown when VARCHAR) -->
+    <div class="sm-form-group" id="smVarcharLen" style="display:none">
+      <label class="sm-label">Max Length</label>
+      <input type="number" id="smFldLen" class="sm-input" placeholder="e.g. 255" style="max-width:120px">
+      <div class="sm-hint">Maximum character length for this field.</div>
+    </div>
+
+    <!-- DECIMAL PRECISION (shown when DECIMAL) -->
+    <div class="sm-form-group" id="smDecimalPrec" style="display:none">
+      <label class="sm-label">Precision &amp; Scale</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="smFldPrec" class="sm-input" placeholder="5" style="max-width:80px">
+        <span style="font-size:12px;color:var(--slate)">total digits,</span>
+        <input type="number" id="smFldScale" class="sm-input" placeholder="2" style="max-width:80px">
+        <span style="font-size:12px;color:var(--slate)">decimal places</span>
+      </div>
+    </div>
+
+    <!-- PREREQ NOTE (shown when PREREQ) -->
+    <div class="sm-form-group" id="smPrereqNote" style="display:none">
+      <div style="background:#DBEAFE;border:1px solid #93C5FD;border-radius:var(--radius);padding:10px 12px;font-size:11px;color:#1E3A8A;line-height:1.6">
+        <strong>Prerequisites field</strong> — stores a list of course codes that must be completed before this course. In the course edit modal, staff will see a searchable multi-select picker populated from all active courses in the catalog.
+      </div>
+    </div>
+
+    <!-- ENUMERATED VALUES (shown when ENUM) -->
+    <div class="sm-form-group" id="smEnumSection" style="display:none">
+      <label class="sm-label">Allowed Values <span style="color:var(--red)">*</span></label>
+      <div class="sm-hint" style="margin-bottom:8px">Define all permitted values for this field. One per line, or comma-separated. These become the controlled vocabulary.</div>
+      <textarea id="smEnumInput" class="sm-input" rows="6" placeholder="e.g.&#10;English Language Arts&#10;Mathematics&#10;Science&#10;Social Studies&#10;CTE&#10;Fine Arts&#10;Physical Education&#10;World Language"></textarea>
+      <div id="smEnumPreview" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"></div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="smParseEnum()">Parse &amp; Preview Values</button>
+    </div>
+
+    <!-- NULLABLE -->
+    <div class="sm-form-group">
+      <label class="sm-label">Nullable</label>
+      <div style="display:flex;gap:16px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smNullable" value="no" checked> No — required field
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smNullable" value="yes"> Yes — optional field
+        </label>
+      </div>
+    </div>
+
+    <!-- GOVERNED -->
+    <div class="sm-form-group">
+      <label class="sm-label">Governed</label>
+      <div style="display:flex;gap:16px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smGoverned" value="yes" checked> Yes — changes require approval
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smGoverned" value="no"> No — staff can edit freely
+        </label>
+      </div>
+    </div>
+
+    <!-- AI ASSISTED -->
+    <div class="sm-form-group">
+      <label class="sm-label">AI-Assisted</label>
+      <div style="display:flex;gap:16px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smAI" value="no" checked> No
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="radio" name="smAI" value="yes"> Yes — AI suggestions enabled for this field
+        </label>
+      </div>
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="sm-form-group">
+      <label class="sm-label">Description</label>
+      <textarea id="smFldDesc" class="sm-input" rows="3" placeholder="What is this field for? How should it be interpreted?"></textarea>
+    </div>
+
+    <!-- CHANGE REASON -->
+    <div class="sm-form-group" id="smChangeReasonGroup">
+      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
+      <textarea id="smFldReason" class="sm-input" rows="2" placeholder="Briefly explain why this change is needed. This will appear in the approval request."></textarea>
+    </div>
+
+  </div>
+
+  <div style="padding:14px 20px;border-top:1px solid rgba(12,35,64,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:#fff">
+    <div id="smDrawerFooterLeft" style="font-size:11px;color:var(--slate)">Change will be submitted for Curriculum Director approval</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="smCloseDrawer()">Cancel</button>
+      <button class="btn btn-gold" id="smSubmitBtn" onclick="smSubmit()">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK UPLOAD MODAL -->
+<div class="bu-overlay hidden" id="buOverlay" onclick="buOverlayClick(event)">
+<div class="bu-modal" id="buModal">
+  <div class="bu-header">
+    <div>
+      <div class="bu-title">Bulk Upload &mdash; Course Catalog</div>
+      <div class="bu-subtitle" id="buSubtitle">Upload a CSV or Excel file to import multiple course records</div>
+    </div>
+    <button class="bu-close" onclick="closeBulkUpload()">&#10005;</button>
+  </div>
+  <div class="bu-stepbar">
+    <div class="bu-step"><div class="bu-stepnum active" id="bsn1">1</div><span class="bu-steplabel active" id="bsl1">Upload File</span></div>
+    <div class="bu-connector" id="bsc1"></div>
+    <div class="bu-step"><div class="bu-stepnum pending" id="bsn2">2</div><span class="bu-steplabel pending" id="bsl2">Preview &amp; Validate</span></div>
+    <div class="bu-connector" id="bsc2"></div>
+    <div class="bu-step"><div class="bu-stepnum pending" id="bsn3">3</div><span class="bu-steplabel pending" id="bsl3">Confirm Import</span></div>
+  </div>
+
+  <!-- STEP 1: UPLOAD -->
+  <div class="bu-body" id="buStep1">
+    <div class="bu-drop" id="buDropZone" onclick="document.getElementById('buFileInput').click()" ondragover="buDragOver(event)" ondragleave="buDragLeave(event)" ondrop="buDrop(event)">
+      <div class="bu-drop-icon">&#128196;</div>
+      <div class="bu-drop-title" id="buDropTitle">Drop your file here or click to browse</div>
+      <div class="bu-drop-sub">Upload a completed template or your own file with matching column headers</div>
+      <span class="bu-formats">Accepted: .csv &nbsp;&middot;&nbsp; .xlsx &nbsp;&middot;&nbsp; .xls</span>
+    </div>
+    <input type="file" id="buFileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="buFileSelect(event)">
+    <div class="bu-template">
+      <div class="bu-template-info">
+        <strong>Download the official import template</strong>
+        <span>Pre-formatted CSV with all required columns and sample data. Recommended for first-time uploads.</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="buDownloadTemplate()">&#11015; Download Template</button>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Required &amp; Optional Columns</div>
+    <div id="buSchemaRefTable">
+      <div style="font-size:11px;color:var(--slate);font-style:italic">Loading schema fields…</div>
+    </div>
+  </div>
+
+  <!-- STEP 2: PREVIEW -->
+  <div class="bu-body" id="buStep2" style="display:none">
+    <div class="bu-prev-summary">
+      <div class="bu-prev-stat ok"><div class="bu-prev-stat-label">Total Rows</div><div class="bu-prev-stat-value" id="buStatTotal">0</div></div>
+      <div class="bu-prev-stat ok"><div class="bu-prev-stat-label">Ready to Import</div><div class="bu-prev-stat-value" id="buStatOk">0</div></div>
+      <div class="bu-prev-stat warn"><div class="bu-prev-stat-label">Warnings</div><div class="bu-prev-stat-value" id="buStatWarn">0</div></div>
+      <div class="bu-prev-stat error"><div class="bu-prev-stat-label">Errors (blocked)</div><div class="bu-prev-stat-value" id="buStatErr">0</div></div>
+    </div>
+    <div class="bu-filter-row">
+      <span style="font-size:11px;color:var(--slate);font-weight:600">Show:</span>
+      <div class="bu-fpill active" onclick="buFilter('all',this)">All rows</div>
+      <div class="bu-fpill wp" onclick="buFilter('warn',this)">Warnings only</div>
+      <div class="bu-fpill ep" onclick="buFilter('error',this)">Errors only</div>
+    </div>
+    <div class="bu-prev-table-wrap">
+      <table class="bu-prev-table">
+        <thead id="buPreviewHead"><tr><th style="width:28px"></th><th>Identifier</th><th>Name / Title</th><th>Type / Category</th><th>Status</th><th>Issues Found</th></tr></thead>
+        <tbody id="buPreviewBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--slate)">&#9432; Rows with <strong>errors</strong> will be skipped. Rows with <strong>warnings</strong> will import &mdash; review before confirming.</div>
+  </div>
+
+  <!-- STEP 3: RESULT -->
+  <div class="bu-body" id="buStep3" style="display:none">
+    <div class="bu-result-header">
+      <div class="bu-result-icon">&#10003;</div>
+      <div class="bu-result-title">Import Complete</div>
+      <div class="bu-result-sub">SY 2025&ndash;26 Course Catalog &middot; Imported March 29, 2026 &middot; By Admin (CIO)</div>
+    </div>
+    <div class="bu-result-grid">
+      <div class="bu-result-stat g"><div class="bu-result-num">8</div><div class="bu-result-label">Records imported successfully</div></div>
+      <div class="bu-result-stat a"><div class="bu-result-num">3</div><div class="bu-result-label">Imported with warnings &mdash; review recommended</div></div>
+      <div class="bu-result-stat r"><div class="bu-result-num">1</div><div class="bu-result-label">Rows skipped due to errors</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Import Log</div>
+    <div class="bu-log">
+      <div class="lok">&#10003; ELA1200 &mdash; English Language Arts 11 &mdash; imported successfully</div>
+      <div class="lok">&#10003; MTH3010 &mdash; Statistics &mdash; imported successfully</div>
+      <div class="lok">&#10003; SCI3030 &mdash; Chemistry I &mdash; imported successfully</div>
+      <div class="lok">&#10003; CTE4410 &mdash; Cybersecurity Fundamentals &mdash; imported successfully</div>
+      <div class="lok">&#10003; SST2010 &mdash; US History &mdash; imported successfully</div>
+      <div class="lok">&#10003; ELA2200 &mdash; Creative Writing &mdash; imported successfully</div>
+      <div class="lok">&#10003; MTH1060 &mdash; Geometry &mdash; imported successfully</div>
+      <div class="lok">&#10003; SCI2020 &mdash; Earth &amp; Space Science &mdash; imported successfully</div>
+      <div class="lwarn">&#9888; CTE3320 &mdash; Healthcare Pathways II &mdash; imported with warning: CTE cluster "Health Sciences" normalized to "Health Science"</div>
+      <div class="lwarn">&#9888; MTH2070 &mdash; Advanced Algebra &mdash; imported with warning: sced_code omitted, queued for AI suggestion</div>
+      <div class="lwarn">&#9888; ELA3100 &mdash; AP Literature &mdash; imported with warning: duplicate course name found (different code). Both retained.</div>
+      <div class="lerr">&#10007; CTE9999 &mdash; state_course_code format invalid (max 10 chars exceeded) &mdash; row skipped</div>
+    </div>
+    <div style="margin-top:14px;background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate);display:flex;align-items:center;gap:10px">
+      <span style="font-size:14px">&#9432;</span>
+      <span>All imported records are now in <strong>Pending Approval</strong> status. A Curriculum Director must approve before they appear in the published catalog.</span>
+    </div>
+  </div>
+
+  <div class="bu-footer">
+    <div class="bu-footer-left" id="buFooterLeft">Supported formats: CSV, XLSX &middot; Max 5,000 rows per upload</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" id="buBtnBack" style="display:none" onclick="buGoBack()">&larr; Back</button>
+      <button class="btn btn-secondary" onclick="closeBulkUpload()">Cancel</button>
+      <button class="btn btn-primary" id="buBtnNext" disabled onclick="buGoNext()">Next: Preview &rarr;</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+function showPanel(id, navEl) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item,.nav-apps-item').forEach(function(n) { n.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  if (id === 'credentials') crRender();
+  if (id === 'publication') pubRender();
+  if (id === 'course-catalog') ccRender();
+  if (id === 'approvals') apRender();
+}
+function toggleCollapse(header) {
+  var body = header.nextElementSibling;
+  var arrow = header.querySelector('.collapse-arrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+/* ── APPROVAL QUEUE ── */
+var apQueue = [
+  {id:'ap-1', group:'Credentials', ref:'CRED · CR1042', title:'CoV Score Update — AWS Certified Cloud Practitioner', meta:'Economic Value: 4.5 → 5.0 · Labor Market SME · Submitted Mar 27, 2026 · Affects 1,847 student plans', approverRole:'curriculum', schemaLib:null, schemaIdx:null, isNew:false, status:'pending'},
+  {id:'ap-2', group:'Credentials', ref:'CRED · CR4088', title:'New Credential — Cybersecurity Fundamentals TC', meta:'New record · Ivy Tech · CTE SME · Submitted Mar 25, 2026 · Cohort impact: SY 2025–26', approverRole:'curriculum', schemaLib:null, schemaIdx:null, isNew:false, status:'pending'},
+  {id:'ap-3', group:'Course Catalog', ref:'COURSE · CTE3310', title:'New Course — Healthcare Career Exploration', meta:'New record · CTE / Health Science · CTE SME · Submitted Mar 28, 2026', approverRole:'curriculum', schemaLib:null, schemaIdx:null, isNew:false, status:'pending'},
+];
+
+var apRoleLabels = {curriculum:'Curriculum Director', cte:'CTE SME', labormarket:'Labor Market SME', math:'Math SME'};
+
+function apCurrentRole() {
+  var sel = document.getElementById('apRoleSelect');
+  return sel ? sel.value : 'curriculum';
+}
+
+function apRender() {
+  var role = apCurrentRole();
+  var pending = apQueue.filter(function(i){ return i.status === 'pending'; });
+  var container = document.getElementById('apCardContainer');
+  var subtitle = document.getElementById('apSubtitle');
+  var banner = document.getElementById('apRoleBanner');
+  subtitle.textContent = pending.length + ' item' + (pending.length !== 1 ? 's' : '') + ' awaiting sign-off';
+  if (role !== 'curriculum') {
+    banner.style.display = 'block';
+    banner.style.background = '#FEF3C7';
+    banner.style.borderColor = '#D97706';
+    banner.style.color = '#92400E';
+    banner.innerHTML = '<strong>' + apRoleLabels[role] + '</strong> — You can view pending items but only the Curriculum Director can approve or reject.';
+  } else {
+    banner.style.display = 'none';
+  }
+  if (pending.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:48px 24px;color:var(--slate)"><div style="font-size:28px;margin-bottom:10px">✓</div><div style="font-family:var(--serif);font-size:15px;color:var(--navy);margin-bottom:6px">All caught up</div><div style="font-size:12px">No items are currently pending approval.</div></div>';
+    return;
+  }
+  var groups = {};
+  pending.forEach(function(item) {
+    if (!groups[item.group]) groups[item.group] = [];
+    groups[item.group].push(item);
+  });
+  var canAct = (role === 'curriculum');
+  var html = '';
+  Object.keys(groups).forEach(function(group) {
+    var groupIds = groups[group].map(function(i){ return i.id; });
+    var groupCheckId = 'apgcb-' + group.replace(/\s+/g,'_');
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-top:16px;margin-bottom:8px">';
+    if (canAct) {
+      html += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none">' +
+        '<input type="checkbox" id="' + groupCheckId + '" onchange="apGroupCheck(this,\''+group+'\')" style="width:14px;height:14px;cursor:pointer">' +
+        '<span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);font-weight:600">' + group + ' (' + groups[group].length + ')</span>' +
+        '</label>';
+    } else {
+      html += '<span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);font-weight:600">' + group + ' (' + groups[group].length + ')</span>';
+    }
+    html += '</div>';
+    groups[group].forEach(function(item) {
+      var btnStyle = canAct ? '' : 'opacity:.35;cursor:not-allowed;pointer-events:none';
+      var schemaTag = (item.schemaLib !== null) ? '<span class="chip chip-blue" style="font-size:9px;margin-left:6px">Schema Change</span>' : '';
+      var cbHtml = canAct
+        ? '<input type="checkbox" class="ap-item-cb" data-id="' + item.id + '" data-group="' + group + '" onchange="apUpdateBulkBtn()" style="width:14px;height:14px;cursor:pointer;flex-shrink:0">'
+        : '';
+      html += '<div class="approval-card" id="' + item.id + '" style="display:flex;align-items:flex-start;gap:10px">' +
+        cbHtml +
+        '<div style="flex:1">' +
+        '<div class="approval-card-header"><span class="approval-card-id">' + item.ref + '</span><div style="display:flex;align-items:center;gap:6px"><span class="chip chip-amber">Pending</span>' + schemaTag + '</div></div>' +
+        '<div class="approval-card-title">' + item.title + '</div>' +
+        '<div class="approval-card-meta">' + item.meta + '</div>' +
+        '<div class="approval-card-actions">' +
+        '<button class="btn-approve" style="' + btnStyle + '" onclick="apApprove(\'' + item.id + '\')">Approve</button>' +
+        '<button class="btn-reject" style="' + btnStyle + '" onclick="apReject(\'' + item.id + '\')">Reject</button>' +
+        (!canAct ? '<span style="font-size:11px;color:var(--slate);margin-left:4px">Curriculum Director approval required</span>' : '') +
+        '</div></div></div>';
+    });
+  });
+  container.innerHTML = html;
+  apUpdateBulkBtn();
+}
+
+function apApprove(id) {
+  var item = apQueue.find(function(i){ return i.id === id; });
+  if (!item) return;
+  item.status = 'approved';
+  // Schema field approval
+  if (item.schemaLib !== null && item.schemaIdx !== null) {
+    var f = smSchemas[item.schemaLib][item.schemaIdx];
+    if (f) { f.status = (f.status === 'pending-retire') ? 'deprecated' : 'active'; }
+    smRender();
+  }
+  // Credential approval
+  if (item.credId) {
+    var cr = crCreds.find(function(c){ return c.id === item.credId; });
+    if (cr) {
+      if (item.credEdit) { Object.keys(item.credEdit).forEach(function(k){ cr[k] = item.credEdit[k]; }); }
+      cr.status = 'active';
+      cr.log = cr.log || [];
+      cr.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Approved', by: 'Curriculum Director', note: item.title});
+    }
+    crSave(); crRender();
+  }
+  // Course approval — move course from pending → active
+  if (item.courseCode) {
+    var c = ccCourses.find(function(c){ return c.code === item.courseCode; });
+    if (c) {
+      if (item.courseEdit) {
+        // Apply the pending edits
+        Object.keys(item.courseEdit).forEach(function(k){ c[k] = item.courseEdit[k]; });
+      }
+      c.status = 'active';
+      c.log = c.log || [];
+      c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Approved', by: 'Curriculum Director', note: item.title});
+    }
+    ccSave();
+    ccRender();
+  }
+  var card = document.getElementById(id);
+  if (card) { card.style.transition = 'opacity .3s'; card.style.opacity = '0'; }
+  persistSave();
+  showPersistBanner('Approved — saved.', true);
+  setTimeout(function(){ apRender(); }, 320);
+}
+
+function apReject(id) {
+  var item = apQueue.find(function(i){ return i.id === id; });
+  if (!item) return;
+  item.status = 'rejected';
+  // Schema field rejection
+  if (item.schemaLib !== null && item.schemaIdx !== null) {
+    var fields = smSchemas[item.schemaLib];
+    var f = fields[item.schemaIdx];
+    if (f) {
+      if (f.status === 'pending' && item.isNew) { fields.splice(item.schemaIdx, 1); }
+      else if (f.status === 'pending') { f.status = 'active'; }
+      else if (f.status === 'pending-retire') { f.status = 'active'; }
+    }
+    smRender();
+  }
+  // Credential rejection
+  if (item.credId) {
+    var cr = crCreds.find(function(c){ return c.id === item.credId; });
+    if (cr) {
+      cr.status = 'active';
+      cr.log = cr.log || [];
+      cr.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Rejected', by: 'Curriculum Director', note: item.title});
+    }
+    crSave(); crRender();
+  }
+  // Course rejection — remove if new, revert edits if edit
+  if (item.courseCode) {
+    if (item.isNew && !item.courseEdit) {
+      var idx = ccCourses.findIndex(function(c){ return c.code === item.courseCode; });
+      if (idx >= 0) ccCourses.splice(idx, 1);
+    } else {
+      var c = ccCourses.find(function(c){ return c.code === item.courseCode; });
+      if (c) {
+        c.status = 'active';
+        c.log = c.log || [];
+        c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Rejected', by: 'Curriculum Director', note: item.title});
+      }
+    }
+    ccSave();
+    ccRender();
+  }
+  var card = document.getElementById(id);
+  if (card) { card.style.transition = 'opacity .3s'; card.style.opacity = '0'; }
+  persistSave();
+  showPersistBanner('Rejected — saved.', true);
+  setTimeout(function(){ apRender(); }, 320);
+}
+
+function dismissCard(btn) {
+  var card = btn.closest('.approval-card, tr');
+  if (card) { card.style.opacity = '.35'; card.style.pointerEvents = 'none'; }
+}
+document.querySelectorAll('.filter-pill').forEach(function(pill) {
+  pill.addEventListener('click', function() {
+    var bar = this.closest('.filter-bar, .panel-actions');
+    if (bar) bar.querySelectorAll('.filter-pill').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+  });
+});
+/* ── BULK UPLOAD ── */
+var buStep = 1;
+var buMode = 'catalog'; // 'catalog' or 'credentials'
+var buRows = [
+  {code:'ELA1200',name:'English Language Arts 11',cat:'ELA',credits:'2.0',sced:'01003',flags:'Core 40, AHD',status:'ok',issue:''},
+  {code:'MTH3010',name:'Statistics',cat:'Math',credits:'2.0',sced:'02201',flags:'AHD, THD',status:'ok',issue:''},
+  {code:'SCI3030',name:'Chemistry I',cat:'Science',credits:'2.0',sced:'03051',flags:'Core 40, AHD',status:'ok',issue:''},
+  {code:'CTE4410',name:'Cybersecurity Fundamentals',cat:'CTE',credits:'1.0',sced:'21051',flags:'Core 40',status:'ok',issue:''},
+  {code:'SST2010',name:'US History',cat:'Social Studies',credits:'2.0',sced:'04101',flags:'Core 40',status:'ok',issue:''},
+  {code:'ELA2200',name:'Creative Writing',cat:'ELA',credits:'1.0',sced:'01071',flags:'—',status:'ok',issue:''},
+  {code:'MTH1060',name:'Geometry',cat:'Math',credits:'2.0',sced:'02101',flags:'Core 40, AHD',status:'ok',issue:''},
+  {code:'SCI2020',name:'Earth & Space Science',cat:'Science',credits:'2.0',sced:'03021',flags:'Core 40',status:'ok',issue:''},
+  {code:'CTE3320',name:'Healthcare Pathways II',cat:'CTE',credits:'1.0',sced:'20053',flags:'Core 40',status:'warn',issue:'CTE cluster "Health Sciences" — did you mean "Health Science"?'},
+  {code:'MTH2070',name:'Advanced Algebra',cat:'Math',credits:'2.0',sced:'—',flags:'AHD',status:'warn',issue:'sced_code omitted — AI suggestion will be queued'},
+  {code:'ELA3100',name:'AP Literature',cat:'ELA',credits:'2.0',sced:'01011',flags:'AHD, THD',status:'warn',issue:'Duplicate course name found with different code (ELA3101)'},
+  {code:'CTE9999TOOLONG',name:'Missing field test',cat:'CTE',credits:'1.0',sced:'—',flags:'—',status:'error',issue:'state_course_code exceeds 10 characters — row will be skipped'}
+];
+function buRenderSchemaRef() {
+  var schema = smSchemas[buMode === 'credentials' ? 'credentials' : 'catalog'].filter(function(f){ return f.status === 'active'; });
+  var html = '<table class="bu-req-table"><thead><tr><th>Column Name</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead><tbody>';
+  schema.forEach(function(f) {
+    var typeLabel = f.type === 'VARCHAR' ? 'VARCHAR(' + f.len + ')' : f.type === 'DECIMAL' ? 'DECIMAL' : f.type === 'ENUM' ? 'ENUM' : f.type;
+    var reqBadge = f.nullable
+      ? '<span class="req-badge req-optional">Optional</span>'
+      : '<span class="req-badge req-required">Required</span>';
+    var notes = f.desc ? f.desc.substring(0, 60) + (f.desc.length > 60 ? '…' : '') : '';
+    if (f.type === 'ENUM' && f.enumVals.length) notes = f.enumVals.slice(0,3).join(', ') + (f.enumVals.length > 3 ? ' +' + (f.enumVals.length-3) + ' more' : '');
+    html += '<tr><td style="font-family:var(--mono);font-size:10px">' + f.name + '</td><td style="font-family:var(--mono);font-size:10px">' + typeLabel + '</td><td>' + reqBadge + '</td><td style="font-size:11px;color:var(--slate)">' + notes + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  var el = document.getElementById('buSchemaRefTable');
+  if (el) el.innerHTML = html;
+}
+
+function openBulkUpload() {
+  buMode = 'catalog';
+  buRenderSchemaRef();
+  buStep = 1;
+  document.getElementById('buBtnNext').disabled = true;
+  document.getElementById('buBtnNext').textContent = 'Next: Preview →';
+  document.getElementById('buDropTitle').textContent = 'Drop your file here or click to browse';
+  var dz = document.getElementById('buDropZone');
+  dz.style.borderColor = ''; dz.style.background = '';
+  buUpdateStep();
+  document.getElementById('buOverlay').classList.remove('hidden');
+}
+function closeBulkUpload() { document.getElementById('buOverlay').classList.add('hidden'); }
+function buOverlayClick(e) { if (e.target === document.getElementById('buOverlay')) closeBulkUpload(); }
+function buDragOver(e) { e.preventDefault(); document.getElementById('buDropZone').classList.add('drag-over'); }
+function buDragLeave() { document.getElementById('buDropZone').classList.remove('drag-over'); }
+function buDrop(e) { e.preventDefault(); document.getElementById('buDropZone').classList.remove('drag-over'); if (e.dataTransfer.files[0]) buParseFile(e.dataTransfer.files[0]); }
+function buFileSelect(e) { if (e.target.files[0]) buParseFile(e.target.files[0]); }
+function buParseFile(file) {
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'xlsx' || ext === 'xls') {
+    // Excel path — use SheetJS
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var wb = XLSX.read(e.target.result, {type:'array'});
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        var raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        if (!raw || raw.length < 2) { alert('File appears empty or has no data rows.'); return; }
+        var headers = raw[0].map(function(h){ return String(h).trim().toLowerCase(); });
+        var dataRows = raw.slice(1).filter(function(r){ return r.some(function(v){ return v !== ''; }); });
+        buProcessRows(headers, dataRows.map(function(r){
+          var obj = {};
+          headers.forEach(function(h,i){ obj[h] = r[i] !== undefined && r[i] !== null ? String(r[i]).trim() : ''; });
+          return obj;
+        }), file.name);
+      } catch(err) {
+        alert('Could not read Excel file: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    // CSV path — plain text
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var text = e.target.result;
+      var lines = text.split(/\r?\n/).filter(function(l){ return l.trim() !== '' && !l.trim().startsWith('#'); });
+      if (lines.length < 2) { alert('File appears empty or has no data rows.'); return; }
+      var headers = lines[0].split(',').map(function(h){ return h.trim().toLowerCase().replace(/"/g,''); });
+      var objs = [];
+      for (var i = 1; i < lines.length; i++) {
+        var vals = buSplitCSV(lines[i]);
+        var obj = {};
+        headers.forEach(function(h, idx){ obj[h] = (vals[idx] || '').trim().replace(/^"|"$/g,''); });
+        objs.push(obj);
+      }
+      buProcessRows(headers, objs, file.name);
+    };
+    reader.readAsText(file);
+  }
+}
+
+function buProcessRows(headers, objs, fileName) {
+    var schema = smSchemas[buMode === 'credentials' ? 'credentials' : 'catalog'].filter(function(f){ return f.status === 'active'; });
+    var requiredFields = schema.filter(function(f){ return !f.nullable; });
+    var idField = schema.find(function(f){ return f.name.includes('code') && !f.nullable; }) || schema[0];
+    var nameField = schema.find(function(f){ return f.name.includes('name') && !f.nullable; }) || schema[1];
+    var catField = schema.find(function(f){ return f.type === 'ENUM' && !f.nullable; });
+    buRows = [];
+    objs.forEach(function(obj) {
+      var issues = [];
+      var status = 'ok';
+      requiredFields.forEach(function(f) {
+        var colPresent = headers.indexOf(f.name) >= 0;
+        var val = obj[f.name];
+        if (colPresent && (!val || val === '')) {
+          // Column exists in file but value is empty — hard error
+          issues.push(f.name + ' column is present but value is empty');
+          status = 'error';
+        } else if (!colPresent) {
+          // Column not in file at all — warn only for user-supplied fields,
+          // skip system fields silently
+          var systemFields = ['cohort_version','record_status'];
+          if (systemFields.indexOf(f.name) === -1) {
+            issues.push(f.name + ' column not found in file');
+            if (status !== 'error') status = 'warn';
+          }
+        }
+      });
+      schema.forEach(function(f) {
+        var val = obj[f.name];
+        if (!val) return;
+        if (f.type === 'VARCHAR' && f.len && val.length > f.len) {
+          issues.push(f.name + ' exceeds ' + f.len + ' characters (got ' + val.length + ') — row will be skipped');
+          status = 'error';
+        }
+        if (f.type === 'ENUM' && f.enumVals.length) {
+          var match = f.enumVals.some(function(v){ return v.toLowerCase() === val.toLowerCase(); });
+          if (!match) {
+            issues.push(f.name + ' value "' + val + '" not in allowed list (' + f.enumVals.slice(0,3).join(', ') + (f.enumVals.length > 3 ? '…' : '') + ')');
+            if (status !== 'error') status = 'warn';
+          }
+        }
+        if (f.type === 'DECIMAL' && val && isNaN(parseFloat(val))) {
+          issues.push(f.name + ' must be a number (got "' + val + '")');
+          if (status !== 'error') status = 'warn';
+        }
+        if (f.type === 'INTEGER' && val && isNaN(parseInt(val))) {
+          issues.push(f.name + ' must be an integer (got "' + val + '")');
+          if (status !== 'error') status = 'warn';
+        }
+        if (f.type === 'BOOLEAN' && val && ['true','false','1','0','yes','no'].indexOf(val.toLowerCase()) === -1) {
+          issues.push(f.name + ' must be TRUE or FALSE (got "' + val + '")');
+          if (status !== 'error') status = 'warn';
+        }
+      });
+      var idVal = idField ? (obj[idField.name] || '—') : '—';
+      var nameVal = nameField ? (obj[nameField.name] || '—') : '—';
+      var catVal = catField ? (obj[catField.name] || '—') : '—';
+      buRows.push({ id: idVal, name: nameVal, cat: catVal, status: status, issue: issues.join(' · '), raw: obj });
+    });
+    var dz = document.getElementById('buDropZone');
+    document.getElementById('buDropTitle').textContent = '✓ ' + fileName + ' — ' + buRows.length + ' data rows found';
+    dz.style.borderColor = 'var(--green)'; dz.style.background = '#F0FFF4';
+    document.getElementById('buBtnNext').disabled = false;
+}
+function buSplitCSV(line) {
+  var result = []; var cur = ''; var inQuotes = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (c === '"') { inQuotes = !inQuotes; }
+    else if (c === ',' && !inQuotes) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
+}
+function buDownloadTemplate() {
+  var fields = smSchemas['catalog'].filter(function(f){ return f.status === 'active'; });
+  var headers = fields.map(function(f){ return f.name; });
+  var sample = fields.map(function(f){ return csvSampleValue(f); });
+  var rows = [headers.join(','), sample.join(',')];
+  var enumFields = fields.filter(function(f){ return f.type === 'ENUM' && f.enumVals.length; });
+  if (enumFields.length) {
+    rows.push('');
+    rows.push('# ALLOWED VALUES:');
+    enumFields.forEach(function(f){ rows.push('# ' + f.name + ': ' + f.enumVals.join(' | ')); });
+  }
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.join('\n'));
+  a.download = 'ipr_course_catalog_template_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+function buRenderPreview(filter) {
+  var okCount = buRows.filter(function(r){return r.status==='ok';}).length;
+  var warnCount = buRows.filter(function(r){return r.status==='warn';}).length;
+  var errCount = buRows.filter(function(r){return r.status==='error';}).length;
+  document.getElementById('buStatTotal').textContent = buRows.length;
+  document.getElementById('buStatOk').textContent = okCount;
+  document.getElementById('buStatWarn').textContent = warnCount;
+  document.getElementById('buStatErr').textContent = errCount;
+  var importable = okCount + warnCount;
+  document.getElementById('buBtnNext').textContent = 'Confirm Import (' + importable + ' rows) →';
+  document.getElementById('buFooterLeft').textContent = errCount + ' row' + (errCount!==1?'s':'') + ' will be skipped · ' + warnCount + ' warning' + (warnCount!==1?'s':'') + ' · ' + okCount + ' ready';
+  var tbody = document.getElementById('buPreviewBody');
+  tbody.innerHTML = '';
+  var schema = smSchemas['catalog'].filter(function(f){ return f.status === 'active'; });
+  var requiredCount = schema.filter(function(f){ return !f.nullable; }).length;
+  document.getElementById('buPreviewHead').innerHTML =
+    '<tr><th style="width:28px"></th><th>Identifier</th><th>Name / Title</th><th>Type / Category</th>' +
+    '<th style="width:80px">Issues</th><th>Details</th></tr>';
+  buRows.forEach(function(row) {
+    if (filter !== 'all' && row.status !== filter) return;
+    var tr = document.createElement('tr');
+    if (row.status === 'warn') tr.className = 'row-warn';
+    if (row.status === 'error') tr.className = 'row-error';
+    var issueCount = row.issue ? row.issue.split(' · ').length : 0;
+    var issueCountHtml = issueCount > 0
+      ? '<span style="background:' + (row.status==='error'?'#FEE2E2':'#FEF3C7') + ';color:' + (row.status==='error'?'#7F1D1D':'#92400E') + ';padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600">' + issueCount + '</span>'
+      : '<span style="color:var(--green);font-size:12px">&#10003;</span>';
+    var issueDetail = row.issue
+      ? '<div class="bu-issue' + (row.status==='error'?' err':'') + '" style="line-height:1.8">' + row.issue.split(' · ').join('<br>') + '</div>'
+      : '<span style="font-size:11px;color:var(--slate)">No issues</span>';
+    tr.innerHTML =
+      '<td style="text-align:center"><span class="bu-status-dot ' + row.status + '"></span></td>' +
+      '<td style="font-family:var(--mono);font-size:10px;color:var(--navy);font-weight:500">' + row.id + '</td>' +
+      '<td style="font-size:11px;color:var(--navy)">' + row.name + '</td>' +
+      '<td><span class="chip chip-navy" style="font-size:9px">' + row.cat + '</span></td>' +
+      '<td style="text-align:center">' + issueCountHtml + '</td>' +
+      '<td>' + issueDetail + '</td>';
+    tbody.appendChild(tr);
+  });
+  var note = document.querySelector('#buStep2 > div:last-child');
+  if (note) note.innerHTML = '&#9432; Showing identifier, name and category columns to confirm file alignment. <strong>' + requiredCount + ' required fields</strong> validated against active schema — errors block import, warnings proceed.';
+}
+function buFilter(type, el) {
+  document.querySelectorAll('.bu-fpill').forEach(function(p) { p.classList.remove('active'); });
+  el.classList.add('active');
+  buRenderPreview(type);
+}
+function buGoNext() {
+  if (buStep === 1) {
+    buStep = 2;
+    buRenderPreview('all');
+    document.querySelectorAll('.bu-fpill').forEach(function(p){p.classList.remove('active');});
+    document.querySelector('.bu-fpill').classList.add('active');
+  } else if (buStep === 2) {
+    buStep = 3;
+    buBuildResultScreen();
+  }
+  buUpdateStep();
+}
+function buBuildResultScreen() {
+  var okRows = buRows.filter(function(r){return r.status==='ok';});
+  var warnRows = buRows.filter(function(r){return r.status==='warn';});
+  var errRows = buRows.filter(function(r){return r.status==='error';});
+  var importable = okRows.length + warnRows.length;
+
+  // Write importable rows into the appropriate library
+  // Derive field mappings from live schema — no hardcoded field names
+  var today = new Date().toISOString().slice(0,10);
+  var isCredMode = buMode === 'credentials';
+  var schema = smSchemas[isCredMode ? 'credentials' : 'catalog'].filter(function(f){ return f.status === 'active'; });
+  var idFieldName   = (schema.find(function(f){ return f.name.includes('code') && !f.nullable; }) || schema[0]).name;
+  var nameFieldName = (schema.find(function(f){ return f.name.includes('name') && !f.nullable; }) || schema[1]).name;
+  var catFieldName  = (schema.find(function(f){ return f.type === 'ENUM' && !f.nullable; }) || {}).name;
+  var creditsField  = (schema.find(function(f){ return f.type === 'DECIMAL' && !f.nullable; }) || {}).name;
+  var scedField     = (schema.find(function(f){ return f.name.includes('sced'); }) || {}).name;
+  var boolFields    = schema.filter(function(f){ return f.type === 'BOOLEAN'; });
+
+  okRows.concat(warnRows).forEach(function(r) {
+    var raw = r.raw || {};
+    var existing = ccCourses.findIndex(function(c){ return c.code.toLowerCase() === r.id.toLowerCase(); });
+
+    // Build flags dynamically from all BOOLEAN fields in the schema
+    var flags = [];
+    boolFields.forEach(function(f) {
+      var val = raw[f.name];
+      if (val && ['true','1','yes'].indexOf(val.toLowerCase()) >= 0) {
+        // Convert field name to display label: diploma_core40 → Core 40, diploma_ahd → AHD, etc.
+        var label = f.name
+          .replace('diploma_', '')
+          .replace('_', ' ')
+          .replace(/\w/g, function(c){ return c.toUpperCase(); });
+        flags.push(label);
+      }
+    });
+
+    // Build a raw data snapshot of all schema fields present in the upload
+    var fieldSnapshot = {};
+    schema.forEach(function(f) {
+      if (raw[f.name] !== undefined) fieldSnapshot[f.name] = raw[f.name];
+    });
+
+    var rec = {
+      code:        raw[idFieldName]   || r.id   || '—',
+      name:        raw[nameFieldName] || r.name  || '—',
+      category:    catFieldName ? (raw[catFieldName] || r.cat || '—') : (r.cat || '—'),
+      credits:     creditsField ? (raw[creditsField] || '—') : '—',
+      sced:        scedField    ? (raw[scedField]    || '—') : '—',
+      flags:       flags.join(', ') || '—',
+      fieldData:   fieldSnapshot,
+      status:      'pending',
+      isNew:       existing === -1,
+      importedOn:  today,
+      issues:      r.issue || '',
+      log:         []
+    };
+    if (isCredMode) {
+      var idField2 = schema.find(function(f){ return f.name.includes('id') && !f.nullable; }) || schema[0];
+      var recId = raw[idField2 ? idField2.name : 'credential_id'] || r.id || '';
+      var existCr = crCreds.findIndex(function(c){ return c.id === recId; });
+      var crRec = { id: recId, name: r.name, credType: raw['credential_type'] || '—',
+        issuer: raw['issuing_organization'] || '—', covScore: parseFloat(raw['cov_score']) || 0,
+        econValue: parseFloat(raw['cov_economic_value']) || 0, upskillValue: parseFloat(raw['cov_upskilling_value']) || 0,
+        national: (raw['national_recognition']||'').toLowerCase() === 'true',
+        cluster: raw['career_cluster'] || '—', shortName: raw['short_name'] || '',
+        fieldData: fieldSnapshot, status: 'pending', isNew: existCr === -1,
+        importedOn: today, issues: r.issue || '', log: [] };
+      if (existCr >= 0) { crCreds[existCr] = crRec; } else { crCreds.push(crRec); }
+    } else {
+      if (existing >= 0) { ccCourses[existing] = rec; }
+      else { ccCourses.push(rec); }
+    }
+  });
+  if (isCredMode) { crSave(); crRender(); } else { ccSave(); ccRender(); }
+
+  // Push each importable record into the approval queue
+  var today = new Date().toISOString().slice(0,10);
+  okRows.concat(warnRows).forEach(function(r) {
+    var apId = (isCredMode ? 'ap-cred-' : 'ap-course-') + r.id + '-' + Date.now() + Math.random().toString(36).slice(2,6);
+    var existingAp = isCredMode
+      ? apQueue.find(function(i){ return i.credId === r.id && i.status === 'pending'; })
+      : apQueue.find(function(i){ return i.courseCode === r.id && i.status === 'pending'; });
+    if (!existingAp) {
+      var apItem = {
+        id: apId,
+        group: isCredMode ? 'Credentials' : 'Course Catalog',
+        ref: (isCredMode ? 'CRED · ' : 'COURSE · ') + r.id,
+        title: (isCredMode ? 'New Credential — ' : 'New Course — ') + r.name,
+        meta: 'Bulk import · Submitted ' + today + (r.issue ? ' · ⚠ ' + r.issue.split(' · ')[0] : ''),
+        approverRole: 'curriculum',
+        schemaLib: null, schemaIdx: null,
+        isNew: true, status: 'pending'
+      };
+      if (isCredMode) { apItem.credId = r.id; } else { apItem.courseCode = r.id; }
+      apQueue.push(apItem);
+    }
+  });
+  persistSave();
+  apRender();
+
+  var s3 = document.getElementById('buStep3');
+  var log = okRows.map(function(r){ return '<div class="lok">&#10003; ' + r.id + ' &mdash; ' + r.name + ' &mdash; added to catalog (Pending Approval)</div>'; }).join('') +
+    warnRows.map(function(r){ return '<div class="lwarn">&#9888; ' + r.id + ' &mdash; ' + r.name + ' &mdash; added with warning: ' + r.issue + '</div>'; }).join('') +
+    errRows.map(function(r){ return '<div class="lerr">&#10007; ' + r.id + ' &mdash; ' + r.issue + ' &mdash; row skipped</div>'; }).join('');
+  s3.innerHTML = '<div class="bu-result-header"><div class="bu-result-icon">&#10003;</div><div class="bu-result-title">Import Complete</div><div class="bu-result-sub">SY 2025&ndash;26 Course Catalog &middot; ' + buRows.length + ' rows processed</div></div>' +
+    '<div class="bu-result-grid">' +
+    '<div class="bu-result-stat g"><div class="bu-result-num">' + okRows.length + '</div><div class="bu-result-label">Added to catalog (Pending Approval)</div></div>' +
+    '<div class="bu-result-stat a"><div class="bu-result-num">' + warnRows.length + '</div><div class="bu-result-label">Added with warnings &mdash; review recommended</div></div>' +
+    '<div class="bu-result-stat r"><div class="bu-result-num">' + errRows.length + '</div><div class="bu-result-label">Rows skipped due to errors</div></div>' +
+    '</div>' +
+    '<div style="font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Import Log</div>' +
+    '<div class="bu-log">' + (log || '<div style="color:var(--slate)">No rows processed.</div>') + '</div>' +
+    '<div style="margin-top:14px;background:var(--mist);border-radius:var(--radius);padding:12px 14px;font-size:11px;color:var(--slate);display:flex;align-items:center;gap:10px"><span style="font-size:14px">&#9432;</span><span>Records are now visible in <strong>Course Catalog</strong> with Pending Approval status. Search for them there now.</span></div>';
+  document.getElementById('buFooterLeft').textContent = importable + ' courses added to catalog · ' + errRows.length + ' row' + (errRows.length!==1?'s':'') + ' skipped';
+  document.getElementById('buSubtitle').textContent = 'Import complete — courses are now searchable in Course Catalog';
+
+  // Auto-download manifest
+  buDownloadManifest(okRows, warnRows, errRows, today);
+}
+
+function buDownloadManifest(okRows, warnRows, errRows, today) {
+  var allRows = okRows.concat(warnRows).concat(errRows);
+  var total = allRows.length;
+
+  // ── Sheet 1: Summary ──
+  var summaryData = [
+    ['Indiana Pathway Registry — Bulk Upload Manifest'],
+    [''],
+    ['Generated', today],
+    ['Library', 'Course Catalog'],
+    ['Cohort', 'SY 2025-26'],
+    [''],
+    ['RESULTS', ''],
+    ['Total rows processed', total],
+    ['Imported successfully', okRows.length],
+    ['Imported with warnings', warnRows.length],
+    ['Skipped (errors)', errRows.length],
+    [''],
+    ['NOTES', ''],
+    ['Imported records', 'Visible in Course Catalog with Pending Approval status'],
+    ['Warning records', 'Imported but flagged — review Reason column in Detail sheet'],
+    ['Error records', 'Not imported — fix issues and re-upload these rows'],
+    [''],
+    ['NEXT STEPS', ''],
+    ['1', 'Go to Pending Approvals and approve imported courses'],
+    ['2', 'Review WARNING rows in the Detail sheet'],
+    ['3', 'Fix ERROR rows and re-upload using a corrected file'],
+  ];
+
+  // ── Sheet 2: Detail — all original columns + result + reason ──
+  // Collect all unique column headers from uploaded data
+  var colSet = {};
+  allRows.forEach(function(r) {
+    if (r.raw) Object.keys(r.raw).forEach(function(k){ colSet[k] = 1; });
+  });
+  var dataCols = Object.keys(colSet);
+
+  var detailHeaders = ['result', 'reason'].concat(dataCols);
+  var detailData = [detailHeaders];
+
+  okRows.forEach(function(r) {
+    var row = ['IMPORTED', ''];
+    dataCols.forEach(function(c){ row.push(r.raw ? (r.raw[c] !== undefined ? r.raw[c] : '') : ''); });
+    detailData.push(row);
+  });
+  warnRows.forEach(function(r) {
+    var row = ['WARNING', r.issue || ''];
+    dataCols.forEach(function(c){ row.push(r.raw ? (r.raw[c] !== undefined ? r.raw[c] : '') : ''); });
+    detailData.push(row);
+  });
+  errRows.forEach(function(r) {
+    var row = ['ERROR', r.issue || ''];
+    dataCols.forEach(function(c){ row.push(r.raw ? (r.raw[c] !== undefined ? r.raw[c] : '') : ''); });
+    detailData.push(row);
+  });
+
+  // ── Build workbook with SheetJS ──
+  try {
+    var wb = XLSX.utils.book_new();
+
+    var wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    // Style the title row bold (SheetJS CE supports basic cell props)
+    if (wsSummary['A1']) wsSummary['A1'].s = {font:{bold:true, sz:13}};
+    wsSummary['!cols'] = [{wch:35},{wch:55}];
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+    var wsDetail = XLSX.utils.aoa_to_sheet(detailData);
+    // Auto-width columns — cap at 40
+    var colWidths = detailHeaders.map(function(h, i) {
+      var max = h.length;
+      detailData.slice(1).forEach(function(row){
+        var v = row[i] !== undefined && row[i] !== null ? String(row[i]) : '';
+        if (v.length > max) max = v.length;
+      });
+      return { wch: Math.min(max + 2, 40) };
+    });
+    wsDetail['!cols'] = colWidths;
+    XLSX.utils.book_append_sheet(wb, wsDetail, 'Detail');
+
+    XLSX.writeFile(wb, 'ipr_upload_manifest_' + today + '.xlsx');
+  } catch(err) {
+    // Fallback to CSV if SheetJS write fails
+    var lines = ['result,reason,' + dataCols.join(',')];
+    okRows.forEach(function(r){
+      var vals = ['IMPORTED', ''].concat(dataCols.map(function(c){ return '"' + (r.raw && r.raw[c] !== undefined ? String(r.raw[c]).replace(/"/g,'""') : '') + '"'; }));
+      lines.push(vals.join(','));
+    });
+    warnRows.concat(errRows).forEach(function(r){
+      var vals = [r.status === 'warn' ? 'WARNING' : 'ERROR', '"' + (r.issue||'').replace(/"/g,'""') + '"'].concat(dataCols.map(function(c){ return '"' + (r.raw && r.raw[c] !== undefined ? String(r.raw[c]).replace(/"/g,'""') : '') + '"'; }));
+      lines.push(vals.join(','));
+    });
+    var a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(lines.join('\n'));
+    a.download = 'ipr_upload_manifest_' + today + '.csv';
+    a.click();
+  }
+}
+function buGoBack() {
+  if (buStep === 2) buStep = 1;
+  else if (buStep === 3) buStep = 2;
+  buUpdateStep();
+}
+function buUpdateStep() {
+  document.getElementById('buStep1').style.display = buStep === 1 ? 'block' : 'none';
+  document.getElementById('buStep2').style.display = buStep === 2 ? 'block' : 'none';
+  document.getElementById('buStep3').style.display = buStep === 3 ? 'block' : 'none';
+  [1,2,3].forEach(function(n) {
+    var num = document.getElementById('bsn'+n);
+    var lbl = document.getElementById('bsl'+n);
+    if (n < buStep) { num.className='bu-stepnum done'; num.textContent='✓'; lbl.className='bu-steplabel done'; }
+    else if (n === buStep) { num.className='bu-stepnum active'; num.textContent=n; lbl.className='bu-steplabel active'; }
+    else { num.className='bu-stepnum pending'; num.textContent=n; lbl.className='bu-steplabel pending'; }
+  });
+  [1,2].forEach(function(n) { document.getElementById('bsc'+n).className='bu-connector'+(n<buStep?' done':''); });
+  var back = document.getElementById('buBtnBack');
+  var next = document.getElementById('buBtnNext');
+  var fl = document.getElementById('buFooterLeft');
+  var sub = document.getElementById('buSubtitle');
+  if (buStep === 1) {
+    back.style.display='none'; next.style.display=''; next.className='btn btn-primary';
+    next.textContent='Next: Preview →';
+    fl.textContent='Supported formats: CSV, XLSX · Max 5,000 rows per upload';
+    sub.textContent='Upload a CSV or Excel file to import multiple course records';
+  } else if (buStep === 2) {
+    back.style.display=''; next.style.display=''; next.disabled=false;
+    next.className='btn btn-gold';
+    sub.textContent='Review parsed rows before importing — errors are blocked, warnings will import';
+  } else {
+    back.style.display='none'; next.style.display='none';
+  }
+}
+/* ── SCHEMA MANAGER ── */
+var smCurrentLib = 'catalog';
+var smSortCol = 'name';
+var smSortDir = 1;
+var smEditingIdx = null;
+var smRetiring = false;
+
+var smSchemas = {
+  catalog: [
+    {name:'state_course_code', type:'VARCHAR', len:10, nullable:false, governed:true, ai:false, status:'active', desc:'Primary identifier, stable across all year instances of the course.', enumVals:[]},
+    {name:'course_name', type:'VARCHAR', len:255, nullable:false, governed:true, ai:false, status:'active', desc:'Official course title as published by IDOE.', enumVals:[]},
+    {name:'course_subject', type:'ENUM', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Broad subject area for the course. Controlled vocabulary of 25 values.', enumVals:['English Language Arts','Mathematics','Science','Social Studies','Career & Technical Education','Fine Arts','Physical Education','World Language','Health','Journalism','Library Science','Drama/Theatre','Speech & Debate','Psychology','Philosophy','Economics','Government','Geography','Computer Science','Architecture','Agriculture','Business','Marketing','Finance','Hospitality']},
+    {name:'credit_hours', type:'DECIMAL', len:null, nullable:false, governed:false, ai:false, status:'active', desc:'Carnegie unit credit value (e.g. 1.0, 2.0).', enumVals:[]},
+    {name:'course_description', type:'TEXT', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Full course description. No character limit.', enumVals:[]},
+    {name:'course_prerequisite', type:'TEXT', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Prerequisite courses or recommendations as free text.', enumVals:[]},
+    {name:'abbreviated_name', type:'VARCHAR', len:20, nullable:true, governed:false, ai:false, status:'active', desc:'Short display name for the course (e.g. ADV ENG CC).', enumVals:[]},
+    {name:'recommended_grade', type:'VARCHAR', len:20, nullable:true, governed:false, ai:false, status:'active', desc:'Recommended grade level(s) for enrollment (e.g. 11, 12).', enumVals:[]},
+    {name:'course_duration_semesters', type:'INTEGER', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Number of semesters the course spans (typically 1 or 2).', enumVals:[]},
+    {name:'credits_per_semester', type:'DECIMAL', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Credit hours awarded per semester.', enumVals:[]},
+    {name:'max_credits', type:'DECIMAL', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Maximum total credits a student can earn for this course.', enumVals:[]},
     {name:'dual_credit', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Course is offered for dual credit (secondary + post-secondary).', enumVals:[]},
     {name:'ap_course', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Course is an Advanced Placement (AP) course.', enumVals:[]},
     {name:'ib_course', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Course is an International Baccalaureate (IB) course.', enumVals:[]},
