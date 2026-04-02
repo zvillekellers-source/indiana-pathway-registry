@@ -211,6 +211,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 .ce-tab:hover{color:var(--navy);background:var(--mist)}
 .ce-tab.active{color:var(--navy);border-bottom-color:var(--gold)}
 .ce-panel{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column}
+.grounding-desc{font-size:11px;color:var(--slate);margin-top:5px;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;max-height:4.5em}
 .ce-flag-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(12,35,64,.07)}
 .ce-toggle{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
 .ce-toggle input{opacity:0;width:0;height:0}
@@ -979,6 +980,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   <div id="crPanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
     <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
       <strong style="color:var(--navy)" id="crGroundingId"></strong> &mdash; <span id="crGroundingName"></span>
+      <div class="grounding-desc" id="crGroundingDesc"></div>
     </div>
     <div class="sm-form-group">
       <label class="sm-label">Credential ID</label>
@@ -1038,6 +1040,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   <div id="crPanel-cov" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
     <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
       <strong style="color:var(--navy)" id="crGroundingId2"></strong> &mdash; <span id="crGroundingName2"></span>
+      <div class="grounding-desc" id="crGroundingDesc2"></div>
     </div>
     <div style="font-size:12px;color:var(--slate);margin-bottom:16px;line-height:1.7">
       CoV scores are computed from Economic Value + Upskilling Value, with bonuses for national recognition and stackability. Scores are cohort-locked on July 1 each year.
@@ -1104,6 +1107,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   <div id="cePanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
     <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
       <strong style="color:var(--navy)" id="ceGroundingCode"></strong> &mdash; <span id="ceGroundingName"></span>
+      <div class="grounding-desc" id="ceGroundingDesc"></div>
     </div>
     <div class="sm-form-group">
       <label class="sm-label">State Course Code</label>
@@ -1165,6 +1169,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   <div id="cePanel-diploma" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
     <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
       <strong style="color:var(--navy)" id="ceGroundingCode2"></strong> &mdash; <span id="ceGroundingName2"></span>
+      <div class="grounding-desc" id="ceGroundingDesc2"></div>
     </div>
     <div style="font-size:12px;color:var(--slate);margin-bottom:16px;line-height:1.6">
       Diploma flags determine which Indiana diploma programs this course can satisfy. Changes require Curriculum Director approval.
@@ -2938,6 +2943,8 @@ function ccOpenAdd() {
   document.getElementById('ceGroundingName').textContent = 'Fill in the fields below';
   document.getElementById('ceGroundingCode2').textContent = 'New Course';
   document.getElementById('ceGroundingName2').textContent = '';
+  document.getElementById('ceGroundingDesc').textContent = '';
+  document.getElementById('ceGroundingDesc2').textContent = '';
 
   // Clear log
   document.getElementById('ceLogEntries').innerHTML = '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet — record has not been created.</div>';
@@ -2971,6 +2978,9 @@ function ccOpenEditByCode(code) {
   document.getElementById('ceGroundingName').textContent = c.name;
   document.getElementById('ceGroundingCode2').textContent = c.code;
   document.getElementById('ceGroundingName2').textContent = c.name;
+  var ceDesc = c.description || (c.fieldData && c.fieldData['course_description']) || '';
+  document.getElementById('ceGroundingDesc').textContent = ceDesc;
+  document.getElementById('ceGroundingDesc2').textContent = ceDesc;
 
   // Core tab
   document.getElementById('ceFldCode').value = c.code;
@@ -3246,6 +3256,9 @@ function crOpenEditById(id) {
   document.getElementById('crGroundingName').textContent = c.name;
   document.getElementById('crGroundingId2').textContent = c.id;
   document.getElementById('crGroundingName2').textContent = c.name;
+  var crDesc = (c.fieldData && c.fieldData['credential_description']) || c.notes || '';
+  document.getElementById('crGroundingDesc').textContent = crDesc;
+  document.getElementById('crGroundingDesc2').textContent = crDesc;
   document.getElementById('crFldId').value = c.id;
   document.getElementById('crFldName').value = c.name || '';
   document.getElementById('crFldShort').value = c.shortName || '';
@@ -3336,6 +3349,8 @@ function crOpenAdd() {
   document.getElementById('crGroundingName').textContent = 'Fill in the fields below';
   document.getElementById('crGroundingId2').textContent = 'New Credential';
   document.getElementById('crGroundingName2').textContent = '';
+  document.getElementById('crGroundingDesc').textContent = '';
+  document.getElementById('crGroundingDesc2').textContent = '';
   document.getElementById('crLogEntries').innerHTML = '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet — record has not been created.</div>';
   crCalcCoV();
   var footer = document.getElementById('crFooterBar');
