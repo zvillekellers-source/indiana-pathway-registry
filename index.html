@@ -3977,8 +3977,13 @@ function meSwitchLib(lib, el) {
   var boolFields = schema.filter(function(f){ return f.type === 'BOOLEAN'; });
   var allAssigned = [];
   cfg.tabs.forEach(function(t){ if (t.id !== 'flags' && t.id !== 'log') allAssigned = allAssigned.concat(t.fields); });
+  var groundingFields = lib === 'catalog'
+    ? ['state_course_code','course_name','course_description','course_prerequisite']
+    : ['credential_id','credential_name'];
   var unassigned = schema.filter(function(f){
-    return f.type !== 'BOOLEAN' && allAssigned.indexOf(f.name) === -1;
+    return f.type !== 'BOOLEAN'
+      && allAssigned.indexOf(f.name) === -1
+      && groundingFields.indexOf(f.name) === -1;
   });
 
   // Warning banner
@@ -3987,9 +3992,15 @@ function meSwitchLib(lib, el) {
     : '<div class="card" style="background:#D8F3DC;border:1px solid #52B788;padding:10px 14px;margin-bottom:16px"><div style="font-size:11px;color:#1B5E32"><strong>All fields assigned</strong> — every active schema field appears in the edit modal.</div></div>';
 
   // Grounding strip explanation
+  var groundingFieldNames = lib === 'catalog'
+    ? ['state_course_code','course_name','course_description','course_prerequisite']
+    : ['credential_id','credential_name'];
+  var groundingFieldLabels = groundingFieldNames.join(', ');
   var groundHtml = '<div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:11px;color:var(--slate)">' +
-    '<strong style="color:var(--navy)">Automatic grounding strip</strong> — every tab always shows the record ID, name, and description at the top automatically. ' +
-    'These are not part of the field assignment system. A tab with <em>only</em> grounding content is hidden in the edit modal.</div>';
+    '<strong style="color:var(--navy)">Automatic grounding strip</strong> — every tab always shows ' +
+    '<span style="font-family:var(--mono);font-size:10px">' + groundingFieldLabels + '</span> at the top automatically. ' +
+    'These fields are locked to the grounding strip and cannot be assigned to other tabs. ' +
+    'A tab with <em>only</em> grounding content is hidden in the edit modal.</div>';
 
   // Tabs
   var tabsHtml = '';
@@ -4057,7 +4068,7 @@ function meSwitchLib(lib, el) {
       var dropdownHtml = '<div style="margin-top:8px;display:flex;gap:6px;align-items:center">' +
         '<select id="meAddSel-' + tab.id + '" class="sm-input" style="font-size:11px;flex:1">' +
         '<option value="">— Add a field to this tab —</option>' +
-        unassigned.filter(function(f){ return f.type !== 'BOOLEAN'; }).map(function(f){
+        unassigned.filter(function(f){ return f.type !== 'BOOLEAN' && groundingFields.indexOf(f.name) === -1; }).map(function(f){
           return '<option value="' + f.name + '">' + f.name + ' (' + f.type + ')</option>';
         }).join('') +
         '</select>' +
