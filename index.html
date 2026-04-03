@@ -976,65 +976,6 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     <div class="ce-tab" id="crTab-log" onclick="crShowTab('log')">Log</div>
   </div>
 
-  <!-- TAB: CORE -->
-  <div id="crPanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
-    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
-      <strong style="color:var(--navy)" id="crGroundingId"></strong> &mdash; <span id="crGroundingName"></span>
-      <div class="grounding-desc" id="crGroundingDesc"></div>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Credential ID</label>
-      <input type="text" id="crFldId" class="sm-input" readonly style="background:var(--mist);color:var(--slate)">
-      <div class="sm-hint">Format: CR + four digits, e.g. CR1001. Cannot be changed after creation.</div>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Credential Name <span style="color:var(--red)">*</span></label>
-      <input type="text" id="crFldName" class="sm-input" placeholder="Full credential name as issued">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Short Name</label>
-      <input type="text" id="crFldShort" class="sm-input" placeholder="Abbreviated display name (optional)">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Issuing Organization <span style="color:var(--red)">*</span></label>
-      <input type="text" id="crFldIssuer" class="sm-input" placeholder="e.g. CompTIA, Ivy Tech, Indiana State Dept. Health">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Credential Type <span style="color:var(--red)">*</span></label>
-      <select id="crFldType" class="sm-input">
-        <option value="">— Select type —</option>
-        <option>Industry Certification</option>
-        <option>Associate of Science</option>
-        <option>Associate of Applied Science</option>
-        <option>Technical Certificate</option>
-        <option>Certificate</option>
-        <option>Apprenticeship</option>
-      </select>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Career Cluster</label>
-      <select id="crFldCluster" class="sm-input">
-        <option value="">— Select cluster —</option>
-        <option>Agriculture</option><option>Architecture &amp; Construction</option><option>Arts A/V</option>
-        <option>Business Management</option><option>Education</option><option>Finance</option>
-        <option>Government</option><option>Health Science</option><option>Hospitality</option>
-        <option>Human Services</option><option>Information Technology</option><option>Law</option>
-        <option>Manufacturing</option><option>Marketing</option><option>Science &amp; Technology</option>
-        <option>Transportation</option>
-      </select>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">National Recognition</label>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
-        <label class="ce-toggle"><input type="checkbox" id="crFldNational"><span class="ce-toggle-slider"></span></label>
-        <span style="font-size:12px;color:var(--slate)">Nationally recognized (+0.3 Signaling bonus in CoV score)</span>
-      </div>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
-      <textarea id="crFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea>
-    </div>
-  </div>
 
   <!-- TAB: CoV SCORING -->
   <div id="crPanel-cov" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
@@ -1070,9 +1011,6 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     </div>
   </div>
 
-  <!-- TAB: LOG -->
-  <div id="crPanel-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
-    <div style="font-size:11px;color:var(--slate);margin-bottom:12px">Read-only audit trail for this credential record.</div>
     <div id="crLogEntries"></div>
   </div>
 
@@ -1099,72 +1037,11 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   <!-- DYNAMIC TAB BAR — built by ceRebuildTabs() -->
   <div id="ceDynamicTabBar" style="display:flex;border-bottom:1px solid rgba(12,35,64,.1);flex-shrink:0;background:#fff;overflow-x:auto"></div>
 
-  <!-- TAB: CORE (always first, always present) -->
-  <div id="cePanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
-    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
-      <strong style="color:var(--navy)" id="ceGroundingCode"></strong> &mdash; <span id="ceGroundingName"></span>
-      <div class="grounding-desc" id="ceGroundingDesc"></div>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">State Course Code</label>
-      <input type="text" id="ceFldCode" class="sm-input" placeholder="e.g. ELA1200">
-      <div class="sm-hint">Course code cannot be changed after creation.</div>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Course Name <span style="color:var(--red)">*</span></label>
-      <input type="text" id="ceFldName" class="sm-input" placeholder="Official course title">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Category <span style="color:var(--red)">*</span></label>
-      <select id="ceFldCategory" class="sm-input">
-        <option value="">— Select —</option>
-        <option>English Language and Literature</option><option>Mathematics</option><option>Science</option>
-        <option>Social Sciences and History</option><option>Career &amp; Technical Education</option>
-        <option>Fine Arts</option><option>Physical Education</option><option>World Language</option><option>Other</option>
-      </select>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Credit Hours <span style="color:var(--red)">*</span></label>
-      <input type="number" id="ceFldCredits" class="sm-input" step="0.5" min="0.5" max="8" placeholder="e.g. 1.0">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Course Subject</label>
-      <select id="ceFldSubject" class="sm-input">
-        <option value="">— Select subject —</option>
-      </select>
-      <div class="sm-hint">Controlled vocabulary — values defined in Schema Manager.</div>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">SCED Code</label>
-      <input type="text" id="ceFldSced" class="sm-input" placeholder="e.g. 01001" maxlength="5">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">CTE Cluster</label>
-      <input type="text" id="ceFldCte" class="sm-input" placeholder="e.g. Health Science">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Course Description</label>
-      <textarea id="ceFldDesc" class="sm-input" rows="4" placeholder="Full course description (no character limit)"></textarea>
-    </div>
-    <div class="sm-form-group" id="cePrereqSection">
-      <label class="sm-label">Prerequisites</label>
-      <div class="sm-hint" style="margin-bottom:6px">Search and select courses that must be completed before this course. Only active courses are shown.</div>
-      <div style="position:relative">
-        <input type="text" id="cePrereqSearch" class="sm-input" placeholder="Search by code or name…" oninput="cePrereqFilter()" style="margin-bottom:6px">
-        <div id="cePrereqDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid rgba(12,35,64,.2);border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:180px;overflow-y:auto;z-index:50"></div>
-      </div>
-      <div id="cePrereqSelected" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px 0"></div>
-    </div>
-  </div>
 
   <!-- DYNAMIC CONFIG PANELS — inserted by ceRebuildTabs() -->
   <div id="ceDynamicPanels" style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0"></div>
 
-  <!-- TAB: LOG (always last) -->
-  <div id="cePanel-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
-    <div style="font-size:11px;color:var(--slate);margin-bottom:12px">Read-only audit trail for this course record.</div>
-    <div id="ceLogEntries"></div>
-  </div>
+  <!-- cePanel-log removed — generated by ceRebuildTabs -->
 
   <div id="ceFooterBar" style="border-top:1px solid rgba(12,35,64,.08);flex-shrink:0;background:#fff;display:flex;flex-direction:column">
     <div style="padding:12px 20px 0">
