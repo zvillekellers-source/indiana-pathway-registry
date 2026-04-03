@@ -2903,7 +2903,6 @@ function ccOpenAdd() {
   document.getElementById('ceDrawerTitle').textContent = 'Add Course';
   document.getElementById('ceDrawerSub').textContent = 'New record — will go to Pending Approvals';
 
-  ceShowTab('core');
   document.getElementById('ceOverlay').style.display = 'block';
   var d = document.getElementById('ceDrawer');
   d.style.display = 'flex';
@@ -2980,7 +2979,7 @@ function ccOpenEditByCode(code) {
 
   cePrereqInit(c.prerequisites || []);
   ceRebuildTabs(c);
-  ceShowTab('core');
+  ceShowTab('cedyn-tab1');
   document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
   document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
 
@@ -2991,23 +2990,24 @@ function ccOpenEditByCode(code) {
   setTimeout(function(){ d.style.transform = 'translateX(0)'; }, 10);
 }
 
-function ceShowTab(tab) {
-  // Hide all panels in the drawer
-  document.querySelectorAll('#ceDrawer .ce-panel').forEach(function(p){
+function ceShowTab(panelId) {
+  // Hide all dynamic panels
+  document.querySelectorAll('#ceDynamicPanels .ce-panel').forEach(function(p){
     p.style.display = 'none';
   });
-  // Deactivate all tabs
+  // Deactivate all tab buttons
   document.querySelectorAll('#ceDynamicTabBar .ce-tab').forEach(function(t){
     t.className = 'ce-tab';
   });
-  // Show the selected panel
-  var panel = document.getElementById('cePanel-' + tab);
+  // Show selected panel
+  var panel = document.getElementById(panelId);
   if (panel) panel.style.display = 'flex';
-  // Activate the selected tab button
-  var tabEl = document.getElementById('ceTab-' + tab);
-  if (tabEl) tabEl.className = 'ce-tab active';
-  // Log tab hides the footer
-  document.getElementById('ceFooterBar').style.display = tab === 'log' ? 'none' : 'flex';
+  // Activate matching tab button — button ids are ceTabBtn-{tabId}
+  var tabId = panelId.replace('cedyn-', '');
+  var tabBtn = document.getElementById('ceTabBtn-' + tabId);
+  if (tabBtn) tabBtn.className = 'ce-tab active';
+  // Log tab hides footer
+  document.getElementById('ceFooterBar').style.display = (panelId === 'cedyn-log') ? 'none' : 'flex';
 }
 
 function ceClose() {
@@ -3977,13 +3977,12 @@ function meSwitchLib(lib, el) {
   var boolFields = schema.filter(function(f){ return f.type === 'BOOLEAN'; });
   var allAssigned = [];
   cfg.tabs.forEach(function(t){ if (t.id !== 'flags' && t.id !== 'log') allAssigned = allAssigned.concat(t.fields); });
-  var groundingFields = lib === 'catalog'
-    ? ['state_course_code','course_name','course_description','course_prerequisite']
-    : ['credential_id','credential_name'];
+  var groundingCfg = cfg.grounding || [];
+  var allGrounding = groundingCfg;
   var unassigned = schema.filter(function(f){
     return f.type !== 'BOOLEAN'
       && allAssigned.indexOf(f.name) === -1
-      && groundingFields.indexOf(f.name) === -1;
+      && allGrounding.indexOf(f.name) === -1;
   });
 
   // Warning banner
@@ -3992,15 +3991,30 @@ function meSwitchLib(lib, el) {
     : '<div class="card" style="background:#D8F3DC;border:1px solid #52B788;padding:10px 14px;margin-bottom:16px"><div style="font-size:11px;color:#1B5E32"><strong>All fields assigned</strong> — every active schema field appears in the edit modal.</div></div>';
 
   // Grounding strip explanation
-  var groundingFieldNames = lib === 'catalog'
-    ? ['state_course_code','course_name','course_description','course_prerequisite']
-    : ['credential_id','credential_name'];
-  var groundingFieldLabels = groundingFieldNames.join(', ');
-  var groundHtml = '<div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:11px;color:var(--slate)">' +
-    '<strong style="color:var(--navy)">Automatic grounding strip</strong> — every tab always shows ' +
-    '<span style="font-family:var(--mono);font-size:10px">' + groundingFieldLabels + '</span> at the top automatically. ' +
-    'These fields are locked to the grounding strip and cannot be assigned to other tabs. ' +
-    'A tab with <em>only</em> grounding content is hidden in the edit modal.</div>';
+  var groundingCfgFields = cfg.grounding || [];
+  var allSchemaFields = schema.filter(function(f){ return f.type !== 'BOOLEAN'; });
+  var unassignedForGrounding = allSchemaFields.filter(function(f){
+    return allAssigned.indexOf(f.name) === -1 && groundingCfgFields.indexOf(f.name) === -1;
+  });
+  var groundHtml = '<div class="card" style="margin-bottom:16px;border-top:3px solid var(--gold)">' +
+    '<div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:4px">Grounding Strip</div>' +
+    '<div style="font-size:11px;color:var(--slate);margin-bottom:10px">These fields appear at the top of every tab (except Log) as read-only context. Assign 1–4 fields here.</div>' +
+    groundingCfgFields.map(function(fname){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:var(--mist);border-radius:var(--radius);margin-bottom:4px;font-size:11px">' +
+        '<span style="font-family:var(--mono)">' + fname + '</span>' +
+        '<button onclick="meRemoveGrounding(\'' + lib + '\',\'' + fname + '\')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px" title="Remove">&#10005;</button>' +
+        '</div>';
+    }).join('') +
+    '<div style="display:flex;gap:6px;margin-top:8px">' +
+    '<select id="meGroundingSel" class="sm-input" style="font-size:11px;flex:1">' +
+    '<option value="">— Add field to grounding strip —</option>' +
+    allSchemaFields.filter(function(f){ return groundingCfgFields.indexOf(f.name) === -1 && allAssigned.indexOf(f.name) === -1; }).map(function(f){
+      return '<option value="' + f.name + '">' + f.name + ' (' + f.type + ')</option>';
+    }).join('') +
+    '</select>' +
+    '<button class="btn btn-secondary btn-sm" onclick="meAddGrounding(\'' + lib + '\')">Add</button>' +
+    '</div>' +
+    '</div>';
 
   // Tabs
   var tabsHtml = '';
@@ -4068,7 +4082,7 @@ function meSwitchLib(lib, el) {
       var dropdownHtml = '<div style="margin-top:8px;display:flex;gap:6px;align-items:center">' +
         '<select id="meAddSel-' + tab.id + '" class="sm-input" style="font-size:11px;flex:1">' +
         '<option value="">— Add a field to this tab —</option>' +
-        unassigned.filter(function(f){ return f.type !== 'BOOLEAN' && groundingFields.indexOf(f.name) === -1; }).map(function(f){
+        unassigned.filter(function(f){ return f.type !== 'BOOLEAN'; }).map(function(f){
           return '<option value="' + f.name + '">' + f.name + ' (' + f.type + ')</option>';
         }).join('') +
         '</select>' +
@@ -4130,6 +4144,24 @@ function meRemoveField(lib, tabId, fname) {
   meSwitchLib(lib, null);
 }
 
+function meAddGrounding(lib) {
+  var sel = document.getElementById('meGroundingSel');
+  if (!sel || !sel.value) return;
+  meLoad();
+  if (!meConfigs[lib].grounding) meConfigs[lib].grounding = [];
+  if (meConfigs[lib].grounding.indexOf(sel.value) === -1) {
+    meConfigs[lib].grounding.push(sel.value);
+  }
+  meSave(); meSwitchLib(lib, null);
+}
+
+function meRemoveGrounding(lib, fname) {
+  meLoad();
+  if (!meConfigs[lib].grounding) return;
+  meConfigs[lib].grounding = meConfigs[lib].grounding.filter(function(f){ return f !== fname; });
+  meSave(); meSwitchLib(lib, null);
+}
+
 function meResetConfig(lib) {
   if (!confirm('Reset Modal Editor configuration for ' + lib + ' to defaults? This cannot be undone.')) return;
   meConfigs[lib] = JSON.parse(JSON.stringify(meConfigsDefault[lib]));
@@ -4149,87 +4181,156 @@ function meGetTabFields(lib, tabId) {
 /* ── COURSE MODAL — CONFIG-DRIVEN TABS ── */
 function ceRebuildTabs(record) {
   meLoad();
-  var cfg = meConfigs.catalog;
+  var cfg = meConfigs.catalog || meConfigsDefault.catalog;
   var schema = smSchemas.catalog ? smSchemas.catalog.filter(function(f){ return f.status === 'active'; }) : [];
   var boolFields = schema.filter(function(f){ return f.type === 'BOOLEAN'; });
   var fieldData = (record && record.fieldData) ? record.fieldData : {};
+  var groundingFields = cfg.grounding || [];
 
-  // Sort config tabs by order
-  var cfgTabs = cfg ? cfg.tabs.slice().sort(function(a,b){ return a.order - b.order; }) : [];
+  // Build grounding strip for each panel
+  function makeGrounding(rec) {
+    var html = '<div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">';
+    if (!groundingFields.length) {
+      html += '<span style="font-style:italic;color:var(--slate)">No grounding fields assigned — configure in Modal Editor.</span>';
+    }
+    groundingFields.forEach(function(fname, i) {
+      var schField = schema.find(function(s){ return s.name === fname; });
+      var val = '';
+      if (rec) {
+        if (fname === 'state_course_code') val = rec.code || '';
+        else if (fname === 'course_name') val = rec.name || '';
+        else if (fname === 'course_description') val = rec.description || (rec.fieldData && rec.fieldData['course_description']) || '';
+        else val = (rec.fieldData && rec.fieldData[fname] !== undefined) ? rec.fieldData[fname] : '';
+      }
+      var label = fname.replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+      if (i === 0) {
+        html += '<div style="font-weight:600;color:var(--navy);font-size:13px;margin-bottom:2px">' + (val || '—') + '</div>';
+      } else if (schField && (schField.type === 'TEXT' || fname.toLowerCase().includes('description'))) {
+        html += '<div class="grounding-desc" style="margin-top:4px">' + (val || '') + '</div>';
+      } else {
+        html += '<div style="font-size:11px;color:var(--slate);margin-top:2px">' + label + ': ' + (val || '—') + '</div>';
+      }
+    });
+    html += '</div>';
+    return html;
+  }
 
-  // Build tab bar — Core is always first
-  var tabBarHtml = '<div class="ce-tab active" id="ceTab-core" onclick="ceShowTab(&quot;core&quot;)">Core</div>';
+  var cfgTabs = cfg.tabs.slice().sort(function(a,b){ return a.order - b.order; });
 
-  // Determine which config tabs have content (at least one assigned field)
-  var visibleCfgTabs = cfgTabs.filter(function(t) {
-    if (t.id === 'log') return false;   // handled separately
+  // Visible tabs = tabs with at least one field (flags: only if bools exist; log: excluded here)
+  var visibleTabs = cfgTabs.filter(function(t) {
+    if (t.id === 'log') return false;
     if (t.id === 'flags') return boolFields.length > 0;
     return t.fields && t.fields.length > 0;
   });
 
-  visibleCfgTabs.forEach(function(t) {
-    var cfgOnclick = 'ceShowTab(\"cfg-' + t.id + '\")';
-    tabBarHtml += '<div class="ce-tab" id="ceTab-cfg-' + t.id + '" onclick="' + cfgOnclick + '">' + t.label + '</div>';
-  });
-  tabBarHtml += '<div class="ce-tab" id="ceTab-log" onclick="ceShowTab(&quot;log&quot;)">Log</div>';
+  // Build tab bar
+  var tabBarHtml = visibleTabs.map(function(t, i) {
+    var activeClass = i === 0 ? ' active' : '';
+    return '<div class="ce-tab' + activeClass + '" id="ceTabBtn-' + t.id + '" onclick="ceShowTab(\'cedyn-' + t.id + '\')">' + t.label + '</div>';
+  }).join('');
+  tabBarHtml += '<div class="ce-tab" id="ceTabBtn-log" onclick="ceShowTab(\'cedyn-log\')">Log</div>';
   document.getElementById('ceDynamicTabBar').innerHTML = tabBarHtml;
 
-  // Build dynamic panels
+  // Build all panels
   var panelsHtml = '';
-  visibleCfgTabs.forEach(function(t) {
-    var panelId = 'cePanel-cfg-' + t.id;
-    var groundingHtml = '<div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">' +
-      '<strong style="color:var(--navy)">' + (record ? record.code : '') + '</strong> &mdash; <span>' + (record ? record.name : '') + '</span>' +
-      '<div class="grounding-desc">' + (record ? (record.description || fieldData['course_description'] || '') : '') + '</div>' +
-      '</div>';
 
+  visibleTabs.forEach(function(t, i) {
+    var panelId = 'cedyn-' + t.id;
+    var display = i === 0 ? 'flex' : 'none';
     var fieldsHtml = '';
 
     if (t.id === 'flags') {
-      // Render BOOLEAN fields as toggles
       fieldsHtml = boolFields.map(function(f) {
         var val = fieldData[f.name];
         var checked = val === true || val === 'TRUE' || val === 'true' || val === '1' || val === 'yes';
-        var label = f.name.replace(/_/g,' ').replace(/\w/g, function(c){ return c.toUpperCase(); });
+        var label = f.name.replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
         return '<div class="ce-flag-row" style="padding:10px 0;border-bottom:1px solid rgba(12,35,64,.06)">' +
           '<div><div style="font-weight:600;font-size:13px;color:var(--navy)">' + label + '</div>' +
-          '<div style="font-size:11px;color:var(--slate);margin-top:2px">' + (f.desc || '') + '</div></div>' +
-          '<label class="ce-toggle"><input type="checkbox" id="ceDynFld-' + f.name + '"' + (checked ? ' checked' : '') + '><span class="ce-toggle-slider"></span></label>' +
+          '<div style="font-size:11px;color:var(--slate);margin-top:2px">' + (f.desc||'') + '</div></div>' +
+          '<label class="ce-toggle"><input type="checkbox" id="ceDynFld-' + f.name + '"' + (checked?' checked':'') + '><span class="ce-toggle-slider"></span></label>' +
           '</div>';
       }).join('');
+    } else if (t.id === 'tab1') {
+      // tab1 always includes the fixed course identity fields
+      var catOpts = ['English Language and Literature','Mathematics','Science','Social Sciences and History','Career & Technical Education','Fine Arts','Physical Education','World Language','Other'];
+      var catHtml = catOpts.map(function(o){ return '<option' + (record && record.category===o?' selected':'') + '>' + o + '</option>'; }).join('');
+
+      // Subject dropdown from schema enum
+      var subjField = schema.find(function(f){ return f.name === 'course_subject'; });
+      var subjOpts = subjField && subjField.enumVals ? subjField.enumVals.map(function(v){
+        return '<option value="'+v+'"'+(record && record.subject===v?' selected':'')+'>'+v+'</option>';
+      }).join('') : '';
+
+      fieldsHtml =
+        '<div class="sm-form-group"><label class="sm-label">State Course Code</label>' +
+        '<input type="text" id="ceFldCode" class="sm-input" placeholder="e.g. 1002">' +
+        '<div class="sm-hint">Course code cannot be changed after creation.</div></div>' +
+        '<div class="sm-form-group"><label class="sm-label">Course Name <span style="color:var(--red)">*</span></label>' +
+        '<input type="text" id="ceFldName" class="sm-input" placeholder="Official course title"></div>' +
+        '<div class="sm-form-group"><label class="sm-label">Category <span style="color:var(--red)">*</span></label>' +
+        '<select id="ceFldCategory" class="sm-input"><option value="">— Select —</option>' + catHtml + '</select></div>' +
+        '<div class="sm-form-group"><label class="sm-label">Credit Hours <span style="color:var(--red)">*</span></label>' +
+        '<input type="number" id="ceFldCredits" class="sm-input" step="0.5" min="0.5" max="8" placeholder="e.g. 1.0"></div>' +
+        '<div class="sm-form-group"><label class="sm-label">Course Subject</label>' +
+        '<select id="ceFldSubject" class="sm-input"><option value="">— Select subject —</option>' + subjOpts + '</select>' +
+        '<div class="sm-hint">Controlled vocabulary — values defined in Schema Manager.</div></div>' +
+        '<div class="sm-form-group"><label class="sm-label">Course Description</label>' +
+        '<textarea id="ceFldDesc" class="sm-input" rows="4" placeholder="Full course description"></textarea></div>' +
+        '<div class="sm-form-group" id="cePrereqSection"><label class="sm-label">Prerequisites</label>' +
+        '<div class="sm-hint" style="margin-bottom:6px">Search active courses to add prerequisites.</div>' +
+        '<div style="position:relative"><input type="text" id="cePrereqSearch" class="sm-input" placeholder="Search by code or name\u2026" oninput="cePrereqFilter()" style="margin-bottom:6px">' +
+        '<div id="cePrereqDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid rgba(12,35,64,.2);border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:180px;overflow-y:auto;z-index:50"></div></div>' +
+        '<div id="cePrereqSelected" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px 0"></div></div>' +
+        '<div class="sm-form-group"><label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>' +
+        '<textarea id="ceFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea></div>';
+
+      // Plus any extra fields assigned to tab1
+      fieldsHtml += t.fields.map(function(fname) {
+        var schField = schema.find(function(s){ return s.name === fname; });
+        if (!schField) return '';
+        var val = fieldData[fname] !== undefined ? fieldData[fname] : '';
+        var label = fname.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+        var inp = '';
+        if (schField.type==='TEXT') inp='<textarea id="ceDynFld-'+fname+'" class="sm-input" rows="3">'+val+'</textarea>';
+        else if (schField.type==='ENUM') inp='<select id="ceDynFld-'+fname+'" class="sm-input"><option value="">— Select —</option>'+(schField.enumVals||[]).map(function(v){return'<option value="'+v+'"'+(val===v?' selected':'')+'>'+v+'</option>';}).join('')+'</select>';
+        else if (schField.type==='BOOLEAN'){var chk=val===true||val==='TRUE'||val==='true'||val==='1';inp='<label class="ce-toggle"><input type="checkbox" id="ceDynFld-'+fname+'"'+(chk?' checked':'')+'><span class="ce-toggle-slider"></span></label>';}
+        else inp='<input type="text" id="ceDynFld-'+fname+'" class="sm-input" value="'+String(val).replace(/"/g,'&quot;')+'">';
+        return '<div class="sm-form-group"><label class="sm-label">'+label+'</label>'+inp+(schField.desc?'<div class="sm-hint">'+schField.desc+'</div>':'')+'</div>';
+      }).join('');
     } else {
-      // Render assigned fields by type
       fieldsHtml = t.fields.map(function(fname) {
         var schField = schema.find(function(s){ return s.name === fname; });
         if (!schField) return '';
         var val = fieldData[fname] !== undefined ? fieldData[fname] : '';
-        var label = fname.replace(/_/g,' ').replace(/\w/g, function(c){ return c.toUpperCase(); });
-        var inputHtml = '';
-        if (schField.type === 'TEXT') {
-          inputHtml = '<textarea id="ceDynFld-' + fname + '" class="sm-input" rows="3">' + val + '</textarea>';
-        } else if (schField.type === 'ENUM') {
-          inputHtml = '<select id="ceDynFld-' + fname + '" class="sm-input">' +
-            '<option value="">— Select —</option>' +
-            (schField.enumVals || []).map(function(v){
-              return '<option value="' + v + '"' + (val === v ? ' selected' : '') + '>' + v + '</option>';
-            }).join('') + '</select>';
-        } else if (schField.type === 'BOOLEAN') {
-          var checked = val === true || val === 'TRUE' || val === 'true' || val === '1';
-          inputHtml = '<label class="ce-toggle"><input type="checkbox" id="ceDynFld-' + fname + '"' + (checked ? ' checked' : '') + '><span class="ce-toggle-slider"></span></label>';
-        } else {
-          inputHtml = '<input type="text" id="ceDynFld-' + fname + '" class="sm-input" value="' + String(val).replace(/"/g,'&quot;') + '">';
-        }
-        return '<div class="sm-form-group"><label class="sm-label">' + label + '</label>' + inputHtml +
-          (schField.desc ? '<div class="sm-hint">' + schField.desc + '</div>' : '') + '</div>';
+        var label = fname.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+        var inp = '';
+        if (schField.type==='TEXT') inp='<textarea id="ceDynFld-'+fname+'" class="sm-input" rows="3">'+val+'</textarea>';
+        else if (schField.type==='ENUM') inp='<select id="ceDynFld-'+fname+'" class="sm-input"><option value="">— Select —</option>'+(schField.enumVals||[]).map(function(v){return'<option value="'+v+'"'+(val===v?' selected':'')+'>'+v+'</option>';}).join('')+'</select>';
+        else if (schField.type==='BOOLEAN'){var chk=val===true||val==='TRUE'||val==='true'||val==='1';inp='<label class="ce-toggle"><input type="checkbox" id="ceDynFld-'+fname+'"'+(chk?' checked':'')+'><span class="ce-toggle-slider"></span></label>';}
+        else inp='<input type="text" id="ceDynFld-'+fname+'" class="sm-input" value="'+String(val).replace(/"/g,'&quot;')+'">';
+        return '<div class="sm-form-group"><label class="sm-label">'+label+'</label>'+inp+(schField.desc?'<div class="sm-hint">'+schField.desc+'</div>':'')+'</div>';
       }).join('');
     }
 
-    panelsHtml += '<div id="' + panelId + '" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">' +
-      groundingHtml + fieldsHtml + '</div>';
+    panelsHtml += '<div id="' + panelId + '" class="ce-panel" style="display:' + display + ';flex:1;overflow-y:auto;padding:20px">' +
+      makeGrounding(record) + fieldsHtml + '</div>';
   });
 
+  // Log panel always last
+  panelsHtml += '<div id="cedyn-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">' +
+    '<div style="font-size:11px;color:var(--slate);margin-bottom:12px">Read-only audit trail for this course record.</div>' +
+    '<div id="ceLogEntries"></div></div>';
+
   document.getElementById('ceDynamicPanels').innerHTML = panelsHtml;
+
+  // Hide the static fallback panels (they are now replaced by ceDynamicPanels)
+  var oldCore = document.getElementById('cePanel-core');
+  if (oldCore) oldCore.style.display = 'none';
+  var oldLog = document.getElementById('cePanel-log');
+  if (oldLog) oldLog.style.display = 'none';
 }
+
 
 /* ── Collect dynamic field values for ceSubmit ── */
 function ceGetDynFieldValues() {
