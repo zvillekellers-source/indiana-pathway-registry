@@ -1155,10 +1155,6 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       </div>
       <div id="cePrereqSelected" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px 0"></div>
     </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
-      <textarea id="ceFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea>
-    </div>
   </div>
 
   <!-- DYNAMIC CONFIG PANELS — inserted by ceRebuildTabs() -->
@@ -4347,8 +4343,7 @@ function ceRebuildTabs(record) {
         '<div style="position:relative"><input type="text" id="cePrereqSearch" class="sm-input" placeholder="Search by code or name\u2026" oninput="cePrereqFilter()" style="margin-bottom:6px">' +
         '<div id="cePrereqDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid rgba(12,35,64,.2);border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:180px;overflow-y:auto;z-index:50"></div></div>' +
         '<div id="cePrereqSelected" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px 0"></div></div>' +
-        '<div class="sm-form-group"><label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>' +
-        '<textarea id="ceFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea></div>';
+        ''; // Reason for Change is in the fixed footer
 
       // Plus any extra fields assigned to tab1
       fieldsHtml += t.fields.map(function(fname) {
