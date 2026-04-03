@@ -2761,6 +2761,11 @@ function ccOpenAdd() {
   document.getElementById('ceDrawerTitle').textContent = 'Add Course';
   document.getElementById('ceDrawerSub').textContent = 'New record — will go to Pending Approvals';
 
+  // Open drawer first
+  document.getElementById('ceOverlay').style.display = 'block';
+  var d = document.getElementById('ceDrawer');
+  d.style.display = 'flex';
+
   ceRebuildTabs(null);
   if (document.getElementById('ceFldCode'))     { document.getElementById('ceFldCode').value = ''; document.getElementById('ceFldCode').readOnly = false; document.getElementById('ceFldCode').style.background = ''; document.getElementById('ceFldCode').style.color = ''; }
   if (document.getElementById('ceFldName'))     document.getElementById('ceFldName').value = '';
@@ -2768,10 +2773,6 @@ function ccOpenAdd() {
   if (document.getElementById('ceFldDesc'))     document.getElementById('ceFldDesc').value = '';
   if (document.getElementById('ceFldCategory')) document.getElementById('ceFldCategory').selectedIndex = 0;
   ceShowTab('cedyn-tab1');
-
-  document.getElementById('ceOverlay').style.display = 'block';
-  var d = document.getElementById('ceDrawer');
-  d.style.display = 'flex';
   setTimeout(function(){ d.style.transform = 'translateX(0)'; }, 10);
 }
 
@@ -2793,9 +2794,19 @@ function ccOpenEditByCode(code) {
     if (submitBtn) submitBtn.textContent = 'Submit for Approval';
   }
 
+  // Open drawer FIRST so elements are in a visible container
+  document.getElementById('ceOverlay').style.display = 'block';
+  var d = document.getElementById('ceDrawer');
+  d.style.display = 'flex';
+
+  document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
+  document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
+  document.getElementById('ceFldReason').value = '';
+
   cePrereqInit(c.prerequisites || []);
   ceRebuildTabs(c);
-  // Populate fixed fields into the freshly built dynamic panels
+
+  // Populate fields after panels are built
   if (document.getElementById('ceFldCode'))    { document.getElementById('ceFldCode').value = c.code; document.getElementById('ceFldCode').readOnly = true; document.getElementById('ceFldCode').style.background = 'var(--mist)'; document.getElementById('ceFldCode').style.color = 'var(--slate)'; }
   if (document.getElementById('ceFldName'))    document.getElementById('ceFldName').value = c.name || '';
   if (document.getElementById('ceFldCredits')) document.getElementById('ceFldCredits').value = c.credits || '';
@@ -2804,14 +2815,8 @@ function ccOpenEditByCode(code) {
   if (document.getElementById('ceFldDesc'))    document.getElementById('ceFldDesc').value = c.description || (c.fieldData && c.fieldData['course_description']) || '';
   if (document.getElementById('ceFldCategory')) { var catSel = document.getElementById('ceFldCategory'); for (var _i=0;_i<catSel.options.length;_i++){if(catSel.options[_i].value===c.category||catSel.options[_i].text===c.category){catSel.selectedIndex=_i;break;}} }
   if (document.getElementById('ceFldSubject')) { var subjSel2 = document.getElementById('ceFldSubject'); for (var _j=0;_j<subjSel2.options.length;_j++){if(subjSel2.options[_j].value===c.subject){subjSel2.selectedIndex=_j;break;}} }
-  ceShowTab('cedyn-tab1');
-  document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
-  document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
 
-  // Open drawer
-  document.getElementById('ceOverlay').style.display = 'block';
-  var d = document.getElementById('ceDrawer');
-  d.style.display = 'flex';
+  ceShowTab('cedyn-tab1');
   setTimeout(function(){ d.style.transform = 'translateX(0)'; }, 10);
 }
 
