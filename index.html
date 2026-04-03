@@ -1162,7 +1162,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   </div>
 
   <!-- DYNAMIC CONFIG PANELS — inserted by ceRebuildTabs() -->
-  <div id="ceDynamicPanels"></div>
+  <div id="ceDynamicPanels" style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0"></div>
 
   <!-- TAB: LOG (always last) -->
   <div id="cePanel-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
@@ -1170,11 +1170,17 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     <div id="ceLogEntries"></div>
   </div>
 
-  <div style="padding:14px 20px;border-top:1px solid rgba(12,35,64,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:#fff" id="ceFooterBar">
-    <div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-secondary" onclick="ceClose()">Cancel</button>
-      <button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button>
+  <div id="ceFooterBar" style="border-top:1px solid rgba(12,35,64,.08);flex-shrink:0;background:#fff;display:flex;flex-direction:column">
+    <div style="padding:12px 20px 0">
+      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
+      <textarea id="ceFldReason" class="sm-input" rows="2" placeholder="Required for approval request" style="margin-top:4px"></textarea>
+    </div>
+    <div style="padding:10px 20px 14px;display:flex;justify-content:space-between;align-items:center" id="ceFooterActions">
+      <div style="font-size:11px;color:var(--slate)" id="ceFooterMsg">Change will go to Pending Approvals</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="ceClose()">Cancel</button>
+        <button class="btn btn-gold" id="ceSubmitBtn" onclick="ceSubmit()">Submit for Approval</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2897,8 +2903,10 @@ function ccOpenAdd() {
   document.getElementById('ceLogEntries').innerHTML = '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet — record has not been created.</div>';
 
   // Footer for new record
-  var footer = document.getElementById('ceFooterBar');
-  footer.innerHTML = '<div style="font-size:11px;color:var(--slate)">New course will go to Pending Approvals</div><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button></div>';
+  var msgEl = document.getElementById('ceFooterMsg');
+  var submitBtn = document.getElementById('ceSubmitBtn');
+  if (msgEl) msgEl.textContent = 'New course will go to Pending Approvals';
+  if (submitBtn) submitBtn.textContent = 'Submit for Approval';
 
   document.getElementById('ceDrawerTitle').textContent = 'Add Course';
   document.getElementById('ceDrawerSub').textContent = 'New record — will go to Pending Approvals';
@@ -2969,12 +2977,16 @@ function ccOpenEditByCode(code) {
   }
 
   // Footer — always editable; show withdraw option if already pending
-  var footer = document.getElementById('ceFooterBar');
   var isPending = c.status === 'pending';
+  var msgEl = document.getElementById('ceFooterMsg');
+  var submitBtn = document.getElementById('ceSubmitBtn');
   if (isPending) {
-    footer.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex:1"><span style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:6px 10px">&#9888; Pending approval — you can still update and resubmit</span><button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none;white-space:nowrap" onclick="ceWithdraw()">Withdraw</button></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Resubmit</button></div>';
+    if (msgEl) msgEl.innerHTML = '<span style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:5px 10px">&#9888; Pending — edits will resubmit</span>' +
+      '<button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none;margin-left:6px" onclick="ceWithdraw()">Withdraw</button>';
+    if (submitBtn) submitBtn.textContent = 'Resubmit';
   } else {
-    footer.innerHTML = '<div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button></div>';
+    if (msgEl) msgEl.textContent = 'Change will go to Pending Approvals';
+    if (submitBtn) submitBtn.textContent = 'Submit for Approval';
   }
 
   cePrereqInit(c.prerequisites || []);
@@ -3002,11 +3014,11 @@ function ceShowTab(panelId) {
   // Show selected panel
   var panel = document.getElementById(panelId);
   if (panel) panel.style.display = 'flex';
-  // Activate matching tab button — button ids are ceTabBtn-{tabId}
+  // Activate matching tab button
   var tabId = panelId.replace('cedyn-', '');
   var tabBtn = document.getElementById('ceTabBtn-' + tabId);
   if (tabBtn) tabBtn.className = 'ce-tab active';
-  // Log tab hides footer
+  // Log tab hides entire footer (including reason); other tabs show it
   document.getElementById('ceFooterBar').style.display = (panelId === 'cedyn-log') ? 'none' : 'flex';
 }
 
@@ -4384,12 +4396,12 @@ function ceRebuildTabs(record) {
     } else {
       groundHtml = makeGrounding(record);
     }
-    panelsHtml += '<div id="' + panelId + '" class="ce-panel" style="display:' + display + ';flex:1;overflow-y:auto;padding:20px">' +
+    panelsHtml += '<div id="' + panelId + '" class="ce-panel" style="display:' + display + ';flex:1;overflow-y:auto;padding:20px;flex-direction:column;min-height:0">' +
       groundHtml + fieldsHtml + '</div>';
   });
 
   // Log panel always last
-  panelsHtml += '<div id="cedyn-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">' +
+  panelsHtml += '<div id="cedyn-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px;flex-direction:column;min-height:0">' +
     '<div style="font-size:11px;color:var(--slate);margin-bottom:12px">Read-only audit trail for this course record.</div>' +
     '<div id="ceLogEntries"></div></div>';
 
