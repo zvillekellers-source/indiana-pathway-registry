@@ -2992,12 +2992,21 @@ function ccOpenEditByCode(code) {
 }
 
 function ceShowTab(tab) {
-  ['core','diploma','log'].forEach(function(t){
-    document.getElementById('cePanel-' + t).style.display = t === tab ? 'flex' : 'none';
-    var tabEl = document.getElementById('ceTab-' + t);
-    if (tabEl) tabEl.className = 'ce-tab' + (t === tab ? ' active' : '');
+  // Hide all panels in the drawer
+  document.querySelectorAll('#ceDrawer .ce-panel').forEach(function(p){
+    p.style.display = 'none';
   });
-  // Log tab doesn't need footer
+  // Deactivate all tabs
+  document.querySelectorAll('#ceDynamicTabBar .ce-tab').forEach(function(t){
+    t.className = 'ce-tab';
+  });
+  // Show the selected panel
+  var panel = document.getElementById('cePanel-' + tab);
+  if (panel) panel.style.display = 'flex';
+  // Activate the selected tab button
+  var tabEl = document.getElementById('ceTab-' + tab);
+  if (tabEl) tabEl.className = 'ce-tab active';
+  // Log tab hides the footer
   document.getElementById('ceFooterBar').style.display = tab === 'log' ? 'none' : 'flex';
 }
 
