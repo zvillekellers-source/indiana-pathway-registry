@@ -2778,7 +2778,7 @@ function ccOpenAdd() {
 
 function ccOpenEditByCode(code) {
   var c = ccCourses.find(function(c){ return c.code === code; });
-  if (!c) return;
+  if (!c) { alert('Course not found: ' + code); return; }
   ceCurrentCode = code;
 
   // Footer — always editable; show withdraw option if already pending
@@ -2795,8 +2795,11 @@ function ccOpenEditByCode(code) {
   }
 
   // Open drawer FIRST so elements are in a visible container
-  document.getElementById('ceOverlay').style.display = 'block';
+  var overlay = document.getElementById('ceOverlay');
   var d = document.getElementById('ceDrawer');
+  if (!overlay) { alert('ceOverlay not found!'); return; }
+  if (!d) { alert('ceDrawer not found!'); return; }
+  overlay.style.display = 'block';
   d.style.display = 'flex';
 
   document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
