@@ -2781,51 +2781,63 @@ function ccOpenEditByCode(code) {
   if (!c) { alert('Course not found: ' + code); return; }
   ceCurrentCode = code;
 
-  // Footer — always editable; show withdraw option if already pending
-  var isPending = c.status === 'pending';
+  // Set drawer title
+  var titleEl = document.getElementById('ceDrawerTitle');
+  var subEl = document.getElementById('ceDrawerSub');
+  if (titleEl) titleEl.textContent = 'Edit Course — ' + c.code;
+  if (subEl) subEl.textContent = 'Changes go to Pending Approvals';
+
+  // Open overlay and drawer immediately
+  var overlay = document.getElementById('ceOverlay');
+  var drawer = document.getElementById('ceDrawer');
+  if (!overlay || !drawer) { alert('Drawer elements missing'); return; }
+  overlay.style.display = 'block';
+  drawer.style.display = 'flex';
+
+  // Set footer state
   var msgEl = document.getElementById('ceFooterMsg');
   var submitBtn = document.getElementById('ceSubmitBtn');
-  if (isPending) {
-    if (msgEl) msgEl.innerHTML = '<span style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:5px 10px">&#9888; Pending — edits will resubmit</span>' +
-      '<button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none;margin-left:6px" onclick="ceWithdraw()">Withdraw</button>';
-    if (submitBtn) submitBtn.textContent = 'Resubmit';
-  } else {
-    if (msgEl) msgEl.textContent = 'Change will go to Pending Approvals';
-    if (submitBtn) submitBtn.textContent = 'Submit for Approval';
-  }
+  var reasonEl = document.getElementById('ceFldReason');
+  if (msgEl) msgEl.textContent = c.status === 'pending' ? 'Pending — edits will resubmit' : 'Change will go to Pending Approvals';
+  if (submitBtn) submitBtn.textContent = c.status === 'pending' ? 'Resubmit' : 'Submit for Approval';
+  if (reasonEl) reasonEl.value = '';
 
-  // Open drawer FIRST so elements are in a visible container
-  var overlay = document.getElementById('ceOverlay');
-  var d = document.getElementById('ceDrawer');
-  if (!overlay) { alert('ceOverlay not found!'); return; }
-  if (!d) { alert('ceDrawer not found!'); return; }
-  overlay.style.display = 'block';
-  d.style.display = 'flex';
-
-  document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
-  document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
-  document.getElementById('ceFldReason').value = '';
-
+  // Build tabs
   cePrereqInit(c.prerequisites || []);
-  try { ceRebuildTabs(c); } catch(rebuildErr) {
-    document.getElementById('ceDynamicPanels').innerHTML = '<div style="padding:20px;color:red;font-family:monospace;font-size:11px">ceRebuildTabs error: ' + rebuildErr.message + '</div>';
-    setTimeout(function(){ d.style.transform = 'translateX(0)'; }, 10);
+  try {
+    ceRebuildTabs(c);
+  } catch(e) {
+    document.getElementById('ceDynamicPanels').innerHTML =
+      '<div style="padding:20px;color:red;font-size:11px;font-family:monospace"><b>Error:</b> ' + e.message + '</div>';
+    setTimeout(function(){ drawer.style.transform = 'translateX(0)'; }, 10);
     return;
   }
 
-  // Populate fields after panels are built
-  if (document.getElementById('ceFldCode'))    { document.getElementById('ceFldCode').value = c.code; document.getElementById('ceFldCode').readOnly = true; document.getElementById('ceFldCode').style.background = 'var(--mist)'; document.getElementById('ceFldCode').style.color = 'var(--slate)'; }
-  if (document.getElementById('ceFldName'))    document.getElementById('ceFldName').value = c.name || '';
-  if (document.getElementById('ceFldCredits')) document.getElementById('ceFldCredits').value = c.credits || '';
-  if (document.getElementById('ceFldSced'))    document.getElementById('ceFldSced').value = c.sced && c.sced !== '—' ? c.sced : '';
-  if (document.getElementById('ceFldCte'))     document.getElementById('ceFldCte').value = c.cteCluster || '';
-  if (document.getElementById('ceFldDesc'))    document.getElementById('ceFldDesc').value = c.description || (c.fieldData && c.fieldData['course_description']) || '';
-  if (document.getElementById('ceFldCategory')) { var catSel = document.getElementById('ceFldCategory'); for (var _i=0;_i<catSel.options.length;_i++){if(catSel.options[_i].value===c.category||catSel.options[_i].text===c.category){catSel.selectedIndex=_i;break;}} }
-  if (document.getElementById('ceFldSubject')) { var subjSel2 = document.getElementById('ceFldSubject'); for (var _j=0;_j<subjSel2.options.length;_j++){if(subjSel2.options[_j].value===c.subject){subjSel2.selectedIndex=_j;break;}} }
+  // Set field values after tabs are built
+  var el;
+  el = document.getElementById('ceFldCode');
+  if (el) { el.value = c.code; el.readOnly = true; el.style.background = 'var(--mist)'; el.style.color = 'var(--slate)'; }
+  el = document.getElementById('ceFldName');     if (el) el.value = c.name || '';
+  el = document.getElementById('ceFldCredits');  if (el) el.value = c.credits || '';
+  el = document.getElementById('ceFldDesc');     if (el) el.value = c.description || (c.fieldData && c.fieldData['course_description']) || '';
+  el = document.getElementById('ceFldCategory');
+  if (el) { for (var i=0;i<el.options.length;i++) { if (el.options[i].value===c.category||el.options[i].text===c.category){el.selectedIndex=i;break;} } }
+  el = document.getElementById('ceFldSubject');
+  if (el) { for (var j=0;j<el.options.length;j++) { if (el.options[j].value===c.subject){el.selectedIndex=j;break;} } }
+
+  // Populate log
+  el = document.getElementById('ceLogEntries');
+  if (el) {
+    var entries = c.log || [];
+    el.innerHTML = entries.length === 0
+      ? '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries.</div>'
+      : entries.map(function(e){ return '<div class="ce-log-entry"><div class="ce-log-date">' + e.date + ' · ' + e.by + '</div><div class="ce-log-action">' + e.action + '</div><div class="ce-log-note">' + e.note + '</div></div>'; }).join('');
+  }
 
   ceShowTab('cedyn-tab1');
-  setTimeout(function(){ d.style.transform = 'translateX(0)'; }, 10);
+  setTimeout(function(){ drawer.style.transform = 'translateX(0)'; }, 10);
 }
+
 
 function ceShowTab(panelId) {
   // Hide all dynamic panels
