@@ -1667,9 +1667,20 @@ function apApprove(id) {
     var c = ccCourses.find(function(c){ return c.code === item.courseCode; });
     if (c) {
       if (item.courseEdit) {
-        // Apply the pending edits
-        Object.keys(item.courseEdit).forEach(function(k){ c[k] = item.courseEdit[k]; });
+        // Apply edits — skip system/meta fields, preserve log
+        var skipKeys = {status:1, log:1, isNew:1, importedOn:1, issues:1, code:1};
+        Object.keys(item.courseEdit).forEach(function(k){
+          if (!skipKeys[k]) c[k] = item.courseEdit[k];
+        });
+        // Merge dynFields back into fieldData
+        if (item.courseEdit.dynFields) {
+          c.fieldData = c.fieldData || {};
+          Object.keys(item.courseEdit.dynFields).forEach(function(k){
+            c.fieldData[k] = item.courseEdit.dynFields[k];
+          });
+        }
       }
+      delete c._pendingEdits;
       c.status = 'active';
       c.log = c.log || [];
       c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Approved', by: 'Curriculum Director', note: item.title});
@@ -2870,8 +2881,8 @@ function ccOpenAdd() {
   document.getElementById('ceFldCode').style.color = '';
   document.getElementById('ceFldName').value = '';
   document.getElementById('ceFldCredits').value = '';
-  document.getElementById('ceFldSced').value = '';
-  document.getElementById('ceFldCte').value = '';
+  if (document.getElementById('ceFldSced')) document.getElementById('ceFldSced').value = '';
+  if (document.getElementById('ceFldCte')) document.getElementById('ceFldCte').value = '';
   document.getElementById('ceFldDesc').value = '';
   document.getElementById('ceFldReason').value = '';
   cePrereqInit([]);
@@ -2933,8 +2944,8 @@ function ccOpenEditByCode(code) {
   document.getElementById('ceFldCode').value = c.code;
   document.getElementById('ceFldName').value = c.name || '';
   document.getElementById('ceFldCredits').value = c.credits || '';
-  document.getElementById('ceFldSced').value = c.sced && c.sced !== '—' ? c.sced : '';
-  document.getElementById('ceFldCte').value = c.cteCluster || '';
+  if (document.getElementById('ceFldSced')) document.getElementById('ceFldSced').value = c.sced && c.sced !== '—' ? c.sced : '';
+  if (document.getElementById('ceFldCte')) document.getElementById('ceFldCte').value = c.cteCluster || '';
   document.getElementById('ceFldDesc').value = c.description || '';
   document.getElementById('ceFldReason').value = '';
 
@@ -2987,6 +2998,15 @@ function ccOpenEditByCode(code) {
 
   cePrereqInit(c.prerequisites || []);
   ceRebuildTabs(c);
+  // Populate fixed fields into the freshly built dynamic panels
+  if (document.getElementById('ceFldCode'))    { document.getElementById('ceFldCode').value = c.code; document.getElementById('ceFldCode').readOnly = true; document.getElementById('ceFldCode').style.background = 'var(--mist)'; document.getElementById('ceFldCode').style.color = 'var(--slate)'; }
+  if (document.getElementById('ceFldName'))    document.getElementById('ceFldName').value = c.name || '';
+  if (document.getElementById('ceFldCredits')) document.getElementById('ceFldCredits').value = c.credits || '';
+  if (document.getElementById('ceFldSced'))    document.getElementById('ceFldSced').value = c.sced && c.sced !== '—' ? c.sced : '';
+  if (document.getElementById('ceFldCte'))     document.getElementById('ceFldCte').value = c.cteCluster || '';
+  if (document.getElementById('ceFldDesc'))    document.getElementById('ceFldDesc').value = c.description || (c.fieldData && c.fieldData['course_description']) || '';
+  if (document.getElementById('ceFldCategory')) { var catSel = document.getElementById('ceFldCategory'); for (var _i=0;_i<catSel.options.length;_i++){if(catSel.options[_i].value===c.category||catSel.options[_i].text===c.category){catSel.selectedIndex=_i;break;}} }
+  if (document.getElementById('ceFldSubject')) { var subjSel2 = document.getElementById('ceFldSubject'); for (var _j=0;_j<subjSel2.options.length;_j++){if(subjSel2.options[_j].value===c.subject){subjSel2.selectedIndex=_j;break;}} }
   ceShowTab('cedyn-tab1');
   document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
   document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
@@ -3040,6 +3060,14 @@ function ceWithdraw() {
   }
   ceClose();
 }
+
+/* ── Safe field reader for ceSubmit ── */
+function ceVal(id) {
+  var el = document.getElementById(id);
+  if (!el) return '';
+  if (el.type === 'checkbox') return el.checked;
+  return el.value || '';
+}
 function ceSubmit() {
   var reason = document.getElementById('ceFldReason').value.trim();
   if (!reason) { alert('Please provide a reason for this change.'); return; }
@@ -3049,17 +3077,17 @@ function ceSubmit() {
   var flags = [];
 
   var edits = {
-    name: name,
-    category: document.getElementById('ceFldCategory').value,
-    credits: document.getElementById('ceFldCredits').value,
-    sced: document.getElementById('ceFldSced').value || '—',
-    cteCluster: document.getElementById('ceFldCte').value,
-    description: document.getElementById('ceFldDesc').value,
-    subject: document.getElementById('ceFldSubject').value,
-    flags: flags.join(', ') || '—',
+    name:        name,
+    category:    ceVal('ceFldCategory'),
+    credits:     ceVal('ceFldCredits'),
+    sced:        ceVal('ceFldSced') || ceGetDynFieldValues()['sced_code'] || '—',
+    cteCluster:  ceVal('ceFldCte')  || ceGetDynFieldValues()['cte_cluster'] || '',
+    description: ceVal('ceFldDesc') || ceGetDynFieldValues()['course_description'] || '',
+    subject:     ceVal('ceFldSubject'),
+    flags:       flags.join(', ') || '—',
     prerequisites: cePrereqs.slice(),
-    dynFields: ceGetDynFieldValues(),
-    status: 'pending'
+    dynFields:   ceGetDynFieldValues(),
+    status:      'pending'
   };
 
   var today = new Date().toISOString().slice(0,10);
