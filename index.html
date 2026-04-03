@@ -1099,7 +1099,6 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   <!-- TAB BAR -->
   <div style="display:flex;border-bottom:1px solid rgba(12,35,64,.1);flex-shrink:0;background:#fff">
     <div class="ce-tab active" id="ceTab-core" onclick="ceShowTab('core')">Core</div>
-    <div class="ce-tab" id="ceTab-diploma" onclick="ceShowTab('diploma')">Diploma Flags</div>
     <div class="ce-tab" id="ceTab-log" onclick="ceShowTab('log')">Log</div>
   </div>
 
@@ -1166,43 +1165,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
   </div>
 
   <!-- TAB: DIPLOMA FLAGS -->
-  <div id="cePanel-diploma" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
-    <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
-      <strong style="color:var(--navy)" id="ceGroundingCode2"></strong> &mdash; <span id="ceGroundingName2"></span>
-      <div class="grounding-desc" id="ceGroundingDesc2"></div>
-    </div>
-    <div style="font-size:12px;color:var(--slate);margin-bottom:16px;line-height:1.6">
-      Diploma flags determine which Indiana diploma programs this course can satisfy. Changes require Curriculum Director approval.
-    </div>
-    <div class="ce-flag-row">
-      <div>
-        <div style="font-weight:600;font-size:13px;color:var(--navy)">Core 40</div>
-        <div style="font-size:11px;color:var(--slate);margin-top:2px">Indiana Core 40 diploma requirement</div>
-      </div>
-      <label class="ce-toggle"><input type="checkbox" id="ceFlagCore40"><span class="ce-toggle-slider"></span></label>
-    </div>
-    <div class="ce-flag-row">
-      <div>
-        <div style="font-weight:600;font-size:13px;color:var(--navy)">Academic Honors Diploma (AHD)</div>
-        <div style="font-size:11px;color:var(--slate);margin-top:2px">Counts toward Indiana Academic Honors Diploma</div>
-      </div>
-      <label class="ce-toggle"><input type="checkbox" id="ceFlagAHD"><span class="ce-toggle-slider"></span></label>
-    </div>
-    <div class="ce-flag-row">
-      <div>
-        <div style="font-weight:600;font-size:13px;color:var(--navy)">Technical Honors Diploma (THD)</div>
-        <div style="font-size:11px;color:var(--slate);margin-top:2px">Counts toward Indiana Technical Honors Diploma</div>
-      </div>
-      <label class="ce-toggle"><input type="checkbox" id="ceFlagTHD"><span class="ce-toggle-slider"></span></label>
-    </div>
-    <div class="ce-flag-row" style="border-bottom:none">
-      <div>
-        <div style="font-weight:600;font-size:13px;color:var(--navy)">Core 40 with Technical Honors (2029)</div>
-        <div style="font-size:11px;color:var(--slate);margin-top:2px">2029 diploma framework flag</div>
-      </div>
-      <label class="ce-toggle"><input type="checkbox" id="ceFlagTH29"><span class="ce-toggle-slider"></span></label>
-    </div>
-  </div>
+
 
   <!-- TAB: LOG -->
   <div id="cePanel-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
@@ -2306,13 +2269,7 @@ var smSchemas = {
     {name:'applied_units_eligible', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Course is eligible for APPLIE (Applied Learning) units. Note: field name matches source system spelling.', enumVals:[]},
     {name:'curriculum_notes', type:'TEXT', len:null, nullable:true, governed:false, ai:false, status:'active', desc:'Internal curriculum notes. Not published to API or student-facing tools.', enumVals:[]},
     {name:'sced_code', type:'VARCHAR', len:5, nullable:true, governed:true, ai:true, status:'active', desc:'Standard Course Equivalency Description code. AI-suggested if omitted.', enumVals:[]},
-    {name:'ceds_code', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Common Education Data Standards code.', enumVals:[]},
-    {name:'edfi_code', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Ed-Fi ODS course code for SIS integration.', enumVals:[]},
     {name:'cte_cluster', type:'VARCHAR', len:50, nullable:true, governed:true, ai:false, status:'active', desc:'CTE career cluster. Required when course_subject = CTE.', enumVals:[]},
-    {name:'diploma_core40', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Satisfies Indiana Core 40 diploma requirement.', enumVals:[]},
-    {name:'diploma_ahd', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Counts toward Academic Honors Diploma.', enumVals:[]},
-    {name:'diploma_thd', type:'BOOLEAN', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Counts toward Technical Honors Diploma.', enumVals:[]},
-    {name:'cohort_version', type:'VARCHAR', len:10, nullable:true, governed:true, ai:false, status:'active', desc:'Cohort year anchor (e.g. SY2025-26). Set by system at record creation — do not include in bulk upload.', enumVals:[]},
     {name:'record_status', type:'ENUM', len:null, nullable:true, governed:true, ai:false, status:'active', desc:'Lifecycle status. Set by system — do not include in bulk upload.', enumVals:['Active','Pending Approval','Deprecated','Retired']},
   ],
   credentials: [
@@ -2920,10 +2877,7 @@ function ccOpenAdd() {
   document.getElementById('ceFldReason').value = '';
   cePrereqInit([]);
   document.getElementById('ceFldCategory').selectedIndex = 0;
-  document.getElementById('ceFlagCore40').checked = false;
-  document.getElementById('ceFlagAHD').checked = false;
-  document.getElementById('ceFlagTHD').checked = false;
-  document.getElementById('ceFlagTH29').checked = false;
+
 
   // Populate subject dropdown from schema
   var subjField = smSchemas.catalog.find(function(f){ return f.name === 'course_subject'; });
@@ -2941,10 +2895,7 @@ function ccOpenAdd() {
   var grounding = document.querySelector('#cePanel-core .sm-form-group:first-child');
   document.getElementById('ceGroundingCode').textContent = 'New Course';
   document.getElementById('ceGroundingName').textContent = 'Fill in the fields below';
-  document.getElementById('ceGroundingCode2').textContent = 'New Course';
-  document.getElementById('ceGroundingName2').textContent = '';
   document.getElementById('ceGroundingDesc').textContent = '';
-  document.getElementById('ceGroundingDesc2').textContent = '';
 
   // Clear log
   document.getElementById('ceLogEntries').innerHTML = '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet — record has not been created.</div>';
@@ -2976,11 +2927,8 @@ function ccOpenEditByCode(code) {
   // Populate grounding fields
   document.getElementById('ceGroundingCode').textContent = c.code;
   document.getElementById('ceGroundingName').textContent = c.name;
-  document.getElementById('ceGroundingCode2').textContent = c.code;
-  document.getElementById('ceGroundingName2').textContent = c.name;
   var ceDesc = c.description || (c.fieldData && c.fieldData['course_description']) || '';
   document.getElementById('ceGroundingDesc').textContent = ceDesc;
-  document.getElementById('ceGroundingDesc2').textContent = ceDesc;
 
   // Core tab
   document.getElementById('ceFldCode').value = c.code;
@@ -3012,10 +2960,7 @@ function ccOpenEditByCode(code) {
 
   // Diploma flags
   var flags = (c.flags || '').split(',').map(function(f){ return f.trim(); });
-  document.getElementById('ceFlagCore40').checked = flags.indexOf('Core 40') >= 0;
-  document.getElementById('ceFlagAHD').checked = flags.indexOf('AHD') >= 0;
-  document.getElementById('ceFlagTHD').checked = flags.indexOf('THD') >= 0;
-  document.getElementById('ceFlagTH29').checked = flags.indexOf('TH29') >= 0;
+
 
   // Log tab
   var logEl = document.getElementById('ceLogEntries');
@@ -3088,10 +3033,6 @@ function ceSubmit() {
   if (!name) { alert('Course Name is required.'); return; }
 
   var flags = [];
-  if (document.getElementById('ceFlagCore40').checked) flags.push('Core 40');
-  if (document.getElementById('ceFlagAHD').checked) flags.push('AHD');
-  if (document.getElementById('ceFlagTHD').checked) flags.push('THD');
-  if (document.getElementById('ceFlagTH29').checked) flags.push('TH29');
 
   var edits = {
     name: name,
@@ -3970,7 +3911,7 @@ var meConfigsDefault = {
   catalog: {
     tabs: [
       {id:'tab1', label:'Core', fields:['credit_hours','sced_code','cte_cluster','abbreviated_name','recommended_grade'], order:0},
-      {id:'tab2', label:'Standards', fields:['ceds_code','edfi_code','course_duration_semesters','credits_per_semester','max_credits'], order:1},
+      {id:'tab2', label:'Standards', fields:['course_duration_semesters','credits_per_semester','max_credits'], order:1},
       {id:'tab3', label:'Enrollment', fields:['dual_credit','course_prerequisite'], order:2},
       {id:'tab4', label:'Tab 4', fields:[], order:3},
       {id:'flags', label:'Flags', fields:[], order:4},
