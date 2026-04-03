@@ -2873,43 +2873,9 @@ var ceCurrentCode = null;
 
 function ccOpenAdd() {
   ceCurrentCode = null;
-
-  // Clear all fields
-  document.getElementById('ceFldCode').value = '';
-  document.getElementById('ceFldCode').readOnly = false;
-  document.getElementById('ceFldCode').style.background = '';
-  document.getElementById('ceFldCode').style.color = '';
-  document.getElementById('ceFldName').value = '';
-  document.getElementById('ceFldCredits').value = '';
-  if (document.getElementById('ceFldSced')) document.getElementById('ceFldSced').value = '';
-  if (document.getElementById('ceFldCte')) document.getElementById('ceFldCte').value = '';
-  document.getElementById('ceFldDesc').value = '';
-  document.getElementById('ceFldReason').value = '';
   cePrereqInit([]);
-  document.getElementById('ceFldCategory').selectedIndex = 0;
+  document.getElementById('ceFldReason').value = '';
 
-
-  // Populate subject dropdown from schema
-  var subjField = smSchemas.catalog.find(function(f){ return f.name === 'course_subject'; });
-  var subjSel = document.getElementById('ceFldSubject');
-  subjSel.innerHTML = '<option value="">— Select subject —</option>';
-  if (subjField && subjField.enumVals) {
-    subjField.enumVals.forEach(function(v){
-      var opt = document.createElement('option');
-      opt.value = v; opt.textContent = v;
-      subjSel.appendChild(opt);
-    });
-  }
-
-  // Hide grounding strip — nothing to ground against for a new record
-  document.getElementById('ceGroundingCode').textContent = 'New Course';
-  document.getElementById('ceGroundingName').textContent = 'Fill in the fields below';
-  document.getElementById('ceGroundingDesc').textContent = '';
-
-  // Clear log
-  document.getElementById('ceLogEntries').innerHTML = '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet — record has not been created.</div>';
-
-  // Footer for new record
   var msgEl = document.getElementById('ceFooterMsg');
   var submitBtn = document.getElementById('ceSubmitBtn');
   if (msgEl) msgEl.textContent = 'New course will go to Pending Approvals';
@@ -2917,6 +2883,14 @@ function ccOpenAdd() {
 
   document.getElementById('ceDrawerTitle').textContent = 'Add Course';
   document.getElementById('ceDrawerSub').textContent = 'New record — will go to Pending Approvals';
+
+  ceRebuildTabs(null);
+  if (document.getElementById('ceFldCode'))     { document.getElementById('ceFldCode').value = ''; document.getElementById('ceFldCode').readOnly = false; document.getElementById('ceFldCode').style.background = ''; document.getElementById('ceFldCode').style.color = ''; }
+  if (document.getElementById('ceFldName'))     document.getElementById('ceFldName').value = '';
+  if (document.getElementById('ceFldCredits'))  document.getElementById('ceFldCredits').value = '';
+  if (document.getElementById('ceFldDesc'))     document.getElementById('ceFldDesc').value = '';
+  if (document.getElementById('ceFldCategory')) document.getElementById('ceFldCategory').selectedIndex = 0;
+  ceShowTab('cedyn-tab1');
 
   document.getElementById('ceOverlay').style.display = 'block';
   var d = document.getElementById('ceDrawer');
@@ -2928,60 +2902,6 @@ function ccOpenEditByCode(code) {
   var c = ccCourses.find(function(c){ return c.code === code; });
   if (!c) return;
   ceCurrentCode = code;
-
-  // Lock code field when editing an existing record
-  document.getElementById('ceFldCode').readOnly = true;
-  document.getElementById('ceFldCode').style.background = 'var(--mist)';
-  document.getElementById('ceFldCode').style.color = 'var(--slate)';
-
-  // Populate grounding fields
-  document.getElementById('ceGroundingCode').textContent = c.code;
-  document.getElementById('ceGroundingName').textContent = c.name;
-  var ceDesc = c.description || (c.fieldData && c.fieldData['course_description']) || '';
-  document.getElementById('ceGroundingDesc').textContent = ceDesc;
-
-  // Core tab
-  document.getElementById('ceFldCode').value = c.code;
-  document.getElementById('ceFldName').value = c.name || '';
-  document.getElementById('ceFldCredits').value = c.credits || '';
-  if (document.getElementById('ceFldSced')) document.getElementById('ceFldSced').value = c.sced && c.sced !== '—' ? c.sced : '';
-  if (document.getElementById('ceFldCte')) document.getElementById('ceFldCte').value = c.cteCluster || '';
-  document.getElementById('ceFldDesc').value = c.description || '';
-  document.getElementById('ceFldReason').value = '';
-
-  // Populate subject dropdown from schema enum
-  var subjField = smSchemas.catalog.find(function(f){ return f.name === 'course_subject'; });
-  var subjSel = document.getElementById('ceFldSubject');
-  subjSel.innerHTML = '<option value="">— Select subject —</option>';
-  if (subjField && subjField.enumVals) {
-    subjField.enumVals.forEach(function(v){
-      var opt = document.createElement('option');
-      opt.value = v; opt.textContent = v;
-      if (c.subject === v) opt.selected = true;
-      subjSel.appendChild(opt);
-    });
-  }
-
-  // Category
-  var catSel = document.getElementById('ceFldCategory');
-  for (var i = 0; i < catSel.options.length; i++) {
-    if (catSel.options[i].value === c.category) { catSel.selectedIndex = i; break; }
-  }
-
-  // Diploma flags
-  var flags = (c.flags || '').split(',').map(function(f){ return f.trim(); });
-
-
-  // Log tab
-  var logEl = document.getElementById('ceLogEntries');
-  var entries = c.log || [];
-  if (entries.length === 0) {
-    logEl.innerHTML = '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet.</div>';
-  } else {
-    logEl.innerHTML = entries.map(function(e){
-      return '<div class="ce-log-entry"><div class="ce-log-date">' + e.date + ' · ' + e.by + '</div><div class="ce-log-action">' + e.action + '</div><div class="ce-log-note">' + e.note + '</div></div>';
-    }).join('');
-  }
 
   // Footer — always editable; show withdraw option if already pending
   var isPending = c.status === 'pending';
