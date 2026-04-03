@@ -1096,13 +1096,10 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     <button onclick="ceClose()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:16px">&#10005;</button>
   </div>
 
-  <!-- TAB BAR -->
-  <div style="display:flex;border-bottom:1px solid rgba(12,35,64,.1);flex-shrink:0;background:#fff">
-    <div class="ce-tab active" id="ceTab-core" onclick="ceShowTab('core')">Core</div>
-    <div class="ce-tab" id="ceTab-log" onclick="ceShowTab('log')">Log</div>
-  </div>
+  <!-- DYNAMIC TAB BAR — built by ceRebuildTabs() -->
+  <div id="ceDynamicTabBar" style="display:flex;border-bottom:1px solid rgba(12,35,64,.1);flex-shrink:0;background:#fff;overflow-x:auto"></div>
 
-  <!-- TAB: CORE -->
+  <!-- TAB: CORE (always first, always present) -->
   <div id="cePanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
     <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
       <strong style="color:var(--navy)" id="ceGroundingCode"></strong> &mdash; <span id="ceGroundingName"></span>
@@ -1135,7 +1132,7 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
       <select id="ceFldSubject" class="sm-input">
         <option value="">— Select subject —</option>
       </select>
-      <div class="sm-hint">Controlled vocabulary — 25 values defined in Schema Manager.</div>
+      <div class="sm-hint">Controlled vocabulary — values defined in Schema Manager.</div>
     </div>
     <div class="sm-form-group">
       <label class="sm-label">SCED Code</label>
@@ -1164,10 +1161,10 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     </div>
   </div>
 
-  <!-- TAB: DIPLOMA FLAGS -->
+  <!-- DYNAMIC CONFIG PANELS — inserted by ceRebuildTabs() -->
+  <div id="ceDynamicPanels"></div>
 
-
-  <!-- TAB: LOG -->
+  <!-- TAB: LOG (always last) -->
   <div id="cePanel-log" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">
     <div style="font-size:11px;color:var(--slate);margin-bottom:12px">Read-only audit trail for this course record.</div>
     <div id="ceLogEntries"></div>
@@ -2892,7 +2889,6 @@ function ccOpenAdd() {
   }
 
   // Hide grounding strip — nothing to ground against for a new record
-  var grounding = document.querySelector('#cePanel-core .sm-form-group:first-child');
   document.getElementById('ceGroundingCode').textContent = 'New Course';
   document.getElementById('ceGroundingName').textContent = 'Fill in the fields below';
   document.getElementById('ceGroundingDesc').textContent = '';
@@ -2983,6 +2979,7 @@ function ccOpenEditByCode(code) {
   }
 
   cePrereqInit(c.prerequisites || []);
+  ceRebuildTabs(c);
   ceShowTab('core');
   document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
   document.getElementById('ceDrawerSub').textContent = c.status === 'pending' ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
@@ -3044,6 +3041,7 @@ function ceSubmit() {
     subject: document.getElementById('ceFldSubject').value,
     flags: flags.join(', ') || '—',
     prerequisites: cePrereqs.slice(),
+    dynFields: ceGetDynFieldValues(),
     status: 'pending'
   };
 
@@ -4126,6 +4124,101 @@ function meGetTabFields(lib, tabId) {
   if (!cfg) return null;
   var tab = cfg.tabs.find(function(t){ return t.id === tabId; });
   return tab ? tab.fields : [];
+}
+
+/* ── COURSE MODAL — CONFIG-DRIVEN TABS ── */
+function ceRebuildTabs(record) {
+  meLoad();
+  var cfg = meConfigs.catalog;
+  var schema = smSchemas.catalog ? smSchemas.catalog.filter(function(f){ return f.status === 'active'; }) : [];
+  var boolFields = schema.filter(function(f){ return f.type === 'BOOLEAN'; });
+  var fieldData = (record && record.fieldData) ? record.fieldData : {};
+
+  // Sort config tabs by order
+  var cfgTabs = cfg ? cfg.tabs.slice().sort(function(a,b){ return a.order - b.order; }) : [];
+
+  // Build tab bar — Core is always first
+  var tabBarHtml = '<div class="ce-tab active" id="ceTab-core" onclick="ceShowTab(&quot;core&quot;)">Core</div>';
+
+  // Determine which config tabs have content (at least one assigned field)
+  var visibleCfgTabs = cfgTabs.filter(function(t) {
+    if (t.id === 'log') return false;   // handled separately
+    if (t.id === 'flags') return boolFields.length > 0;
+    return t.fields && t.fields.length > 0;
+  });
+
+  visibleCfgTabs.forEach(function(t) {
+    var cfgOnclick = 'ceShowTab(\"cfg-' + t.id + '\")';
+    tabBarHtml += '<div class="ce-tab" id="ceTab-cfg-' + t.id + '" onclick="' + cfgOnclick + '">' + t.label + '</div>';
+  });
+  tabBarHtml += '<div class="ce-tab" id="ceTab-log" onclick="ceShowTab(&quot;log&quot;)">Log</div>';
+  document.getElementById('ceDynamicTabBar').innerHTML = tabBarHtml;
+
+  // Build dynamic panels
+  var panelsHtml = '';
+  visibleCfgTabs.forEach(function(t) {
+    var panelId = 'cePanel-cfg-' + t.id;
+    var groundingHtml = '<div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">' +
+      '<strong style="color:var(--navy)">' + (record ? record.code : '') + '</strong> &mdash; <span>' + (record ? record.name : '') + '</span>' +
+      '<div class="grounding-desc">' + (record ? (record.description || fieldData['course_description'] || '') : '') + '</div>' +
+      '</div>';
+
+    var fieldsHtml = '';
+
+    if (t.id === 'flags') {
+      // Render BOOLEAN fields as toggles
+      fieldsHtml = boolFields.map(function(f) {
+        var val = fieldData[f.name];
+        var checked = val === true || val === 'TRUE' || val === 'true' || val === '1' || val === 'yes';
+        var label = f.name.replace(/_/g,' ').replace(/\w/g, function(c){ return c.toUpperCase(); });
+        return '<div class="ce-flag-row" style="padding:10px 0;border-bottom:1px solid rgba(12,35,64,.06)">' +
+          '<div><div style="font-weight:600;font-size:13px;color:var(--navy)">' + label + '</div>' +
+          '<div style="font-size:11px;color:var(--slate);margin-top:2px">' + (f.desc || '') + '</div></div>' +
+          '<label class="ce-toggle"><input type="checkbox" id="ceDynFld-' + f.name + '"' + (checked ? ' checked' : '') + '><span class="ce-toggle-slider"></span></label>' +
+          '</div>';
+      }).join('');
+    } else {
+      // Render assigned fields by type
+      fieldsHtml = t.fields.map(function(fname) {
+        var schField = schema.find(function(s){ return s.name === fname; });
+        if (!schField) return '';
+        var val = fieldData[fname] !== undefined ? fieldData[fname] : '';
+        var label = fname.replace(/_/g,' ').replace(/\w/g, function(c){ return c.toUpperCase(); });
+        var inputHtml = '';
+        if (schField.type === 'TEXT') {
+          inputHtml = '<textarea id="ceDynFld-' + fname + '" class="sm-input" rows="3">' + val + '</textarea>';
+        } else if (schField.type === 'ENUM') {
+          inputHtml = '<select id="ceDynFld-' + fname + '" class="sm-input">' +
+            '<option value="">— Select —</option>' +
+            (schField.enumVals || []).map(function(v){
+              return '<option value="' + v + '"' + (val === v ? ' selected' : '') + '>' + v + '</option>';
+            }).join('') + '</select>';
+        } else if (schField.type === 'BOOLEAN') {
+          var checked = val === true || val === 'TRUE' || val === 'true' || val === '1';
+          inputHtml = '<label class="ce-toggle"><input type="checkbox" id="ceDynFld-' + fname + '"' + (checked ? ' checked' : '') + '><span class="ce-toggle-slider"></span></label>';
+        } else {
+          inputHtml = '<input type="text" id="ceDynFld-' + fname + '" class="sm-input" value="' + String(val).replace(/"/g,'&quot;') + '">';
+        }
+        return '<div class="sm-form-group"><label class="sm-label">' + label + '</label>' + inputHtml +
+          (schField.desc ? '<div class="sm-hint">' + schField.desc + '</div>' : '') + '</div>';
+      }).join('');
+    }
+
+    panelsHtml += '<div id="' + panelId + '" class="ce-panel" style="display:none;flex:1;overflow-y:auto;padding:20px">' +
+      groundingHtml + fieldsHtml + '</div>';
+  });
+
+  document.getElementById('ceDynamicPanels').innerHTML = panelsHtml;
+}
+
+/* ── Collect dynamic field values for ceSubmit ── */
+function ceGetDynFieldValues() {
+  var vals = {};
+  document.querySelectorAll('[id^="ceDynFld-"]').forEach(function(el) {
+    var fname = el.id.replace('ceDynFld-', '');
+    vals[fname] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+  return vals;
 }
 
 </script>
