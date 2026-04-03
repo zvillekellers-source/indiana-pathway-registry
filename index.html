@@ -4070,10 +4070,19 @@ function meSwitchLib(lib, el) {
         }).join('');
       }
     } else {
-      // Assigned fields with remove button
-      var assignedHtml = tab.fields.map(function(fname){
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:var(--mist);border-radius:var(--radius);margin-bottom:4px;font-size:11px">' +
-          '<span style="font-family:var(--mono)">' + fname + '</span>' +
+      // Assigned fields with ordering arrows + remove button
+      var assignedHtml = tab.fields.map(function(fname, fi){
+        var canUp = fi > 0;
+        var canDown = fi < tab.fields.length - 1;
+        var upBtn = canUp
+          ? '<button onclick="meMoveField(\'' + lib + '\',\'' + tab.id + '\',\'' + fname + '\',-1)" style="background:none;border:none;cursor:pointer;color:var(--slate);font-size:10px;padding:0 3px" title="Move up">▲</button>'
+          : '<span style="display:inline-block;width:18px"></span>';
+        var downBtn = canDown
+          ? '<button onclick="meMoveField(\'' + lib + '\',\'' + tab.id + '\',\'' + fname + '\',1)" style="background:none;border:none;cursor:pointer;color:var(--slate);font-size:10px;padding:0 3px" title="Move down">▼</button>'
+          : '<span style="display:inline-block;width:18px"></span>';
+        return '<div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:var(--mist);border-radius:var(--radius);margin-bottom:4px;font-size:11px">' +
+          '<span style="display:flex;flex-direction:column;line-height:1">' + upBtn + downBtn + '</span>' +
+          '<span style="font-family:var(--mono);flex:1">' + fname + '</span>' +
           '<button onclick="meRemoveField(\'' + lib + '\',\'' + tab.id + '\',\'' + fname + '\')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px" title="Remove from tab">&#10005;</button>' +
           '</div>';
       }).join('');
@@ -4140,6 +4149,21 @@ function meAddField(lib, tabId) {
 function meRemoveField(lib, tabId, fname) {
   var tab = meConfigs[lib].tabs.find(function(t){ return t.id === tabId; });
   if (tab) { tab.fields = tab.fields.filter(function(f){ return f !== fname; }); }
+  meSave();
+  meSwitchLib(lib, null);
+}
+
+function meMoveField(lib, tabId, fname, dir) {
+  var tab = meConfigs[lib].tabs.find(function(t){ return t.id === tabId; });
+  if (!tab) return;
+  var idx = tab.fields.indexOf(fname);
+  if (idx === -1) return;
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= tab.fields.length) return;
+  // Swap
+  var other = tab.fields[newIdx];
+  tab.fields[newIdx] = fname;
+  tab.fields[idx] = other;
   meSave();
   meSwitchLib(lib, null);
 }
@@ -4342,7 +4366,24 @@ function ceRebuildTabs(record) {
       }).join('');
     }
 
-    var groundHtml = (t.id === 'tab1') ? '' : makeGrounding(record);
+    var groundHtml;
+    if (t.id === 'tab1') {
+      // Tab1: shaded editable grounding section at top + HR + regular fields
+      var groundingSection = groundingFields.length > 0
+        ? '<div style="background:#F0F4FA;border:1px solid rgba(12,35,64,.1);border-radius:var(--radius);padding:16px;margin-bottom:4px">' +
+          '<div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;color:var(--slate);margin-bottom:10px">Identity &mdash; shown on every tab</div>' +
+          makeGroundingEditable(record) +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:10px;margin:14px 0 16px">' +
+          '<hr style="flex:1;border:none;border-top:1px solid rgba(12,35,64,.1)">' +
+          '<span style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--slate);white-space:nowrap">Additional Fields</span>' +
+          '<hr style="flex:1;border:none;border-top:1px solid rgba(12,35,64,.1)">' +
+          '</div>'
+        : '';
+      groundHtml = groundingSection;
+    } else {
+      groundHtml = makeGrounding(record);
+    }
     panelsHtml += '<div id="' + panelId + '" class="ce-panel" style="display:' + display + ';flex:1;overflow-y:auto;padding:20px">' +
       groundHtml + fieldsHtml + '</div>';
   });
