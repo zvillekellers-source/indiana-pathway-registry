@@ -2804,7 +2804,11 @@ function ccOpenEditByCode(code) {
   document.getElementById('ceFldReason').value = '';
 
   cePrereqInit(c.prerequisites || []);
-  ceRebuildTabs(c);
+  try { ceRebuildTabs(c); } catch(rebuildErr) {
+    document.getElementById('ceDynamicPanels').innerHTML = '<div style="padding:20px;color:red;font-family:monospace;font-size:11px">ceRebuildTabs error: ' + rebuildErr.message + '</div>';
+    setTimeout(function(){ d.style.transform = 'translateX(0)'; }, 10);
+    return;
+  }
 
   // Populate fields after panels are built
   if (document.getElementById('ceFldCode'))    { document.getElementById('ceFldCode').value = c.code; document.getElementById('ceFldCode').readOnly = true; document.getElementById('ceFldCode').style.background = 'var(--mist)'; document.getElementById('ceFldCode').style.color = 'var(--slate)'; }
