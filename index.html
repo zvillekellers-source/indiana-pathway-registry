@@ -212,6 +212,11 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
 .ce-tab.active{color:var(--navy);border-bottom-color:var(--gold)}
 .ce-panel{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column}
 #ceFooterBar{contain:layout}
+/* ── Course edit drawer view/edit mode ── */
+.ce-view-row{display:flex;padding:9px 0;border-bottom:1px solid rgba(12,35,64,.06);gap:12px;align-items:baseline}
+.ce-view-row--tall{align-items:flex-start}
+.ce-view-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);font-weight:600;width:110px;flex-shrink:0;padding-top:2px}
+.ce-view-val{font-size:13px;color:var(--navy);flex:1;line-height:1.5}
 .grounding-desc{font-size:11px;color:var(--slate);margin-top:5px;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;max-height:4.5em}
 .ce-flag-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(12,35,64,.07)}
 .ce-toggle{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
@@ -1042,64 +1047,87 @@ body{font-family:var(--sans);background:var(--light);color:var(--navy);min-heigh
     <div class="ce-tab" id="ceTab-log" onclick="ceShowTab('log')">Log</div>
   </div>
 
-  <!-- TAB: CORE -->
+  <!-- TAB: CORE — VIEW mode (read-only) and EDIT mode (inputs) -->
   <div id="cePanel-core" class="ce-panel" style="flex:1;overflow-y:auto;padding:20px">
+
+    <!-- GROUNDING STRIP (always visible) -->
     <div style="background:var(--mist);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--slate)">
       <strong style="color:var(--navy)" id="ceGroundingCode"></strong> &mdash; <span id="ceGroundingName"></span>
+      <div class="grounding-desc" id="ceGroundingDesc" style="margin-top:4px"></div>
     </div>
-    <div class="sm-form-group">
-      <label class="sm-label">State Course Code</label>
-      <input type="text" id="ceFldCode" class="sm-input" placeholder="e.g. ELA1200">
-      <div class="sm-hint">Course code cannot be changed after creation.</div>
+
+    <!-- VIEW MODE: read-only field display -->
+    <div id="ceViewMode">
+      <div class="ce-view-row"><span class="ce-view-label">Course Code</span><span class="ce-view-val" id="ceViewCode"></span></div>
+      <div class="ce-view-row"><span class="ce-view-label">Course Name</span><span class="ce-view-val" id="ceViewName"></span></div>
+      <div class="ce-view-row"><span class="ce-view-label">Category</span><span class="ce-view-val" id="ceViewCategory"></span></div>
+      <div class="ce-view-row"><span class="ce-view-label">Credit Hours</span><span class="ce-view-val" id="ceViewCredits"></span></div>
+      <div class="ce-view-row"><span class="ce-view-label">Course Subject</span><span class="ce-view-val" id="ceViewSubject"></span></div>
+      <div class="ce-view-row"><span class="ce-view-label">SCED Code</span><span class="ce-view-val" id="ceViewSced"></span></div>
+      <div class="ce-view-row"><span class="ce-view-label">CTE Cluster</span><span class="ce-view-val" id="ceViewCte"></span></div>
+      <div class="ce-view-row ce-view-row--tall"><span class="ce-view-label">Description</span><span class="ce-view-val" id="ceViewDesc"></span></div>
+      <div class="ce-view-row"><span class="ce-view-label">Prerequisites</span><span class="ce-view-val" id="ceViewPrereqs"></span></div>
     </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Course Name <span style="color:var(--red)">*</span></label>
-      <input type="text" id="ceFldName" class="sm-input" placeholder="Official course title">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Category <span style="color:var(--red)">*</span></label>
-      <select id="ceFldCategory" class="sm-input">
-        <option value="">&#8212; Select &#8212;</option>
-        <option>English Language and Literature</option><option>Mathematics</option><option>Science</option>
-        <option>Social Sciences and History</option><option>Career &amp; Technical Education</option>
-        <option>Fine Arts</option><option>Physical Education</option><option>World Language</option><option>Other</option>
-      </select>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Credit Hours <span style="color:var(--red)">*</span></label>
-      <input type="number" id="ceFldCredits" class="sm-input" step="0.5" min="0.5" max="8" placeholder="e.g. 1.0">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Course Subject</label>
-      <select id="ceFldSubject" class="sm-input">
-        <option value="">&#8212; Select subject &#8212;</option>
-      </select>
-      <div class="sm-hint">Controlled vocabulary &#8212; values defined in Schema Manager.</div>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">SCED Code</label>
-      <input type="text" id="ceFldSced" class="sm-input" placeholder="e.g. 01001" maxlength="5">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">CTE Cluster</label>
-      <input type="text" id="ceFldCte" class="sm-input" placeholder="e.g. Health Science">
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Course Description</label>
-      <textarea id="ceFldDesc" class="sm-input" rows="4" placeholder="Full course description (no character limit)"></textarea>
-    </div>
-    <div class="sm-form-group" id="cePrereqSection">
-      <label class="sm-label">Prerequisites</label>
-      <div class="sm-hint" style="margin-bottom:6px">Search and select courses that must be completed before this course. Only active courses are shown.</div>
-      <div style="position:relative">
-        <input type="text" id="cePrereqSearch" class="sm-input" placeholder="Search by code or name…" oninput="cePrereqFilter()" style="margin-bottom:6px">
-        <div id="cePrereqDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid rgba(12,35,64,.2);border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:180px;overflow-y:auto;z-index:50"></div>
+
+    <!-- EDIT MODE: live inputs (hidden until Enter Edit Mode clicked) -->
+    <div id="ceEditMode" style="display:none">
+      <div style="background:#FEF3C7;border:1px solid #D97706;border-radius:var(--radius);padding:9px 12px;margin-bottom:16px;font-size:11px;color:#92400E">
+        &#9998; Edit mode active &mdash; changes are staged locally until you submit for approval.
       </div>
-      <div id="cePrereqSelected" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px 0"></div>
-    </div>
-    <div class="sm-form-group">
-      <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
-      <textarea id="ceFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea>
+      <div class="sm-form-group">
+        <label class="sm-label">State Course Code</label>
+        <input type="text" id="ceFldCode" class="sm-input" placeholder="e.g. ELA1200">
+        <div class="sm-hint">Course code cannot be changed after creation.</div>
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">Course Name <span style="color:var(--red)">*</span></label>
+        <input type="text" id="ceFldName" class="sm-input" placeholder="Official course title">
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">Category <span style="color:var(--red)">*</span></label>
+        <select id="ceFldCategory" class="sm-input">
+          <option value="">&#8212; Select &#8212;</option>
+          <option>English Language and Literature</option><option>Mathematics</option><option>Science</option>
+          <option>Social Sciences and History</option><option>Career &amp; Technical Education</option>
+          <option>Fine Arts</option><option>Physical Education</option><option>World Language</option><option>Other</option>
+        </select>
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">Credit Hours <span style="color:var(--red)">*</span></label>
+        <input type="number" id="ceFldCredits" class="sm-input" step="0.5" min="0.5" max="8" placeholder="e.g. 1.0">
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">Course Subject</label>
+        <select id="ceFldSubject" class="sm-input">
+          <option value="">&#8212; Select subject &#8212;</option>
+        </select>
+        <div class="sm-hint">Controlled vocabulary &#8212; values defined in Schema Manager.</div>
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">SCED Code</label>
+        <input type="text" id="ceFldSced" class="sm-input" placeholder="e.g. 01001" maxlength="5">
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">CTE Cluster</label>
+        <input type="text" id="ceFldCte" class="sm-input" placeholder="e.g. Health Science">
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">Course Description</label>
+        <textarea id="ceFldDesc" class="sm-input" rows="5" placeholder="Full course description (no character limit)"></textarea>
+      </div>
+      <div class="sm-form-group" id="cePrereqSection">
+        <label class="sm-label">Prerequisites</label>
+        <div class="sm-hint" style="margin-bottom:6px">Search and select courses that must be completed before this course. Only active courses are shown.</div>
+        <div style="position:relative">
+          <input type="text" id="cePrereqSearch" class="sm-input" placeholder="Search by code or name…" oninput="cePrereqFilter()" style="margin-bottom:6px">
+          <div id="cePrereqDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid rgba(12,35,64,.2);border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:180px;overflow-y:auto;z-index:50"></div>
+        </div>
+        <div id="cePrereqSelected" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px 0"></div>
+      </div>
+      <div class="sm-form-group">
+        <label class="sm-label">Reason for Change <span style="color:var(--red)">*</span></label>
+        <textarea id="ceFldReason" class="sm-input" rows="2" placeholder="Required for approval request"></textarea>
+      </div>
     </div>
   </div>
 
@@ -2860,15 +2888,24 @@ function ccOpenEditByCode(code) {
   var c = ccCourses.find(function(c){ return c.code === code; });
   if (!c) return;
   ceCurrentCode = code;
+  ceEditActive = false;
 
-  // Lock code field for edits
+  // Grounding strip
+  document.getElementById('ceGroundingCode').textContent = c.code;
+  document.getElementById('ceGroundingName').textContent = c.name;
+
+  // Populate VIEW mode display values
+  cePopulateViewMode(c);
+
+  // Ensure view mode shown, edit mode hidden
+  document.getElementById('ceViewMode').style.display = 'block';
+  document.getElementById('ceEditMode').style.display = 'none';
+
+  // Pre-populate EDIT mode fields (ready for when user clicks Enter Edit Mode)
   document.getElementById('ceFldCode').value = c.code;
   document.getElementById('ceFldCode').readOnly = true;
   document.getElementById('ceFldCode').style.background = 'var(--mist)';
   document.getElementById('ceFldCode').style.color = 'var(--slate)';
-
-  document.getElementById('ceGroundingCode').textContent = c.code;
-  document.getElementById('ceGroundingName').textContent = c.name;
   document.getElementById('ceFldName').value = c.name || '';
   document.getElementById('ceFldCredits').value = c.credits || '';
   document.getElementById('ceFldSced').value = c.sced && c.sced !== '—' ? c.sced : '';
@@ -2876,7 +2913,6 @@ function ccOpenEditByCode(code) {
   document.getElementById('ceFldDesc').value = c.description || (c.fieldData && c.fieldData['course_description']) || '';
   document.getElementById('ceFldReason').value = '';
 
-  // Subject dropdown
   var subjField = smSchemas.catalog.find(function(f){ return f.name === 'course_subject'; });
   var subjSel = document.getElementById('ceFldSubject');
   subjSel.innerHTML = '<option value="">— Select subject —</option>';
@@ -2888,40 +2924,24 @@ function ccOpenEditByCode(code) {
       subjSel.appendChild(opt);
     });
   }
-
-  // Category
   var catSel = document.getElementById('ceFldCategory');
   for (var i = 0; i < catSel.options.length; i++) {
-    if (catSel.options[i].value === c.category || catSel.options[i].text === c.category) {
-      catSel.selectedIndex = i; break;
-    }
+    if (catSel.options[i].value === c.category || catSel.options[i].text === c.category) { catSel.selectedIndex = i; break; }
   }
-
-  // Prerequisites
   cePrereqInit(c.prerequisites || []);
 
   // Log
   var logEl = document.getElementById('ceLogEntries');
   var entries = c.log || [];
-  if (entries.length === 0) {
-    logEl.innerHTML = '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet.</div>';
-  } else {
-    logEl.innerHTML = entries.map(function(e){
-      return '<div class="ce-log-entry"><div class="ce-log-date">' + e.date + ' · ' + e.by + '</div><div class="ce-log-action">' + e.action + '</div><div class="ce-log-note">' + e.note + '</div></div>';
-    }).join('');
-  }
+  logEl.innerHTML = entries.length === 0
+    ? '<div style="font-size:12px;color:var(--slate);text-align:center;padding:24px">No log entries yet.</div>'
+    : entries.map(function(e){ return '<div class="ce-log-entry"><div class="ce-log-date">' + e.date + ' · ' + e.by + '</div><div class="ce-log-action">' + e.action + '</div><div class="ce-log-note">' + e.note + '</div></div>'; }).join('');
 
-  // Footer
-  var footer = document.getElementById('ceFooterBar');
-  var isPending = c.status === 'pending';
-  if (isPending) {
-    footer.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex:1"><span style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:6px 10px">⚠ Pending — edits will resubmit</span><button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none;white-space:nowrap" onclick="ceWithdraw()">Withdraw</button></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Resubmit</button></div>';
-  } else {
-    footer.innerHTML = '<div style="font-size:11px;color:var(--slate)">Change will go to Pending Approvals</div><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="ceClose()">Cancel</button><button class="btn btn-gold" onclick="ceSubmit()">Submit for Approval</button></div>';
-  }
+  // View-mode footer
+  ceSetViewFooter(c);
 
-  document.getElementById('ceDrawerTitle').textContent = 'Edit Course — ' + c.code;
-  document.getElementById('ceDrawerSub').textContent = isPending ? 'Pending Approval — edits will resubmit' : 'Changes go to Pending Approvals';
+  document.getElementById('ceDrawerTitle').textContent = c.code + ' — ' + c.name;
+  document.getElementById('ceDrawerSub').textContent = 'View mode — click Edit to make changes';
 
   ceShowTab('core');
   document.getElementById('ceOverlay').style.display = 'block';
@@ -2950,6 +2970,118 @@ function ceClose() {
   setTimeout(function(){ d.style.display = 'none'; document.getElementById('ceOverlay').style.display = 'none'; }, 260);
   ceCurrentCode = null;
 }
+
+/* ── COURSE EDIT MODAL — VIEW/EDIT MODE ── */
+var ceEditActive = false;
+
+function cePopulateViewMode(c) {
+  var fd = c.fieldData || {};
+  document.getElementById('ceViewCode').textContent = c.code || '—';
+  document.getElementById('ceViewName').textContent = c.name || '—';
+  document.getElementById('ceViewCategory').textContent = c.category || fd['course_category'] || '—';
+  document.getElementById('ceViewCredits').textContent = c.credits ? c.credits + ' credits' : '—';
+  document.getElementById('ceViewSubject').textContent = c.subject || fd['course_subject'] || '—';
+  document.getElementById('ceViewSced').textContent = (c.sced && c.sced !== '—') ? c.sced : '—';
+  document.getElementById('ceViewCte').textContent = c.cteCluster || fd['cte_cluster'] || '—';
+  var desc = c.description || fd['course_description'] || '';
+  document.getElementById('ceViewDesc').textContent = desc || '—';
+  document.getElementById('ceGroundingDesc').textContent = desc.length > 120 ? desc.slice(0, 120) + '…' : desc;
+  var prereqs = c.prerequisites || [];
+  document.getElementById('ceViewPrereqs').textContent = prereqs.length > 0 ? prereqs.join(', ') : '—';
+}
+
+function ceEnterEditMode() {
+  ceEditActive = true;
+  document.getElementById('ceViewMode').style.display = 'none';
+  document.getElementById('ceEditMode').style.display = 'block';
+  document.getElementById('ceDrawerSub').textContent = 'Edit mode — changes staged until submitted';
+  // Footer: Save Draft | Save & Submit | Cancel Edit
+  document.getElementById('ceFooterBar').innerHTML =
+    '<div style="font-size:11px;color:var(--slate)">Reason required to submit for approval</div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-secondary" onclick="ceExitEditMode()">Cancel Edit</button>' +
+    '<button class="btn btn-secondary" onclick="ceSaveDraft()">Save Draft</button>' +
+    '<button class="btn btn-gold" onclick="ceSubmit()">Save &amp; Submit</button>' +
+    '</div>';
+}
+
+function ceExitEditMode() {
+  ceEditActive = false;
+  document.getElementById('ceViewMode').style.display = 'block';
+  document.getElementById('ceEditMode').style.display = 'none';
+  // Restore view-mode footer
+  var c = ccCourses.find(function(c){ return c.code === ceCurrentCode; });
+  ceSetViewFooter(c);
+  document.getElementById('ceDrawerSub').textContent = 'View mode — click Edit to make changes';
+}
+
+function ceSetViewFooter(c) {
+  var isPending = c && c.status === 'pending';
+  var footer = document.getElementById('ceFooterBar');
+  if (isPending) {
+    footer.innerHTML =
+      '<div style="display:flex;align-items:center;gap:8px;flex:1">' +
+      '<span style="font-size:11px;color:#92400E;background:#FEF3C7;border-radius:var(--radius);padding:5px 10px">' +
+      '&#9888; Pending approval</span>' +
+      '<button class="btn btn-sm" style="background:#FEE2E2;color:#7F1D1D;border:none" onclick="ceWithdraw()">Withdraw</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px">' +
+      '<button class="btn btn-secondary" onclick="ceClose()">Close</button>' +
+      '<button class="btn btn-gold" onclick="ceEnterEditMode()">Edit &amp; Resubmit</button>' +
+      '</div>';
+  } else {
+    footer.innerHTML =
+      '<div style="font-size:11px;color:var(--slate)">View only — no changes pending</div>' +
+      '<div style="display:flex;gap:8px">' +
+      '<button class="btn btn-secondary" onclick="ceClose()">Close</button>' +
+      '<button class="btn btn-gold" onclick="ceEnterEditMode()">Enter Edit Mode</button>' +
+      '</div>';
+  }
+}
+
+function ceSaveDraft() {
+  // Save changes to the course record locally without submitting to approval queue
+  var name = document.getElementById('ceFldName').value.trim();
+  if (!name) { alert('Course Name is required.'); return; }
+  var c = ccCourses.find(function(c){ return c.code === ceCurrentCode; });
+  if (!c) return;
+
+  c.name = name;
+  c.category = document.getElementById('ceFldCategory').value;
+  c.credits = document.getElementById('ceFldCredits').value;
+  c.sced = document.getElementById('ceFldSced').value || '—';
+  c.cteCluster = document.getElementById('ceFldCte').value;
+  c.description = document.getElementById('ceFldDesc').value;
+  c.subject = document.getElementById('ceFldSubject').value;
+  c.prerequisites = cePrereqs.slice();
+  c.fieldData = c.fieldData || {};
+  c.fieldData['course_description'] = c.description;
+  c.fieldData['course_subject'] = c.subject;
+  c.fieldData['cte_cluster'] = c.cteCluster;
+  c.log = c.log || [];
+  c.log.unshift({date: new Date().toISOString().slice(0,10), action: 'Draft Saved', by: 'Admin (CIO)', note: 'Local draft — not yet submitted for approval'});
+
+  ccSave();
+  ccRender();
+  persistSave();
+
+  // Update grounding strip and view mode with new values
+  document.getElementById('ceGroundingName').textContent = c.name;
+  cePopulateViewMode(c);
+
+  showPersistBanner('Draft saved locally — not yet submitted for approval.', true);
+
+  // Stay in edit mode so user can continue or choose to submit
+  var footer = document.getElementById('ceFooterBar');
+  footer.innerHTML =
+    '<div style="font-size:11px;color:var(--green)">&#10003; Draft saved — continue editing or submit</div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-secondary" onclick="ceExitEditMode()">Done Editing</button>' +
+    '<button class="btn btn-secondary" onclick="ceSaveDraft()">Save Draft</button>' +
+    '<button class="btn btn-gold" onclick="ceSubmit()">Save &amp; Submit</button>' +
+    '</div>';
+}
+
 
 function ceWithdraw() {
   if (!confirm('Withdraw this pending submission? The course will return to its previous status.')) return;
